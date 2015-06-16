@@ -1,0 +1,288 @@
+# ---------------------------------------------------------------------------
+# Rescue5 Variable File: EF_KP.EXE
+#           Created on: Tue May 23 16:54:22 2000
+#  Linked with Library: Clipper (R) 5.2d Intl. (x215)  (1994.03.25)
+# ---------------------------------------------------------------------------
+#
+# The variable names in this file are generated from the definitions in
+# VARIABLE.UDT.  To change types and/or qualifiers globally, edit VARIABLE.UDT
+# (or create a new .UDT file and use @ to include it in VARIABLE.UDT) then
+# re-run Pass 1 (either use the /1 switch or delete the .VAR and .GRP files).
+#
+# Section 1 is a list of the locally scoped variables for each procedure,
+# including LOCALs, local parameters and code block parameters.
+#
+# Section 2 lists STATIC variables for each module, modules being
+# identified by cross reference index into Section 2 in the .GRP file.
+#
+# Order is important in this file.  The names to the right of the "#"
+# are for reference only.  Rescue5 assigns variable names according to
+# their ordinal position after each heading.
+#
+# To change variable names during Rescue5 Pass 2 edit the names to the left
+# of the '#'.  Be sure to adhere to CA-Clipper 5 naming conventions.
+#
+#
+# ===========================================================================
+
+# Section 1
+
+# ---------------------------------------------------------------------------
+
+READKILL:
+(LOCAL)
+   _Undef         # P1
+   _Undef1        # L2
+
+# ---------------------------------------------------------------------------
+
+READMODAL:
+(LOCAL)
+   _Undef         # P1
+   _Undef1        # P2
+   oObj           # L3
+   _Undef2        # L4
+
+# ---------------------------------------------------------------------------
+
+GETPREVALI:
+(LOCAL)
+   oObj           # P1
+   _Undef         # L2
+   vVar           # L3
+
+# ---------------------------------------------------------------------------
+
+GETPOSTVAL:
+(LOCAL)
+   oObj           # P1
+   _Undef         # L2
+   vVar           # L3
+
+# ---------------------------------------------------------------------------
+
+GETDOSETKE:
+(LOCAL)
+   _Undef         # P1
+   oObj           # P2
+   _Undef1        # L3
+
+# ---------------------------------------------------------------------------
+
+WINMENU:
+(LOCAL)
+   _Undef         # P1
+   _Undef1        # P2
+   _Undef2        # P3
+   _Undef3        # P4
+   _Undef4        # P5
+   _Undef5        # P6
+   nNum           # L7
+   nNum1          # L8
+   _Undef6        # L9
+   _Undef7        # L10
+   nNum2          # L11
+   nNum3          # L12
+   nNum4          # L13
+   nNum5          # L14
+   nNum6          # L15
+   nNum7          # L16
+(BLOCK)
+   _bUndef        # BL1
+
+# ---------------------------------------------------------------------------
+
+ERRORSYS:
+(BLOCK)
+   _bUndef        # BL1
+
+# ---------------------------------------------------------------------------
+
+ERRORMESSA(2394):
+(LOCAL)
+   oObj           # P1
+   vVar           # L2
+
+# ---------------------------------------------------------------------------
+
+CLEARGETSY(2597):
+(LOCAL)
+   aArr           # L1
+
+# ---------------------------------------------------------------------------
+
+SETTLE(2598):
+(LOCAL)
+   _Undef         # P1
+   nNum           # P2
+   vVar           # L3
+
+# ---------------------------------------------------------------------------
+
+POSTACTIVE(2599):
+(LOCAL)
+   _Undef         # P1
+
+# ---------------------------------------------------------------------------
+
+GETREADER:
+(LOCAL)
+   oObj           # P1
+
+# ---------------------------------------------------------------------------
+
+RESTOREGET(2602):
+(LOCAL)
+   _Undef         # P1
+
+# ---------------------------------------------------------------------------
+
+GETAPPLYKE:
+(LOCAL)
+   oObj           # P1
+   _Undef         # P2
+   sStr           # L3
+   _Undef1        # L4
+
+# ---------------------------------------------------------------------------
+
+SHOWSCOREB(2604):
+(LOCAL)
+   nNum           # L1
+   nNum1          # L2
+
+# ---------------------------------------------------------------------------
+
+DATEMSG(2607):
+(LOCAL)
+   nNum           # L1
+   nNum1          # L2
+
+# ---------------------------------------------------------------------------
+
+READEXIT:
+(LOCAL)
+   _Undef         # P1
+
+# ---------------------------------------------------------------------------
+
+GETACTIVE:
+(LOCAL)
+   _Undef         # P1
+   _Undef1        # L2
+
+# ---------------------------------------------------------------------------
+
+GETREADVAR(2613):
+(LOCAL)
+   oObj           # P1
+   sStr           # L2
+   nNum           # L3
+
+# ---------------------------------------------------------------------------
+
+__SETFORMA:
+(LOCAL)
+   _Undef         # P1
+
+# ---------------------------------------------------------------------------
+
+READINSERT:
+(LOCAL)
+   _Undef         # P1
+
+# ---------------------------------------------------------------------------
+
+RANGECHECK:
+(LOCAL)
+   oObj           # P1
+   _Undef         # P2
+   _Undef1        # P3
+   _Undef2        # P4
+   sStr           # L5
+   nNum           # L6
+   nNum1          # L7
+   vVar           # L8
+
+# ---------------------------------------------------------------------------
+
+READUPDATE:
+(LOCAL)
+   _Undef         # P1
+   _Undef1        # L2
+
+# ---------------------------------------------------------------------------
+
+READFORMAT:
+(LOCAL)
+   _Undef         # P1
+   _Undef1        # L2
+
+# ---------------------------------------------------------------------------
+
+DEFERROR(2393):
+(LOCAL)
+   oObj           # P1
+   nNum           # L2
+   sStr           # L3
+   aArr           # L4
+   nNum1          # L5
+
+# ---------------------------------------------------------------------------
+# Section 2
+# ---------------------------------------------------------------------------
+
+
+STATIC:
+[4]
+   ssStr          # S4_1
+
+# ---------------------------------------------------------------------------
+
+STATIC:
+[5]
+   asArr          # S5_1
+
+# ---------------------------------------------------------------------------
+
+STATIC:
+[6]
+   _sUndef        # S6_1
+   nsNum          # S6_2
+   asArr          # S6_3
+   _sUndef1       # S6_4
+   _sUndef2       # S6_5
+   asArr1         # S6_6
+   asArr2         # S6_7
+   nsNum1         # S6_8
+
+# ---------------------------------------------------------------------------
+
+STATIC:
+[7]
+   _sUndef        # S7_1
+   ssStr          # S7_2
+
+# ---------------------------------------------------------------------------
+
+STATIC:
+[8]
+   ssStr          # S8_1
+
+# ---------------------------------------------------------------------------
+
+STATIC:
+[9]
+   usNil          # S9_1
+   lsLog          # S9_2
+   lsLog1         # S9_3
+   lsLog2         # S9_4
+   lsLog3         # S9_5
+   vsVar          # S9_6
+   nsNum          # S9_7
+   _sUndef        # S9_8
+   ssStr          # S9_9
+   nsNum1         # S9_10
+# ---------------------------------------------------------------------------
+# End of VARIABLE
+# ---------------------------------------------------------------------------

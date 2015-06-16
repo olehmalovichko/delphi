@@ -1,0 +1,228 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_BADSL
+   Params: None.
+   Return: Nil
+  Example: EF_BADSL()
+  ..........................................................................
+*/
+
+FUNCTION EF_BADSL()
+
+   LOCAL ABROWSE, COLUMN, DESKTOP, INDEXBLOCK, BL_PR_US, IKEY_TOP := DTOS(;
+         DAT_OD__), IKEY_BOT := DTOS(DAT_OD__)
+   LOCAL COLORFON, COLORCUR, BOTIO_1 := {"~Esc-~выход", ;
+         "~F9-~печать реестра"}
+
+   PRIVATE BROWSE1, VYVBLOCK
+   DBSELECTAR("ef_badsl")
+   ABROWSE := CREATTBROW(3, 1, 19, 78, "no_slip", {||VYVSTR()})
+   MEMVAR->BROWSE1 := ABROWSE[1]
+   COLUMN := ABROWSE[2]
+   COLORFON := "N/W"
+   COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   BL_PR_US := ""
+   INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 8) == DTOS(;
+         DAT_OD__)}
+   USTANTBROW(BROWSE1, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " Журнал отмененных операций за " + DTOC(DAT_OD__) + ;
+         " г.")
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   OBRIO_1()
+   WINCLOSE(DESKTOP)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYVSTR
+   Params: None.
+   Return: Variable
+  Example: VYVSTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYVSTR()
+
+   IF DBEMPTY()
+
+      RETURN SPACE(77)
+
+   ELSE
+
+      RETURN " " + STR(EF_BADSL->NO_SLIP, 10) + "   " + EF_BADSL->CH_NO + ;
+            "   " + STR(EF_BADSL->AMOUNT, 11, 2) + "   " + EF_BADSL->CURR + ;
+            "   " + EF_BADSL->FIO_OP + " "
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+
+   IF DBEMPTY()
+
+      DEVPOS(21, 14)
+      DEVOUT(SPACE(40))
+
+   ELSE
+
+      DEVPOS(21, 14)
+      DEVOUT(EF_BADSL->KOMENT)
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(20, 0)
+   DEVOUT("╟")
+   DISPBOX(20, 1, 20, 78, "┌─┐│┘─└│ ")
+   DEVPOS(20, 79)
+   DEVOUT("╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 4)
+   DEVOUT(;
+         "N слипа      N карты            Сумма       Валюта  Операционист";
+         )
+   DEVPOS(21, 2)
+   DEVOUT("Комментарий")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE1:STABLE()
+
+         BROWSE1:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE1:STABLE()
+
+         IF BROWSE1:HITTOP() .OR. BROWSE1:HITBOTTOM()
+
+            BROWSE1:HITTOP := .F.
+            BROWSE1:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(10)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE1:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE1:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE1:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE1:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE1:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE1:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE1:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -8
+
+            V_P_BRCH()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+

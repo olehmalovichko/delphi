@@ -1,0 +1,897 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_NASTR
+   Params: None.
+   Return: Nil
+  Example: EF_NASTR()
+  ..........................................................................
+*/
+
+FUNCTION EF_NASTR()
+
+   LOCAL CKEY := MEMVAR->KEY := 0, OLDC := SETCOLOR()
+   LOCAL PAPE, OLDS1 := SAVESCREEN(0, 0, 0, 79), OLDS2 := SAVESCREEN(24,;
+          0, 24, 79)
+
+   PRIVATE ARBUT1, ARBUT2, ARBUT3, ARBUT4, ARBUT5, FFF := .T.
+   PRIVATE RR := ARRAY(50), WIN1, WIN2
+
+   IF  .NOT. HIDDEN_OPE("ef_slip")
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE("ef_bank")
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_SLIP->(DBSEEK("03" + DTOS(DAT_OD__)))
+
+      MEMVAR->FFF := .F.
+
+   ENDIF
+
+   DBSELECTAR("ef_bank")
+   SETCOLOR("w+/n")
+   MEMVAR->WIN2 := WIN(24, 0, 24, 79)
+   SETCOLOR("n/w")
+   DEVPOS(0, 0)
+   DEVOUT(REPLICATE(" ", 80))
+   DEVPOS(0, 6)
+   DEVOUT("выход")
+   DEVPOS(0, 17)
+   DEVOUT("корректировать")
+   DEVPOS(0, 37)
+   DEVOUT("другая страница")
+   SETCOLOR("r/w")
+   DEVPOS(0, 2)
+   DEVOUT("Esc-")
+   DEVPOS(0, 14)
+   DEVOUT("F2-")
+   DEVPOS(0, 33)
+   DEVOUT("Tab-")
+   SETCOLOR("w+/w")
+   MEMVAR->WIN1 := WIN(1, 0, 23, 79, "d")
+   CENTR(NIL, 0, " НАСТРОЙКА КОМПЛЕКСА ")
+   SETCOLOR("n/w")
+   MEMVAR->RR[1] := EF_BANK->NAM_B
+   MEMVAR->RR[2] := EF_BANK->BRANCH
+   MEMVAR->RR[3] := EF_BANK->KOD_B
+   MEMVAR->RR[4] := EF_BANK->NAM_FIL
+   MEMVAR->RR[5] := EF_BANK->POST_IND
+   MEMVAR->RR[6] := EF_BANK->GOS
+   MEMVAR->RR[7] := EF_BANK->OBL
+   MEMVAR->RR[8] := EF_BANK->GOROD
+   MEMVAR->RR[9] := EF_BANK->KOD_OKPO
+   MEMVAR->RR[10] := EF_BANK->BOSS
+   MEMVAR->RR[11] := EF_BANK->N_BOSS_K
+   MEMVAR->RR[12] := EF_BANK->N_GLB_K
+   MEMVAR->RR[13] := EF_BANK->B1_711
+   MEMVAR->RR[14] := EF_BANK->N_B1_711_K
+   MEMVAR->RR[15] := EF_BANK->B2_711
+   MEMVAR->RR[16] := EF_BANK->N_B2_711_K
+   MEMVAR->RR[17] := EF_BANK->MB_PATH
+   MEMVAR->RR[18] := EF_BANK->REP_PATH
+   MEMVAR->RR[19] := EF_BANK->CP_PATH
+   MEMVAR->RR[20] := EF_BANK->IN_PATH
+   MEMVAR->RR[21] := EF_BANK->OUT_PATH
+   MEMVAR->RR[38] := EF_BANK->CITY
+   MEMVAR->RR[29] := EF_BANK->POS_PATH
+   MEMVAR->RR[36] := EF_BANK->N_SHEM
+   MEMVAR->RR[37] := EF_BANK->KOD_PVN
+   MEMVAR->RR[39] := EF_BANK->POSE_PATH
+   MEMVAR->RR[22] := EF_BANK->KOD_NAC
+   MEMVAR->RR[23] := EF_BANK->KOD_VALT
+   MEMVAR->RR[24] := EF_BANK->NAM_NAC
+   MEMVAR->RR[25] := EF_BANK->NAM_VALT
+   MEMVAR->RR[26] := EF_BANK->MIN_KUP
+   MEMVAR->RR[27] := EF_BANK->OD_NAC
+   MEMVAR->RR[28] := EF_BANK->OD_VALT
+   MEMVAR->RR[30] := EF_BANK->PR_KAS
+   MEMVAR->RR[31] := EF_BANK->VL_PATH
+   MEMVAR->RR[32] := EF_BANK->OI
+   MEMVAR->RR[33] := EF_BANK->MFO_PS
+   MEMVAR->RR[34] := EF_BANK->CH_KPLAN_R
+   MEMVAR->RR[35] := EF_BANK->CH_KPLAN_P
+   MEMVAR->RR[40] := EF_BANK->KOD_NACN
+   MEMVAR->RR[41] := EF_BANK->KOD_VALTN
+   MEMVAR->RR[42] := EF_BANK->CH_KPL_T
+   MEMVAR->RR[43] := EF_BANK->CH_KPL_K
+   MEMVAR->RR[44] := EF_BANK->PR_ZAPR
+   MEMVAR->RR[45] := EF_BANK->PR_R_L
+   MEMVAR->RR[46] := EF_BANK->KVO_STR
+   MEMVAR->RR[47] := EF_BANK->BR_SYB
+   MEMVAR->RR[48] := EF_BANK->ID
+   MEMVAR->RR[49] := EF_BANK->CH_KPLNV_R
+   MEMVAR->RR[50] := EF_BANK->CH_KPLNV_P
+
+   IF VAL(MEMVAR->RR[27]) >= 1 .AND. VAL(MEMVAR->RR[27]) <= 2
+
+      MEMVAR->ARBUT1 := RB_CREAT(3, VAL(MEMVAR->RR[27]))
+
+   ELSE
+
+      MEMVAR->ARBUT1 := RB_CREAT(3, 3)
+
+   ENDIF
+
+   MEMVAR->ARBUT3 := RB_CREAT(3, IF(MEMVAR->RR[36] = 0, 1, MEMVAR->RR[36]))
+   MEMVAR->ARBUT4 := RB_CREAT(2, IF( .NOT. MEMVAR->RR[44], 1, 2))
+   MEMVAR->ARBUT5 := RB_CREAT(2, IF( .NOT. MEMVAR->RR[45], 1, 2))
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   PAPE := 1
+   VYVPAPE(PAPE)
+
+   DO WHILE .T.
+
+      CKEY := INKEY(0)
+
+      IF CKEY = -1
+
+         EDITPAPE(PAPE)
+
+      ELSEIF CKEY = 9
+
+         IF(PAPE = 1, PAPE := 0, PAPE := 1)
+         VYVPAPE(PAPE)
+
+      ELSEIF CKEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   DBCLOSEALL()
+   WINCLOSE(WIN1)
+   WINCLOSE(WIN2)
+   RESTSCREEN(0, 0, 0, 79, OLDS1)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EDITPAPE
+   Params: STRPAPE
+   Return: Nil
+  Example: EDITPAPE(STRPAPE)
+  ..........................................................................
+*/
+
+STATIC FUNCTION EDITPAPE(STRPAPE)
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL KEY, OLDS, PP
+
+   WSELECT(WIN2)
+   OLDS := SAVESCREEN(0, 0, 0, 79)
+   SETCOLOR("n/w")
+   DEVPOS(0, 0)
+   DEVOUT(REPLICATE(" ", 80))
+   DEVPOS(0, 6)
+   DEVOUT("выход")
+   DEVPOS(0, 18)
+   DEVOUT("запомнить")
+   SETCOLOR("r/w")
+   DEVPOS(0, 2)
+   DEVOUT("Esc-")
+   DEVPOS(0, 14)
+   DEVOUT("F10-")
+   SETCOLOR("w/n")
+   WSELECT(WIN1)
+   SETCOLOR("w+/w,w+/b,,,w+/bg")
+
+   IF STRPAPE = 1
+
+      DO WHILE .T.
+
+         SETPOS(1, 15)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               1}):DISPLAY())
+         SETPOS(1, 54)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("9", 3), NIL, NIL, {;
+               2}):DISPLAY())
+         SETPOS(1, 67)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("9", 3), NIL, NIL, {;
+               37}):DISPLAY())
+         SETPOS(2, 15)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("9", 9), NIL, NIL, {;
+               3}):DISPLAY())
+         SETPOS(2, 51)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 25), NIL, NIL, {;
+               4}):DISPLAY())
+         SETPOS(3, 22)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 4), NIL, NIL, {;
+               47}):DISPLAY())
+         SETPOS(3, 72)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 4), NIL, NIL, {;
+               48}):DISPLAY())
+         SETPOS(4, 15)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("9", 6), NIL, NIL, {;
+               5}):DISPLAY())
+         SETPOS(4, 56)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               6}):DISPLAY())
+         SETPOS(5, 15)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               7}):DISPLAY())
+         SETPOS(5, 56)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               8}):DISPLAY())
+         SETPOS(6, 15)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 8), NIL, NIL, {;
+               9}):DISPLAY())
+         SETPOS(6, 56)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 13), NIL, NIL, {;
+               38}):DISPLAY())
+         SETPOS(7, 24)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               11}):DISPLAY())
+         SETPOS(7, 45)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               10}):DISPLAY())
+         SETPOS(8, 24)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               12}):DISPLAY())
+         SETPOS(9, 24)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               14}):DISPLAY())
+         SETPOS(9, 45)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               13}):DISPLAY())
+         SETPOS(10, 24)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               16}):DISPLAY())
+         SETPOS(10, 45)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               15}):DISPLAY())
+         SETPOS(12, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {18});
+               :DISPLAY())
+         SETPOS(13, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {19});
+               :DISPLAY())
+         SETPOS(14, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {20});
+               :DISPLAY())
+         SETPOS(15, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {21});
+               :DISPLAY())
+         SETPOS(16, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {17});
+               :DISPLAY())
+         SETPOS(17, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {31});
+               :DISPLAY())
+         SETPOS(18, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {29});
+               :DISPLAY())
+         SETPOS(19, 39)
+         AADD(GETLIST, __GETA({||RR}, "rr", "@S37", NIL, NIL, {39});
+               :DISPLAY())
+         SETKEYON()
+         SET(28, "ON")
+         SETCURSOR(1)
+         READMODAL(GETLIST)
+         MEMVAR->GETLIST := {}
+         SETCURSOR(0)
+         SET(28, "OFF")
+         SETKEYOF()
+         KEY := LASTKEY()
+
+         IF KEY = -9
+
+            EXIT
+
+         ELSEIF KEY = 27
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+   ELSE
+
+      DO WHILE .T.
+
+         SETPOS(1, 18)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 3), NIL, NIL, {;
+               22}):DISPLAY())
+         SETPOS(1, 23)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("9", 3), NIL, NIL, {;
+               40}):DISPLAY())
+         SETPOS(1, 57)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 3), NIL, NIL, {;
+               23}):DISPLAY())
+         SETPOS(1, 63)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("9", 3), NIL, NIL, {;
+               41}):DISPLAY())
+         SETPOS(2, 19)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               24}):DISPLAY())
+         SETPOS(2, 58)
+         AADD(GETLIST, __GETA({||RR}, "rr", REPLICATE("X", 20), NIL, NIL, {;
+               25}):DISPLAY())
+         SETPOS(3, 14)
+         AADD(GETLIST, __GETA({||RR}, "rr", "9999.99", NIL, NIL, {26});
+               :DISPLAY())
+         AADD(GETLIST, _RADIOBUTT(6, 2, 1, ARBUT1, "aRBut1", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT1, 1)) + " Sybridge", IF(VALTYPE(L) == "L", _ARRAY_(;
+               ARBUT1, 1, L), _ARRAY_(ARBUT1, 1)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(7, 2, 2, ARBUT1, "aRBut1", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT1, 2)) + " Банк-клиент", IF(VALTYPE(L) == "L", _ARRAY_(;
+               ARBUT1, 2, L), _ARRAY_(ARBUT1, 2)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(8, 2, 3, ARBUT1, "aRBut1", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT1, 3)) + " Не выполнять", IF(VALTYPE(L) == "L", ;
+               _ARRAY_(ARBUT1, 3, L), _ARRAY_(ARBUT1, 3)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(6, 29, 1, ARBUT3, "aRBut3", NIL, {||FFF},;
+                "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT3, 1)) + " Провод по кассе каждой операции", IF(;
+               VALTYPE(L) == "L", _ARRAY_(ARBUT3, 1, L), _ARRAY_(ARBUT3, 1);
+               ))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(7, 29, 2, ARBUT3, "aRBut3", NIL, {||FFF},;
+                "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT3, 2)) + " Сводный расходный ордер", IF(VALTYPE(L) == ;
+               "L", _ARRAY_(ARBUT3, 2, L), _ARRAY_(ARBUT3, 2)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(8, 29, 3, ARBUT3, "aRBut3", NIL, {||FFF},;
+                "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT3, 3)) + " Кассир-бухгалтер", IF(VALTYPE(L) == "L", ;
+               _ARRAY_(ARBUT3, 3, L), _ARRAY_(ARBUT3, 3)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         SETPOS(12, 30)
+         AADD(GETLIST, __GETA({||RR}, "rr", "X", {||MEMVAR->RR[30] == "д" ;
+               .OR. MEMVAR->RR[30] == "н"}, NIL, {30}):DISPLAY())
+         SETPOS(13, 21)
+         AADD(GETLIST, __GETA({||RR}, "rr", "99", NIL, NIL, {32}):DISPLAY();
+               )
+         SETPOS(14, 32)
+         AADD(GETLIST, __GETA({||RR}, "rr", "999999", NIL, NIL, {33});
+               :DISPLAY())
+         SETPOS(15, 38)
+         AADD(GETLIST, __GETA({||RR}, "rr", "99", NIL, NIL, {34}):DISPLAY();
+               )
+         SETPOS(15, 70)
+         AADD(GETLIST, __GETA({||RR}, "rr", "99", NIL, NIL, {35}):DISPLAY();
+               )
+         SETPOS(16, 38)
+         AADD(GETLIST, __GETA({||RR}, "rr", "99", NIL, NIL, {42}):DISPLAY();
+               )
+         SETPOS(16, 70)
+         AADD(GETLIST, __GETA({||RR}, "rr", "99", NIL, NIL, {43}):DISPLAY();
+               )
+         SETPOS(17, 38)
+         AADD(GETLIST, __GETA({||RR}, "rr", "XX", NIL, NIL, {49}):DISPLAY();
+               )
+         SETPOS(17, 70)
+         AADD(GETLIST, __GETA({||RR}, "rr", "XX", NIL, NIL, {50}):DISPLAY();
+               )
+         AADD(GETLIST, _RADIOBUTT(18, 42, 1, ARBUT4, "aRBut4", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT4, 1)) + " Нет", IF(VALTYPE(L) == "L", _ARRAY_(ARBUT4, ;
+               1, L), _ARRAY_(ARBUT4, 1)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(18, 52, 2, ARBUT4, "aRBut4", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT4, 2)) + " Да", IF(VALTYPE(L) == "L", _ARRAY_(ARBUT4, ;
+               2, L), _ARRAY_(ARBUT4, 2)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(19, 16, 1, ARBUT5, "aRBut5", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT5, 1)) + " листы", IF(VALTYPE(L) == "L", _ARRAY_(;
+               ARBUT5, 1, L), _ARRAY_(ARBUT5, 1)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _RADIOBUTT(19, 29, 2, ARBUT5, "aRBut5", NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(;
+               ARBUT5, 2)) + " рулон", IF(VALTYPE(L) == "L", _ARRAY_(;
+               ARBUT5, 2, L), _ARRAY_(ARBUT5, 2)))}
+         ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         SETPOS(19, 72)
+         AADD(GETLIST, __GETA({||RR}, "rr", "99", NIL, NIL, {46}):DISPLAY();
+               )
+         SETKEYON()
+         SET(28, "ON")
+         SETCURSOR(1)
+         READMODAL(GETLIST)
+         MEMVAR->GETLIST := {}
+         SETCURSOR(0)
+         SET(28, "OFF")
+         SETKEYOF()
+         KEY := LASTKEY()
+
+         IF KEY = -9
+
+            IF MEMVAR->RR[30] == "д" .OR. MEMVAR->RR[30] == "н"
+
+               EXIT
+
+            ELSE
+
+               TONE(125, 3)
+
+            ENDIF
+
+         ELSEIF KEY = 27
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+   ENDIF
+
+   IF KEY = -9 .AND. EF_BANK->(RECLOCK(3))
+
+      IF BT_SET(ARBUT1) = 1
+
+         MEMVAR->RR[27] := "1"
+
+      ELSEIF BT_SET(ARBUT1) = 2
+
+         MEMVAR->RR[27] := "2"
+
+      ELSEIF BT_SET(ARBUT1) = 3
+
+         MEMVAR->RR[27] := "9"
+
+      ENDIF
+
+      IF BT_SET(ARBUT3) = 1
+
+         MEMVAR->RR[36] := 1
+
+      ELSEIF BT_SET(ARBUT3) = 2
+
+         MEMVAR->RR[36] := 2
+
+      ELSEIF BT_SET(ARBUT3) = 3
+
+         MEMVAR->RR[36] := 3
+
+      ENDIF
+
+      IF BT_SET(ARBUT4) = 1
+
+         MEMVAR->RR[44] := .F.
+
+      ELSEIF BT_SET(ARBUT4) = 2
+
+         MEMVAR->RR[44] := .T.
+
+      ENDIF
+
+      IF BT_SET(ARBUT5) = 1
+
+         MEMVAR->RR[45] := .F.
+
+      ELSEIF BT_SET(ARBUT5) = 2
+
+         MEMVAR->RR[45] := .T.
+
+      ENDIF
+
+      EF_BANK->NAM_B := MEMVAR->RR[1]
+      EF_BANK->BRANCH := MEMVAR->RR[2]
+      EF_BANK->KOD_B := MEMVAR->RR[3]
+      EF_BANK->NAM_FIL := MEMVAR->RR[4]
+      EF_BANK->POST_IND := MEMVAR->RR[5]
+      EF_BANK->GOS := MEMVAR->RR[6]
+      EF_BANK->OBL := MEMVAR->RR[7]
+      EF_BANK->GOROD := MEMVAR->RR[8]
+      EF_BANK->KOD_OKPO := MEMVAR->RR[9]
+      EF_BANK->BOSS := MEMVAR->RR[10]
+      EF_BANK->N_BOSS_K := MEMVAR->RR[11]
+      EF_BANK->N_GLB_K := MEMVAR->RR[12]
+      EF_BANK->B1_711 := MEMVAR->RR[13]
+      EF_BANK->N_B1_711_K := MEMVAR->RR[14]
+      EF_BANK->B2_711 := MEMVAR->RR[15]
+      EF_BANK->N_B2_711_K := MEMVAR->RR[16]
+      EF_BANK->MB_PATH := MEMVAR->RR[17]
+      EF_BANK->REP_PATH := MEMVAR->RR[18]
+      EF_BANK->CP_PATH := MEMVAR->RR[19]
+      EF_BANK->IN_PATH := MEMVAR->RR[20]
+      EF_BANK->OUT_PATH := MEMVAR->RR[21]
+      EF_BANK->POS_PATH := MEMVAR->RR[29]
+      EF_BANK->N_SHEM := MEMVAR->RR[36]
+      EF_BANK->KOD_PVN := MEMVAR->RR[37]
+      EF_BANK->KOD_NAC := MEMVAR->RR[22]
+      EF_BANK->KOD_VALT := MEMVAR->RR[23]
+      EF_BANK->NAM_NAC := MEMVAR->RR[24]
+      EF_BANK->NAM_VALT := MEMVAR->RR[25]
+      EF_BANK->MIN_KUP := MEMVAR->RR[26]
+      EF_BANK->OD_NAC := MEMVAR->RR[27]
+      EF_BANK->OD_VALT := MEMVAR->RR[27]
+      EF_BANK->PR_KAS := MEMVAR->RR[30]
+      EF_BANK->VL_PATH := MEMVAR->RR[31]
+      EF_BANK->OI := MEMVAR->RR[32]
+      EF_BANK->MFO_PS := MEMVAR->RR[33]
+      EF_BANK->CH_KPLAN_R := MEMVAR->RR[34]
+      EF_BANK->CH_KPLAN_P := MEMVAR->RR[35]
+      EF_BANK->CITY := MEMVAR->RR[38]
+      EF_BANK->POSE_PATH := MEMVAR->RR[39]
+      EF_BANK->KOD_NACN := MEMVAR->RR[40]
+      EF_BANK->KOD_VALTN := MEMVAR->RR[41]
+      EF_BANK->KVO_STR := MEMVAR->RR[46]
+      EF_BANK->CH_KPL_T := MEMVAR->RR[42]
+      EF_BANK->CH_KPL_K := MEMVAR->RR[43]
+      EF_BANK->PR_ZAPR := MEMVAR->RR[44]
+      EF_BANK->PR_R_L := MEMVAR->RR[45]
+      EF_BANK->BR_SYB := MEMVAR->RR[47]
+      EF_BANK->ID := MEMVAR->RR[48]
+      EF_BANK->CH_KPLNV_R := MEMVAR->RR[49]
+      EF_BANK->CH_KPLNV_P := MEMVAR->RR[50]
+      DBCOMMIT()
+      DBUNLOCK()
+      MEMVAR->KOD_OTD__ := EF_BANK->BRANCH
+      MEMVAR->KOD_OKPO__ := EF_BANK->KOD_OKPO
+      MEMVAR->POST_IND__ := EF_BANK->POST_IND
+      MEMVAR->GOROD__ := EF_BANK->GOROD
+      MEMVAR->NAM_FIL__ := ALLTRIM(EF_BANK->NAM_FIL)
+      MEMVAR->NAM_B__ := ALLTRIM(EF_BANK->NAM_B)
+      MEMVAR->KOD_B__ := ALLTRIM(EF_BANK->KOD_B)
+      MEMVAR->PR_KAS__ := EF_BANK->PR_KAS
+      MEMVAR->PRC_CRED__ := EF_BANK->PRC_CRED
+      MEMVAR->IN_PATH__ := ALLTRIM(EF_BANK->IN_PATH)
+      MEMVAR->OUT_PATH__ := ALLTRIM(EF_BANK->OUT_PATH)
+      MEMVAR->CP_PATH__ := ALLTRIM(EF_BANK->CP_PATH)
+      MEMVAR->REP_PATH__ := ALLTRIM(EF_BANK->REP_PATH)
+      MEMVAR->MB_PATH__ := ALLTRIM(EF_BANK->MB_PATH)
+      MEMVAR->VL_PATH__ := ALLTRIM(EF_BANK->VL_PATH)
+      MEMVAR->POS_PATH__ := ALLTRIM(EF_BANK->POS_PATH)
+      MEMVAR->POSE_PATH_ := ALLTRIM(EF_BANK->POSE_PATH)
+      MEMVAR->KOD_VUAH__ := EF_BANK->KOD_NAC
+      MEMVAR->KOD_VUSD__ := EF_BANK->KOD_VALT
+      MEMVAR->CHKPLANR__ := EF_BANK->CH_KPLAN_R
+      MEMVAR->CHKPLANP__ := EF_BANK->CH_KPLAN_P
+      MEMVAR->CH_KPL_T__ := EF_BANK->CH_KPL_T
+      MEMVAR->CH_KPL_K__ := EF_BANK->CH_KPL_K
+      MEMVAR->N_SHEM__ := EF_BANK->N_SHEM
+      MEMVAR->KVO_STR__ := EF_BANK->KVO_STR
+      MEMVAR->PR_R_L__ := EF_BANK->PR_R_L
+      MEMVAR->CHKPLNRV__ := EF_BANK->CH_KPLNV_R
+      MEMVAR->CHKPLNPV__ := EF_BANK->CH_KPLNV_P
+
+   ENDIF
+
+   WSELECT(WIN2)
+   RESTSCREEN(0, 0, 0, 79, OLDS)
+   WSELECT(WIN1)
+   SETCOLOR(OLDC)
+   VYVPAPE(STRPAPE)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYVPAPE
+   Params: STRPAPE
+   Return: Nil
+  Example: VYVPAPE(STRPAPE)
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYVPAPE(STRPAPE)
+
+   LOCAL OLDC := SETCOLOR()
+
+   SCROLL(1, 1, 21, 77)
+   SETPOS(1, 1)
+   SETCOLOR("n/w")
+
+   IF STRPAPE = 1
+
+      DEVPOS(0, 65)
+      DEVOUT(" Страница 1 ", "gr+/w")
+      DEVPOS(1, 2)
+      DEVOUT(;
+            "Наим.банка :                           Код филиала:        ПВН:";
+            )
+      DEVPOS(2, 2)
+      DEVOUT("Код МФО    :                           Филиал  :")
+      DEVPOS(3, 2)
+      DEVOUT(;
+            "Branch в SYBRUDGE :                    Имя операциониста в SYBRIDGE :";
+            )
+      DEVPOS(4, 2)
+      DEVOUT("Почт.индекс:                           Государство  :")
+      DEVPOS(5, 2)
+      DEVOUT("Область    :                           Город        :")
+      DEVPOS(6, 2)
+      DEVOUT("Код ОКПО   :")
+      DEVPOS(7, 2)
+      DEVOUT("Руководитель банка  :")
+      DEVPOS(8, 2)
+      DEVOUT("Гл.бухгалтер банка  :")
+      DEVPOS(9, 2)
+      DEVOUT("Рук.подразд. 1 звена:")
+      DEVPOS(10, 2)
+      DEVOUT("Рук.подразд. 2 звена:")
+      DEVPOS(12, 2)
+      DEVOUT("Директория для записи отчетов      :")
+      DEVPOS(13, 2)
+      DEVOUT("Директория для копирования базы    :")
+      DEVPOS(14, 2)
+      DEVOUT("Директория вх.  почтового ящика    :")
+      DEVPOS(15, 2)
+      DEVOUT("Директория вых. почтового ящика    :")
+      DEVPOS(16, 2)
+      DEVOUT("Путь для отправки гривневых плат.  :")
+      DEVPOS(17, 2)
+      DEVOUT("Путь для отправки валютных  плат.  :")
+      DEVPOS(18, 2)
+      DEVOUT("Путь обмена электорон. авторизации :")
+      DEVPOS(19, 2)
+      DEVOUT("Путь и имя файла POS-эмулятора     :")
+      SETCOLOR("w+/w")
+      DEVPOS(1, 15)
+      DEVOUTPICT(MEMVAR->RR[1], REPLICATE("X", 20))
+      DEVPOS(1, 54)
+      DEVOUTPICT(MEMVAR->RR[2], REPLICATE("X", 3))
+      DEVPOS(1, 67)
+      DEVOUTPICT(MEMVAR->RR[37], REPLICATE("X", 3))
+      DEVPOS(2, 15)
+      DEVOUTPICT(MEMVAR->RR[3], REPLICATE("9", 9))
+      DEVPOS(2, 51)
+      DEVOUTPICT(MEMVAR->RR[4], REPLICATE("X", 25))
+      DEVPOS(3, 22)
+      DEVOUTPICT(MEMVAR->RR[47], REPLICATE("X", 4))
+      DEVPOS(3, 72)
+      DEVOUTPICT(MEMVAR->RR[48], REPLICATE("X", 4))
+      DEVPOS(4, 15)
+      DEVOUTPICT(MEMVAR->RR[5], REPLICATE("9", 6))
+      DEVPOS(4, 56)
+      DEVOUTPICT(MEMVAR->RR[6], REPLICATE("X", 20))
+      DEVPOS(5, 15)
+      DEVOUTPICT(MEMVAR->RR[7], REPLICATE("X", 20))
+      DEVPOS(5, 56)
+      DEVOUTPICT(MEMVAR->RR[8], REPLICATE("X", 20))
+      DEVPOS(6, 15)
+      DEVOUTPICT(MEMVAR->RR[9], REPLICATE("X", 8))
+      DEVPOS(6, 56)
+      DEVOUTPICT(MEMVAR->RR[38], REPLICATE("X", 13))
+      DEVPOS(7, 24)
+      DEVOUTPICT(MEMVAR->RR[11], REPLICATE("X", 20))
+      DEVPOS(7, 45)
+      DEVOUTPICT(MEMVAR->RR[10], REPLICATE("X", 20))
+      DEVPOS(8, 24)
+      DEVOUTPICT(MEMVAR->RR[12], REPLICATE("X", 20))
+      DEVPOS(9, 24)
+      DEVOUTPICT(MEMVAR->RR[14], REPLICATE("X", 20))
+      DEVPOS(9, 45)
+      DEVOUTPICT(MEMVAR->RR[13], REPLICATE("X", 20))
+      DEVPOS(10, 24)
+      DEVOUTPICT(MEMVAR->RR[16], REPLICATE("X", 20))
+      DEVPOS(10, 45)
+      DEVOUTPICT(MEMVAR->RR[15], REPLICATE("X", 20))
+      DEVPOS(12, 39)
+      DEVOUTPICT(MEMVAR->RR[18], REPLICATE("X", 37))
+      DEVPOS(13, 39)
+      DEVOUTPICT(MEMVAR->RR[19], REPLICATE("X", 37))
+      DEVPOS(14, 39)
+      DEVOUTPICT(MEMVAR->RR[20], REPLICATE("X", 37))
+      DEVPOS(15, 39)
+      DEVOUTPICT(MEMVAR->RR[21], REPLICATE("X", 37))
+      DEVPOS(16, 39)
+      DEVOUTPICT(MEMVAR->RR[17], REPLICATE("X", 37))
+      DEVPOS(17, 39)
+      DEVOUTPICT(MEMVAR->RR[31], REPLICATE("X", 37))
+      DEVPOS(18, 39)
+      DEVOUTPICT(MEMVAR->RR[29], REPLICATE("X", 37))
+      DEVPOS(19, 39)
+      DEVOUTPICT(MEMVAR->RR[39], REPLICATE("X", 37))
+
+   ELSE
+
+      DEVPOS(0, 65)
+      DEVOUT(" Страница 2 ", "gr+/w")
+      DEVPOS(1, 2)
+      DEVOUT("Код нац.валюты:                        Код USD валюты:")
+      DEVPOS(2, 2)
+      DEVOUT("Наим.нац.валюты:                       Наим.USD валюты:")
+      DEVPOS(3, 2)
+      DEVOUT("Мин.купюра:         грн.")
+      DEVPOS(5, 2)
+      DEVOUT("Экспорт проводок в:             Схема выдачи наличных :")
+      DEVPOS(6, 2)
+      DEVOUT(;
+            "( ) Sybridge               ( ) Провод по кассе каждой операции";
+            )
+      DEVPOS(7, 2)
+      DEVOUT("( ) Банк-клиент            ( ) Сводный расходный ордер")
+      DEVPOS(8, 2)
+      DEVOUT("( ) Не выполнять           ( ) Кассир-бухгалтер")
+      DEVPOS(12, 2)
+      DEVOUT("Признак работы через кассу:   (д/н)")
+      DEVPOS(13, 2)
+      DEVOUT("Ответ-исполнитель: ")
+      DEVPOS(14, 2)
+      DEVOUT("МФО для перевода пополнений : ")
+      DEVPOS(15, 2)
+      DEVOUT(;
+            "Символы касплана - выдача наличных:        пополнения на карту    :";
+            )
+      DEVPOS(16, 2)
+      DEVOUT(;
+            "                   тариф ком. плат:        прих. ордера ком. плат.:";
+            )
+      DEVPOS(17, 2)
+      DEVOUT(;
+            "Символы валютные - выдача наличных:        пополнения на карту    :";
+            )
+      DEVPOS(18, 2)
+      DEVOUT(" Выполнять запрос на печать квитанции :")
+      DEVPOS(18, 42)
+      DEVOUT("( ) Нет")
+      DEVPOS(18, 52)
+      DEVOUT("( ) Да")
+      DEVPOS(19, 2)
+      DEVOUT(;
+            " Вид бумаги:  ( ) листы    ( ) рулон    К-во пустых строк для рулона  ";
+            )
+      SETCOLOR("w+/w")
+      DEVPOS(1, 18)
+      DEVOUTPICT(MEMVAR->RR[22], REPLICATE("X", 3))
+      DEVPOS(1, 57)
+      DEVOUTPICT(MEMVAR->RR[23], REPLICATE("X", 3))
+      DEVPOS(1, 23)
+      DEVOUTPICT(MEMVAR->RR[40], REPLICATE("9", 3))
+      DEVPOS(1, 63)
+      DEVOUTPICT(MEMVAR->RR[41], REPLICATE("9", 3))
+      DEVPOS(2, 19)
+      DEVOUTPICT(MEMVAR->RR[24], REPLICATE("X", 20))
+      DEVPOS(2, 58)
+      DEVOUTPICT(MEMVAR->RR[25], REPLICATE("X", 20))
+      DEVPOS(3, 14)
+      DEVOUTPICT(MEMVAR->RR[26], "9999.99")
+
+      IF MEMVAR->RR[27] == "1"
+
+         DEVPOS(6, 3)
+         DEVOUT(CHR(7))
+         DEVPOS(7, 3)
+         DEVOUT(" ")
+         DEVPOS(8, 3)
+         DEVOUT(" ")
+
+      ELSEIF MEMVAR->RR[27] == "2"
+
+         DEVPOS(6, 3)
+         DEVOUT(" ")
+         DEVPOS(7, 3)
+         DEVOUT(CHR(7))
+         DEVPOS(8, 3)
+         DEVOUT(" ")
+
+      ELSEIF MEMVAR->RR[27] == "3"
+
+         DEVPOS(6, 3)
+         DEVOUT(" ")
+         DEVPOS(7, 3)
+         DEVOUT(" ")
+         DEVPOS(8, 3)
+         DEVOUT(CHR(7))
+
+      ENDIF
+
+      IF MEMVAR->RR[36] = 1
+
+         DEVPOS(6, 30)
+         DEVOUT(CHR(7))
+         DEVPOS(7, 30)
+         DEVOUT(" ")
+         DEVPOS(8, 30)
+         DEVOUT(" ")
+
+      ELSEIF MEMVAR->RR[36] = 2
+
+         DEVPOS(6, 30)
+         DEVOUT(" ")
+         DEVPOS(7, 30)
+         DEVOUT(CHR(7))
+         DEVPOS(8, 30)
+         DEVOUT(" ")
+
+      ELSEIF MEMVAR->RR[36] = 3
+
+         DEVPOS(6, 30)
+         DEVOUT(" ")
+         DEVPOS(7, 30)
+         DEVOUT(" ")
+         DEVPOS(8, 30)
+         DEVOUT(CHR(7))
+
+      ENDIF
+
+      DEVPOS(12, 30)
+      DEVOUTPICT(MEMVAR->RR[30], "X")
+      DEVPOS(13, 21)
+      DEVOUTPICT(MEMVAR->RR[32], "99")
+      DEVPOS(14, 32)
+      DEVOUTPICT(MEMVAR->RR[33], "999999")
+      DEVPOS(15, 38)
+      DEVOUTPICT(MEMVAR->RR[34], "99")
+      DEVPOS(15, 70)
+      DEVOUTPICT(MEMVAR->RR[35], "99")
+      DEVPOS(16, 38)
+      DEVOUTPICT(MEMVAR->RR[42], "99")
+      DEVPOS(16, 70)
+      DEVOUTPICT(MEMVAR->RR[43], "99")
+      DEVPOS(17, 38)
+      DEVOUTPICT(MEMVAR->RR[49], "XX")
+      DEVPOS(17, 70)
+      DEVOUTPICT(MEMVAR->RR[50], "XX")
+
+      IF MEMVAR->RR[44]
+
+         DEVPOS(18, 43)
+         DEVOUT(" ")
+         DEVPOS(18, 53)
+         DEVOUT(CHR(7))
+
+      ELSE
+
+         DEVPOS(18, 43)
+         DEVOUT(CHR(7))
+         DEVPOS(18, 53)
+         DEVOUT(" ")
+
+      ENDIF
+
+      IF MEMVAR->RR[45]
+
+         DEVPOS(19, 17)
+         DEVOUT(" ")
+         DEVPOS(19, 30)
+         DEVOUT(CHR(7))
+
+      ELSE
+
+         DEVPOS(19, 17)
+         DEVOUT(CHR(7))
+         DEVPOS(19, 30)
+         DEVOUT(" ")
+
+      ENDIF
+
+      DEVPOS(19, 72)
+      DEVOUTPICT(MEMVAR->RR[46], "99")
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+

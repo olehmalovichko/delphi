@@ -1,0 +1,202 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_OPRES
+   Params: None.
+   Return: Variable
+  Example: EF_OPRES()
+  ..........................................................................
+*/
+
+FUNCTION EF_OPRES()
+
+   LOCAL KEY := 0, ARR_ := {}, KOD, WIN, OLDC := SETCOLOR()
+   LOCAL NAM_BAS := "tmp_"
+
+   IF  .NOT. AREA_OPEN({{"ef_s_gpl"}, {"ef_sys"}, {"ef_post"}, {"ef_bank"},;
+          {"ef_jpkpl"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_s_gpl")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF EF_S_GPL->PR_RVGB
+
+         AADD(ARR_, {EF_S_GPL->NAM_VPL, EF_S_GPL->KOD_VPL})
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   IF LEN(ARR_) > 0
+
+      SETCOLOR("w+/w")
+      WIN := WIN(10, 10, 15, 69, "d", "t")
+      SETCOLOR("n/w")
+      CENTR(NIL, 1, " Ждите, идет формирование реестров  ... ")
+      CENTR(NIL, 3, " Сканирование базы документов EF_JPKPL.DBF ", "gr+/w")
+      MEMVAR->LIN := INOTDEAD(4, 18)
+
+      IF  .NOT. HIDDEN_OPE(NAM_BAS, .T., 3, NIL, "k_plat")
+
+         DBCLOSEALL()
+         RETURN .F.
+
+      ENDIF
+
+      FOR I := 1 TO LEN(ARR_)
+
+         EF_JPKPL->(DBSEEK(DTOS(DAT_OD__) + STR(ARR_[I, 2])))
+
+         DO WHILE EF_JPKPL->( .NOT. EOF()) .AND. EF_JPKPL->DAT_BANK == ;
+               DAT_OD__ .AND. EF_JPKPL->KOD_VPL = ARR_[I, 2]
+
+            IF  .NOT. EF_JPKPL->PR_OTPR
+
+               K_PLAT->(DBAPPEND())
+               K_PLAT->KOD_VPL := EF_JPKPL->KOD_VPL
+               K_PLAT->KOD_PL := EF_JPKPL->KOD_PL
+               K_PLAT->KOD_POL := EF_JPKPL->KOD_POL
+               K_PLAT->NUM_DOC := EF_JPKPL->NUM_DOC
+               K_PLAT->DAT_BANK := EF_JPKPL->DAT_BANK
+               K_PLAT->DAT_OPL := EF_JPKPL->DAT_OPL
+               K_PLAT->SUMMA := EF_JPKPL->SUMMA
+               K_PLAT->SUM_KOM := EF_JPKPL->SUM_KOM
+               K_PLAT->NAM_PLAT := EF_JPKPL->NAM_PLAT
+               K_PLAT->LS_PLAT := EF_JPKPL->LS_PLAT
+               K_PLAT->ADRES := EF_JPKPL->ADRES
+               K_PLAT->NUM_TEL := EF_JPKPL->NUM_TEL
+               K_PLAT->FIO_OP := EF_JPKPL->FIO_OP
+               K_PLAT->PR_OPL := EF_JPKPL->PR_OPL
+               K_PLAT->PR_PK := EF_JPKPL->PR_PK
+               K_PLAT->PR_TAR := EF_JPKPL->PR_TAR
+               K_PLAT->PR_KOM := EF_JPKPL->PR_KOM
+               K_PLAT->KOD_PVN := EF_JPKPL->KOD_PVN
+               K_PLAT->KOD_SOV := EF_JPKPL->KOD_SOV
+               K_PLAT->PR_N_K := EF_JPKPL->PR_N_K
+
+            ENDIF
+
+            EF_JPKPL->(DBSKIP())
+            MEMVAR->LIN := INOTDEAD(LIN)
+
+         ENDDO
+
+      NEXT
+
+      DBSELECTAR("k_plat")
+      MEMVAR->RR := LASTREC()
+      K_PLAT->(DBCLOSEARE())
+
+      IF RR > 0
+
+         MEMVAR->NUM_P := NUM_PAK(4)
+
+         IF NUM_P > "z"
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "На сегодня свободные", ;
+                  "N для отправки пакетов кончились !"}, {" Выход "})
+            DBUNLOCK()
+
+         ELSEIF EF_SYS->(RECLOCK(3))
+
+            MEMVAR->NF := "Y" + EF_BANK->BRANCH + ZERO_STR(DOY(DAT_OD__), 3) ;
+                  + NUM_P + "." + IF(EMPTY(EF_BANK->KOD_PVN), "zip", ;
+                  EF_BANK->KOD_PVN)
+            MEMVAR->HOST := "pkzip -a " + OUT_PATH__ + NF + " " + NAM_BAS + ;
+                  ".dbf"
+            WSELECT(0)
+            MEMVAR->WINN := SAVESCREEN(0, 0, 24, 79)
+            DISPBOX(0, 0, 24, 79, "         ", "W/N")
+            S_RUN(HOST, -1, .T.)
+            RESTSCREEN(0, 0, 24, 79, WINN)
+            WSELECT(WIN)
+
+            IF FILE(OUT_PATH__ + NF + ".zip")
+
+               IF EF_POST->(ADDREC(3))
+
+                  EF_POST->NAM_FILE := NF
+                  EF_POST->DAT_POST := DAT_OD__
+                  EF_POST->TIME_POST := TIME()
+                  EF_POST->PR_V_I := .F.
+                  EF_POST->(DBCOMMIT())
+                  EF_POST->(DBUNLOCK())
+
+               ENDIF
+
+               __COPYFILE(OUT_PATH__ + NF + ".zip", CP_PATH__ + NF + ;
+                     ".zip")
+               DBSELECTAR("ef_jpkpl")
+
+               FOR I := 1 TO LEN(ARR_)
+
+                  EF_JPKPL->(DBSEEK(DTOS(DAT_OD__) + STR(ARR_[I, 2])))
+
+                  DO WHILE EF_JPKPL->( .NOT. EOF()) .AND. EF_JPKPL->DAT_BANK ;
+                        == DAT_OD__ .AND. EF_JPKPL->KOD_VPL = ARR_[I, 2]
+
+                     IF  .NOT. EF_JPKPL->PR_OTPR
+
+                        EF_JPKPL->(RECLOCK(3))
+                        EF_JPKPL->PR_OTPR := .T.
+                        EF_JPKPL->(DBUNLOCK())
+
+                     ENDIF
+
+                     EF_JPKPL->(DBSKIP())
+                     MEMVAR->LIN := INOTDEAD(LIN)
+
+                  ENDDO
+
+               NEXT
+
+               DIALOG(NIL, NIL, {"@Сообщение", "", ;
+                     "Пакет сформирован успешно !", ""}, {" Выход "})
+               EF_SYS->N_R := ASC(NUM_P)
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не удалось сформировать пакет !", ;
+                     "Попробуйте сформировать пакет еще раз !"}, {;
+                     " Выход "})
+
+            ENDIF
+
+            EF_SYS->(DBCOMMIT())
+            EF_SYS->(DBUNLOCK())
+
+         ENDIF
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Внимание !", "Нет ни одного платежа ", ;
+               " для отправки в ГБ !!"}, {" Выход "})
+
+      ENDIF
+
+      DBCLOSEALL()
+      WINCLOSE(WIN)
+      FERASE(("") + NAM_BAS + ".dbf")
+      SETCOLOR(OLDC)
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Внимание !", ;
+            "Ни по одному из платежей не требуется", ;
+            " отправка реестра в ГБ !!"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+
+RETURN .T.
+

@@ -1,0 +1,543 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CREATTBROW
+   Params: NTOP, NLEFT, NBOTTOM, NRIGHT, NAME, KBLOCK
+   Return: Array
+  Example: CREATTBROW(NTOP, NLEFT, NBOTTOM, NRIGHT, NAME, KBLOCK)
+  ..........................................................................
+*/
+
+FUNCTION CREATTBROW(NTOP, NLEFT, NBOTTOM, NRIGHT, NAME, KBLOCK)
+
+   LOCAL BROWSE := TBROWSEDB(NTOP, NLEFT, NBOTTOM, NRIGHT)
+   LOCAL COLUMN := TBCOLUMNNE(NIL, FIELDWBLOC(NAME, SELECT()))
+
+   BROWSE:ADDCOLUMN(COLUMN)
+   COLUMN:BLOCK := KBLOCK
+
+RETURN {BROWSE, COLUMN}
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CREATSTR
+   Params: X, Y, Z
+   Return: Undefined
+  Example: CREATSTR(X, Y, Z)
+  ..........................................................................
+*/
+
+FUNCTION CREATSTR(X, Y, Z)
+
+   LOCAL I := 0, J := Z[1]
+   LOCAL K, L
+
+   DO WHILE (++I) <= LEN(X)
+
+      K := VALTYPE((&(X[I] + Y[I])))
+
+      IF K == "N"
+
+         L := FIELDNUM(Y[I])
+         J := J + (STR((&(X[I] + Y[I])), FIELDSIZE(L), FIELDDECI(L)) + Z[I ;
+               + 1])
+
+      ELSEIF K == "D"
+
+         J := J + (DTOC((&(X[I] + Y[I]))) + Z[I + 1])
+
+      ELSEIF K == "L"
+
+         J := J + (IF((&(X[I] + Y[I])), ".T.", ".F.") + Z[I + 1])
+
+      ELSEIF K == "C"
+
+         J := J + ((&(X[I] + Y[I])) + Z[I + 1])
+
+      ENDIF
+
+   ENDDO
+
+
+RETURN J
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: USTANTBROW
+   Params: BROWSE, CLFON, CLCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US
+   Return: Logical
+  Example: USTANTBROW(BROWSE, CLFON, CLCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK,
+                       BL_PR_US)
+  ..........................................................................
+*/
+
+FUNCTION USTANTBROW(BROWSE, CLFON, CLCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+                     BL_PR_US)
+
+   BROWSE:SKIPBLOCK := {|X|SKIPPER(X, INDEXBLOCK, BL_PR_US)}
+   BROWSE:GOBOTTOMB := {||BOT(IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US)}
+   BROWSE:GOTOPBLOC := {||TOP(IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US)}
+   MEMVAR->COLORSP := CLFON + "," + CLCUR
+   BROWSE:COLORSPEC := IF(EMPTY(CLFON) .AND. EMPTY(CLCUR), SETCOLOR(), ;
+         COLORSP)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DBEMPTY
+   Params: None.
+   Return: Logical
+  Example: DBEMPTY()
+  ..........................................................................
+*/
+
+FUNCTION DBEMPTY()
+
+   IF RECNO() > LASTREC()
+
+      RETURN .T.
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NEWRECY
+   Params: BROWSE
+   Return: Undefined
+  Example: NEWRECY(BROWSE)
+  ..........................................................................
+*/
+
+FUNCTION NEWRECY(BROWSE)
+
+   LOCAL I, CURPOS, REC := RECNO()
+
+   CURPOS := BROWSE:ROWPOS() - 1 + BROWSE:NTOP()
+   I := CURPOS + 1
+
+   IF DBEMPTY()
+
+      I := BROWSE:NTOP()
+
+   ELSEIF CURPOS + 1 = BROWSE:NBOTTOM()
+
+      I := BROWSE:NBOTTOM()
+
+   ELSE
+
+      DBSKIP()
+
+      DO WHILE  .NOT. EOF() .AND. I < BROWSE:NBOTTOM()
+
+         IF IF(VALTYPE(BL_PR_US) = "B", EVAL(BL_PR_US), .T.) .AND. IF(;
+               VALTYPE(INDEXBLOCK) = "B", EVAL(INDEXBLOCK), .T.)
+
+            ++I
+
+         ENDIF
+
+         DBSKIP()
+
+      ENDDO
+
+   ENDIF
+
+   DBGOTO(REC)
+
+RETURN I
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RECCOLOR
+   Params: COL, BRO
+   Return: Logical
+  Example: RECCOLOR(COL, BRO)
+  ..........................................................................
+*/
+
+FUNCTION RECCOLOR(COL, BRO)
+
+   IF COL <> NIL
+
+      IF BRO = NIL
+
+         COLORWIN2(BROWSE:NTOP() + BROWSE:ROWPOS() - 1, BROWSE:NLEFT(), ;
+               BROWSE:NTOP() + BROWSE:ROWPOS() - 1, BROWSE:NRIGHT(), COL)
+
+      ELSE
+
+         COLORWIN2(BRO:NTOP() + BRO:ROWPOS() - 1, BRO:NLEFT(), BRO:NTOP() +;
+                BRO:ROWPOS() - 1, BRO:NRIGHT(), COL)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: REFRESH
+   Params: BRO
+   Return: Logical
+  Example: REFRESH(BRO)
+  ..........................................................................
+*/
+
+FUNCTION REFRESH(BRO)
+
+   BRO:REFRESHALL()
+
+   DO WHILE  .NOT. BRO:STABILIZE()
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SKIPPER
+   Params: N, INDEXBLOCK, BL_PR_US
+   Return: Undefined
+  Example: SKIPPER(N, INDEXBLOCK, BL_PR_US)
+  ..........................................................................
+*/
+
+FUNCTION SKIPPER(N, INDEXBLOCK, BL_PR_US)
+
+   LOCAL I := 0
+   LOCAL SH_SKIP := 0
+   LOCAL FL_BOF1, FL_BOF2
+
+   IF N == 0 .OR. LASTREC() == 0
+
+      DBSKIP(0)
+      RETURN I
+
+   ENDIF
+
+   IF N > 0 .AND. RECNO() <= LASTREC()
+
+      DO WHILE I < N .AND. IF(VALTYPE(INDEXBLOCK) = "B", EVAL(INDEXBLOCK), ;
+            .T.)
+
+         DBSKIP(1)
+         ++I
+         SH_SKIP := 0
+
+         DO WHILE  .NOT. EOF() .AND. IF(VALTYPE(BL_PR_US) = "B",  .NOT. ;
+               EVAL(BL_PR_US), .F.) .AND. IF(VALTYPE(INDEXBLOCK) = "B", ;
+               EVAL(INDEXBLOCK), .T.)
+
+            DBSKIP(1)
+            ++SH_SKIP
+
+         ENDDO
+
+         IF EOF() .OR. IF(VALTYPE(INDEXBLOCK) = "B",  .NOT. EVAL(;
+               INDEXBLOCK), .F.)
+
+            --I
+            DBSKIP(-1)
+
+            DO WHILE SH_SKIP <> 0 .AND. .NOT. BOF() .AND. IF(VALTYPE(;
+                  BL_PR_US) = "B",  .NOT. EVAL(BL_PR_US), .F.)
+
+               DBSKIP(-1)
+               --SH_SKIP
+
+            ENDDO
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+   ELSEIF N < 0
+
+      DO WHILE I > N .AND. IF(VALTYPE(INDEXBLOCK) = "B", EVAL(INDEXBLOCK), ;
+            .T.)
+
+         DBSKIP(-1)
+         IF(FL_BOF1 := BOF(), NIL, I--)
+         SH_SKIP := 0
+
+         DO WHILE  .NOT. FL_BOF1 .AND. IF(VALTYPE(BL_PR_US) = "B",  .NOT. ;
+               EVAL(BL_PR_US), .F.) .AND. IF(VALTYPE(INDEXBLOCK) = "B", ;
+               EVAL(INDEXBLOCK), .T.)
+
+            DBSKIP(-1)
+
+            IF FL_BOF2 := BOF()
+
+               DBSKIP(1)
+               ++I
+               EXIT
+
+            ELSE
+
+               ++SH_SKIP
+
+            ENDIF
+
+         ENDDO
+
+         IF IF(EMPTY(FL_BOF2), .F., FL_BOF2 )
+
+            DO WHILE SH_SKIP > 0 .AND. .NOT. EOF() .AND. IF(VALTYPE(;
+                  BL_PR_US) = "B",  .NOT. EVAL(BL_PR_US), .F.) .AND. IF(;
+                  VALTYPE(INDEXBLOCK) = "B", EVAL(INDEXBLOCK), .T.)
+
+               DBSKIP(1)
+               --SH_SKIP
+
+            ENDDO
+
+            EXIT
+
+         ENDIF
+
+         IF  .NOT. FL_BOF1 .AND. IF(VALTYPE(INDEXBLOCK) = "B",  .NOT. EVAL(;
+               INDEXBLOCK), .F.)
+
+            DBSKIP(1)
+            ++I
+
+            DO WHILE SH_SKIP > 0 .AND. IF(VALTYPE(BL_PR_US) = "B",  .NOT. ;
+                  EVAL(BL_PR_US), .F.)
+
+               DBSKIP(1)
+               --SH_SKIP
+
+            ENDDO
+
+            EXIT
+
+         ENDIF
+
+         IF FL_BOF1 .OR. IF(EMPTY(FL_BOF2), .F., FL_BOF2)
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+   ENDIF
+
+
+RETURN I
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BOT
+   Params: IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US
+   Return: Logical
+  Example: BOT(IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US)
+  ..........................................................................
+*/
+
+FUNCTION BOT(IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US)
+
+   LOCAL I, J
+
+   IF VALTYPE(INDEXBLOCK) = "B" .AND. VALTYPE(IKEY_BOT) <> "U"
+
+      I := VALTYPE(IKEY_BOT)
+
+      IF I == "N"
+
+         ++IKEY_BOT
+
+      ELSEIF I == "D"
+
+         ++IKEY_BOT
+
+      ELSEIF I == "L"
+
+         IF IKEY_BOT
+
+            DBGOBOTTOM()
+
+            IF IF(VALTYPE(BL_PR_US) = "B", EVAL(BL_PR_US), .T. )
+
+               RETURN .T.
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+         ELSE
+
+            IKEY_BOT := .T.
+
+         ENDIF
+
+      ELSEIF I == "C"
+
+         J := LEN(IKEY_BOT) + 1
+
+         DO WHILE (--J) >= 1
+
+            IF ASC(SUBSTR(IKEY_BOT, J, 1)) = 255
+
+               IKEY_BOT := SUBSTR(IKEY_BOT, 1, J - 1) + CHR(0) + SUBSTR(;
+                     IKEY_BOT, J + 1)
+
+            ELSE
+
+               IKEY_BOT := SUBSTR(IKEY_BOT, 1, J - 1) + CHR(ASC(SUBSTR(;
+                     IKEY_BOT, J, 1)) + 1) + SUBSTR(IKEY_BOT, J + 1)
+               EXIT
+
+            ENDIF
+
+         ENDDO
+
+         IF J == 0 .AND. ASC(SUBSTR(IKEY_BOT, 1, 1)) == 0
+
+            DBGOBOTTOM()
+
+            DO WHILE .T.
+
+               IF IF(VALTYPE(BL_PR_US) = "B", EVAL(BL_PR_US), .T. )
+
+                  RETURN .T.
+
+               ELSE
+
+                  DBSKIP(-1)
+
+                  IF BOF()
+
+                     RETURN .F.
+
+                  ENDIF
+
+               ENDIF
+
+            ENDDO
+
+         ENDIF
+
+      ENDIF
+
+      DBSEEK(IKEY_BOT, .T.)
+      DBSKIP(-1)
+
+      IF  .NOT. EVAL(INDEXBLOCK)
+
+         DBGOBOTTOM()
+         DBSKIP()
+         RETURN .F.
+
+      ENDIF
+
+      DO WHILE EVAL(INDEXBLOCK)
+
+         IF IF(VALTYPE(BL_PR_US) = "B", EVAL(BL_PR_US), .T. )
+
+            RETURN .T.
+
+         ELSE
+
+            DBSKIP(-1)
+
+            IF BOF()
+
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+      ENDDO
+
+   ELSE
+
+      DBGOBOTTOM()
+
+      DO WHILE .T.
+
+         IF IF(VALTYPE(BL_PR_US) = "B", EVAL(BL_PR_US), .T. )
+
+            RETURN .T.
+
+         ELSE
+
+            DBSKIP(-1)
+
+            IF BOF()
+
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+      ENDDO
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TOP
+   Params: IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US
+   Return: Logical
+  Example: TOP(IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US)
+  ..........................................................................
+*/
+
+FUNCTION TOP(IKEY_TOP, IKEY_BOT, INDEXBLOCK, BL_PR_US)
+
+   LOCAL REC := RECNO()
+
+   IF VALTYPE(INDEXBLOCK) = "B" .AND. IF(VALTYPE(IKEY_TOP) <> "U" .AND. ;
+         VALTYPE(IKEY_BOT) <> "U", IKEY_TOP = IKEY_BOT, .F.)
+
+      DBSEEK(IKEY_TOP)
+
+   ELSEIF VALTYPE(INDEXBLOCK) = "B" .AND. IF(VALTYPE(IKEY_TOP) <> "U" ;
+         .AND. VALTYPE(IKEY_BOT) <> "U", IKEY_TOP <> IKEY_BOT, .F.)
+
+      DBSEEK(IKEY_TOP, .T.)
+
+   ELSEIF VALTYPE(INDEXBLOCK) <> "B"
+
+      DBGOTOP()
+
+   ENDIF
+
+   IF IF(VALTYPE(INDEXBLOCK) = "B",  .NOT. EVAL(INDEXBLOCK), .F. )
+
+      DBGOTO(REC)
+      RETURN .F.
+
+   ENDIF
+
+   DO WHILE IF(VALTYPE(INDEXBLOCK) = "B", EVAL(INDEXBLOCK), .T. )
+
+      IF IF(VALTYPE(BL_PR_US) = "B", EVAL(BL_PR_US), .T. )
+
+         RETURN .T.
+
+      ELSE
+
+         DBSKIP()
+
+         IF EOF()
+
+            DBSKIP(-1)
+            DBGOTO(REC)
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+   ENDDO
+
+
+RETURN .T.
+

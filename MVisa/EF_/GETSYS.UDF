@@ -1,0 +1,875 @@
+STATIC S9_1
+STATIC S9_2 := .F.
+STATIC S9_3
+STATIC S9_4
+STATIC S9_5
+STATIC S9_6
+STATIC S9_7
+STATIC S9_9
+STATIC S9_10
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READMODAL
+   Params: P1, P2
+   Return: Logical
+  Example: READMODAL(P1, P2)
+  ..........................................................................
+*/
+
+FUNCTION READMODAL(P1, P2)
+
+   LOCAL L3, L4
+
+   IF VALTYPE(S9_1) == "B"
+
+      EVAL(S9_1)
+
+   ENDIF
+
+   IF EMPTY(P1)
+
+      SETPOS(MAXROW() - 1, 0)
+      RETURN .F.
+
+   ENDIF
+
+   L4 := CLEARGETSY()
+   S9_9 := PROCNAME(1)
+   S9_10 := PROCLINE(1)
+
+   IF  .NOT. (VALTYPE(P2) == "N" .AND. P2 > 0)
+
+      P2 := SETTLE(P1, 0)
+
+   ENDIF
+
+   DO WHILE  .NOT. P2 == 0
+
+      POSTACTIVE(L3 := P1[P2])
+
+      IF VALTYPE(L3:READER()) == "B"
+
+         EVAL(L3:READER(), L3)
+
+      ELSE
+
+         GETREADER(L3)
+
+      ENDIF
+
+      P2 := SETTLE(P1, P2)
+
+   ENDDO
+
+   RESTOREGET(L4)
+   SETPOS(MAXROW() - 1, 0)
+
+RETURN S9_2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLEARGETSY
+   Params: None.
+   Return: Array
+  Example: CLEARGETSY()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CLEARGETSY()
+
+   LOCAL L1[9]
+
+   L1[1] := S9_3
+   L1[2] := S9_4
+   L1[3] := S9_5
+   L1[4] := S9_6
+   L1[5] := S9_7
+   L1[6] := GETACTIVE(NIL)
+   L1[7] := READVAR("")
+   L1[8] := S9_9
+   L1[9] := S9_10
+   S9_3 := .F.
+   S9_4 := .F.
+   S9_5 := .F.
+   S9_6 := 0
+   S9_7 := 0
+   S9_9 := ""
+   S9_10 := 0
+   S9_2 := .F.
+
+RETURN L1
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETTLE
+   Params: P1, P2
+   Return: Number
+  Example: SETTLE(P1, P2)
+  ..........................................................................
+*/
+
+STATIC FUNCTION SETTLE(P1, P2)
+
+   LOCAL L3
+
+   IF P2 == 0
+
+      L3 := 2
+
+   ELSE
+
+      L3 := P1[P2]:EXITSTATE()
+
+   ENDIF
+
+   IF L3 == 7 .OR. L3 == 6
+
+      RETURN 0
+
+   ENDIF
+
+   IF  .NOT. L3 == 8
+
+      S9_7 := P2
+      S9_4 := .F.
+      S9_5 := .F.
+
+   ELSE
+
+      L3 := S9_6
+
+   ENDIF
+
+   DO CASE
+
+   CASE L3 == 1
+
+      --P2
+
+   CASE L3 == 2
+
+      ++P2
+
+   CASE L3 == 3
+
+      P2 := 1
+      S9_4 := .T.
+      L3 := 2
+
+   CASE L3 == 4
+
+      P2 := LEN(P1)
+      S9_5 := .T.
+      L3 := 1
+
+   CASE L3 == 5
+
+      ++P2
+
+   END CASE
+
+   IF P2 == 0
+
+      IF  .NOT. READEXIT() .AND. .NOT. S9_5
+
+         S9_4 := .T.
+         P2 := S9_7
+         L3 := 2
+
+      ENDIF
+
+   ELSEIF P2 == LEN(P1) + 1
+
+      IF  .NOT. READEXIT() .AND. .NOT. L3 == 5 .AND. .NOT. S9_4
+
+         S9_5 := .T.
+         P2 := S9_7
+         L3 := 1
+
+      ELSE
+
+         P2 := 0
+
+      ENDIF
+
+   ENDIF
+
+   S9_6 := L3
+
+   IF  .NOT. P2 == 0
+
+      P1[P2]:EXITSTATE := L3
+
+   ENDIF
+
+
+RETURN P2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: POSTACTIVE
+   Params: P1
+   Return: Undefined
+  Example: POSTACTIVE(P1)
+  ..........................................................................
+*/
+
+STATIC PROCEDURE POSTACTIVE(P1)
+
+   GETACTIVE(P1)
+   READVAR(GETREADVAR(P1))
+   SHOWSCOREB()
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RESTOREGET
+   Params: P1
+   Return: Undefined
+  Example: RESTOREGET(P1)
+  ..........................................................................
+*/
+
+STATIC PROCEDURE RESTOREGET(P1)
+
+   S9_3 := P1[1]
+   S9_4 := P1[2]
+   S9_5 := P1[3]
+   S9_6 := P1[4]
+   S9_7 := P1[5]
+   GETACTIVE(P1[6])
+   READVAR(P1[7])
+   S9_9 := P1[8]
+   S9_10 := P1[9]
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETPREVALI
+   Params: P1
+   Return: Variable
+  Example: GETPREVALI(P1)
+  ..........................................................................
+*/
+
+FUNCTION GETPREVALI(P1)
+
+   LOCAL L2, L3 := .T.
+
+   IF  .NOT. P1:PREBLOCK() == NIL
+
+      L2 := S9_2
+      L3 := EVAL(P1:PREBLOCK(), P1)
+      P1:DISPLAY()
+      SHOWSCOREB()
+      S9_2 := L2
+
+   ENDIF
+
+   IF S9_3
+
+      L3 := .F.
+      P1:EXITSTATE := 7
+
+   ELSEIF  .NOT. L3
+
+      P1:EXITSTATE := 8
+
+   ELSE
+
+      P1:EXITSTATE := 0
+
+   ENDIF
+
+
+RETURN L3
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETPOSTVAL
+   Params: P1
+   Return: Variable
+  Example: GETPOSTVAL(P1)
+  ..........................................................................
+*/
+
+FUNCTION GETPOSTVAL(P1)
+
+   LOCAL L2, L3 := .T.
+
+   IF P1:EXITSTATE() == 7
+
+      RETURN .T.
+
+   ENDIF
+
+   IF P1:BADDATE()
+
+      P1:HOME()
+      DATEMSG()
+      SHOWSCOREB()
+      RETURN .F.
+
+   ENDIF
+
+   IF P1:CHANGED()
+
+      P1:ASSIGN()
+      S9_2 := .T.
+
+   ENDIF
+
+   P1:RESET()
+
+   IF  .NOT. P1:POSTBLOCK() == NIL
+
+      L2 := S9_2
+      SETPOS(P1:ROW(), P1:COL() + LEN(P1:BUFFER()))
+      L3 := EVAL(P1:POSTBLOCK(), P1)
+      SETPOS(P1:ROW(), P1:COL())
+      SHOWSCOREB()
+      P1:UPDATEBUFF()
+      S9_2 := L2
+
+      IF S9_3
+
+         P1:EXITSTATE := 7
+         L3 := .T.
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN L3
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETDOSETKE
+   Params: P1, P2
+   Return: Undefined
+  Example: GETDOSETKE(P1, P2)
+  ..........................................................................
+*/
+
+PROCEDURE GETDOSETKE(P1, P2)
+
+   LOCAL L3
+
+   IF P2:CHANGED()
+
+      P2:ASSIGN()
+      S9_2 := .T.
+
+   ENDIF
+
+   L3 := S9_2
+   EVAL(P1, S9_9, S9_10, READVAR())
+   SHOWSCOREB()
+   P2:UPDATEBUFF()
+   S9_2 := L3
+
+   IF S9_3
+
+      P2:EXITSTATE := 7
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETAPPLYKE
+   Params: P1, P2
+   Return: Undefined
+  Example: GETAPPLYKE(P1, P2)
+  ..........................................................................
+*/
+
+PROCEDURE GETAPPLYKE(P1, P2)
+
+   LOCAL L3, L4
+
+   IF  .NOT. (L4 := SETKEY(P2)) == NIL
+
+      GETDOSETKE(L4, P1)
+      RETURN 
+
+   ENDIF
+
+   DO CASE
+
+   CASE P2 == 5
+
+      P1:EXITSTATE := 1
+
+   CASE P2 == 271
+
+      P1:EXITSTATE := 1
+
+   CASE P2 == 24
+
+      P1:EXITSTATE := 2
+
+   CASE P2 == 9
+
+      P1:EXITSTATE := 2
+
+   CASE P2 == 13
+
+      P1:EXITSTATE := 5
+
+   CASE P2 == 27
+
+      IF SET(28)
+
+         P1:UNDO()
+         P1:EXITSTATE := 7
+
+      ENDIF
+
+   CASE P2 == 18
+
+      P1:EXITSTATE := 6
+
+   CASE P2 == 3
+
+      P1:EXITSTATE := 6
+
+   CASE P2 == 29
+
+      P1:EXITSTATE := 3
+
+   CASE P2 == 23
+
+      P1:EXITSTATE := 6
+
+   CASE P2 == 22
+
+      SET(29,  .NOT. SET(29))
+      SHOWSCOREB()
+
+   CASE P2 == 21
+
+      P1:UNDO()
+
+   CASE P2 == 1
+
+      P1:HOME()
+
+   CASE P2 == 6
+
+      P1:END()
+
+   CASE P2 == 4
+
+      P1:RIGHT()
+
+   CASE P2 == 19
+
+      P1:LEFT()
+
+   CASE P2 == 2
+
+      P1:WORDRIGHT()
+
+   CASE P2 == 26
+
+      P1:WORDLEFT()
+
+   CASE P2 == 8
+
+      P1:BACKSPACE()
+
+   CASE P2 == 7
+
+      P1:DELETE()
+
+   CASE P2 == 20
+
+      P1:DELWORDRIG()
+
+   CASE P2 == 25
+
+      P1:DELEND()
+
+   CASE P2 == 127
+
+      P1:DELWORDLEF()
+
+   OTHERWISE
+
+      IF P2 >= 32 .AND. P2 <= 255
+
+         L3 := CHR(P2)
+
+         IF P1:TYPE() == "N" .AND. (L3 == "." .OR. L3 == ",")
+
+            P1:TODECPOS()
+
+         ENDIF
+
+         IF SET(29)
+
+            P1:INSERT(L3)
+
+         ELSE
+
+            P1:OVERSTRIKE(L3)
+
+         ENDIF
+
+         IF P1:TYPEOUT()
+
+            IF SET(26)
+
+               QQOUT(CHR(7))
+
+            ENDIF
+
+            IF  .NOT. SET(27)
+
+               P1:EXITSTATE := 5
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+   END CASE
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SHOWSCOREB
+   Params: None.
+   Return: Undefined
+  Example: SHOWSCOREB()
+  ..........................................................................
+*/
+
+STATIC PROCEDURE SHOWSCOREB()
+
+   LOCAL L1, L2
+
+   IF SET(32)
+
+      L1 := ROW()
+      L2 := COL()
+      SETPOS(0, 60)
+      DISPOUT(IF(SET(29), NATIONMSG(7), NATIONMSG(8)))
+      SETPOS(L1, L2)
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DATEMSG
+   Params: None.
+   Return: Undefined
+  Example: DATEMSG()
+  ..........................................................................
+*/
+
+STATIC PROCEDURE DATEMSG()
+
+   LOCAL L1, L2
+
+   IF SET(32)
+
+      L1 := ROW()
+      L2 := COL()
+      SETPOS(0, 60)
+      DISPOUT(NATIONMSG(9))
+      SETPOS(L1, L2)
+
+      DO WHILE NEXTKEY() == 0
+
+      ENDDO
+
+      SETPOS(0, 60)
+      DISPOUT(SPACE(LEN(NATIONMSG(9))))
+      SETPOS(L1, L2)
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETREADVAR
+   Params: P1
+   Return: String
+  Example: GETREADVAR(P1)
+  ..........................................................................
+*/
+
+STATIC FUNCTION GETREADVAR(P1)
+
+   LOCAL L2 := UPPER(P1:NAME())
+   LOCAL L3
+
+   IF  .NOT. P1:SUBSCRIPT() == NIL
+
+      FOR L3 := 1 TO LEN(P1:SUBSCRIPT())
+
+         L2 := L2 + ("[" + LTRIM(STR(P1:SUBSCRIPT()[L3])) + "]")
+
+      NEXT
+
+   ENDIF
+
+
+RETURN L2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READKILL
+   Params: P1
+   Return: Undefined
+  Example: READKILL(P1)
+  ..........................................................................
+*/
+
+FUNCTION READKILL(P1)
+
+   LOCAL L2 := S9_3
+
+   IF PCOUNT() > 0
+
+      S9_3 := P1
+
+   ENDIF
+
+
+RETURN L2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETREADER
+   Params: P1
+   Return: Undefined
+  Example: GETREADER(P1)
+  ..........................................................................
+*/
+
+PROCEDURE GETREADER(P1)
+
+   IF GETPREVALI(P1)
+
+      P1:SETFOCUS()
+
+      DO WHILE P1:EXITSTATE() == 0
+
+         IF P1:TYPEOUT()
+
+            P1:EXITSTATE := 5
+
+         ENDIF
+
+         DO WHILE P1:EXITSTATE() == 0
+
+            GETAPPLYKE(P1, INKEY(0))
+
+         ENDDO
+
+         IF  .NOT. GETPOSTVAL(P1)
+
+            P1:EXITSTATE := 0
+
+         ENDIF
+
+      ENDDO
+
+      P1:KILLFOCUS()
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READEXIT
+   Params: P1
+   Return: Undefined
+  Example: READEXIT(P1)
+  ..........................................................................
+*/
+
+FUNCTION READEXIT(P1)
+
+
+RETURN SET(30, P1)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETACTIVE
+   Params: P1
+   Return: Undefined
+  Example: GETACTIVE(P1)
+  ..........................................................................
+*/
+
+FUNCTION GETACTIVE(P1)
+
+   STATIC S9_8
+
+   LOCAL L2 := S9_8
+
+   IF PCOUNT() > 0
+
+      S9_8 := P1
+
+   ENDIF
+
+
+RETURN L2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: __SETFORMA
+   Params: P1
+   Return: Undefined
+  Example: __SETFORMA(P1)
+  ..........................................................................
+*/
+
+PROCEDURE __SETFORMA(P1)
+
+   S9_1 := IF(VALTYPE(P1) == "B", P1, NIL)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: __KILLREAD
+   Params: None.
+   Return: Undefined
+  Example: __KILLREAD()
+  ..........................................................................
+*/
+
+PROCEDURE __KILLREAD()
+
+   S9_3 := .T.
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: UPDATED
+   Params: None.
+   Return: Undefined
+  Example: UPDATED()
+  ..........................................................................
+*/
+
+FUNCTION UPDATED()
+
+
+RETURN S9_2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READINSERT
+   Params: P1
+   Return: Undefined
+  Example: READINSERT(P1)
+  ..........................................................................
+*/
+
+FUNCTION READINSERT(P1)
+
+
+RETURN SET(29, P1)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RANGECHECK
+   Params: P1, P2, P3, P4
+   Return: Logical
+  Example: RANGECHECK(P1, P2, P3, P4)
+  ..........................................................................
+*/
+
+FUNCTION RANGECHECK(P1, P2, P3, P4)
+
+   LOCAL L5, L6, L7, L8
+
+   IF  .NOT. P1:CHANGED()
+
+      RETURN .T.
+
+   ENDIF
+
+   L8 := P1:VARGET()
+
+   IF L8 >= P3 .AND. L8 <= P4
+
+      RETURN .T.
+
+   ENDIF
+
+   IF SET(32)
+
+      L5 := NATIONMSG(10) + LTRIM(TRANSFORM(P3, "")) + NATIONMSG(11) + ;
+            LTRIM(TRANSFORM(P4, ""))
+
+      IF LEN(L5) > MAXCOL()
+
+         L5 := SUBSTR(L5, 1, MAXCOL())
+
+      ENDIF
+
+      L6 := ROW()
+      L7 := COL()
+      SETPOS(0, MIN(60, MAXCOL() - LEN(L5)))
+      DISPOUT(L5)
+      SETPOS(L6, L7)
+
+      DO WHILE NEXTKEY() == 0
+
+      ENDDO
+
+      SETPOS(0, MIN(60, MAXCOL() - LEN(L5)))
+      DISPOUT(SPACE(LEN(L5)))
+      SETPOS(L6, L7)
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READUPDATE
+   Params: P1
+   Return: Undefined
+  Example: READUPDATE(P1)
+  ..........................................................................
+*/
+
+FUNCTION READUPDATE(P1)
+
+   LOCAL L2 := S9_2
+
+   IF PCOUNT() > 0
+
+      S9_2 := P1
+
+   ENDIF
+
+
+RETURN L2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READFORMAT
+   Params: P1
+   Return: Undefined
+  Example: READFORMAT(P1)
+  ..........................................................................
+*/
+
+FUNCTION READFORMAT(P1)
+
+   LOCAL L2 := S9_1
+
+   IF PCOUNT() > 0
+
+      S9_1 := P1
+
+   ENDIF
+
+
+RETURN L2
+

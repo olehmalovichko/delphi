@@ -1,0 +1,703 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: HIDDEN_OPE
+   Params: MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, DOP7, DOP8
+   Return: Logical
+  Example: HIDDEN_OPE(MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, DOP7, 
+                      DOP8)
+  ..........................................................................
+*/
+
+FUNCTION HIDDEN_OPE(MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, DOP7, ;
+                     DOP8)
+
+   LOCAL I, J, A2, A3, A4, A5, A6, A7, A8, A9, WIND
+
+   PRIVATE ERRNTX := ""
+
+   IF VALTYPE(MASFILES) = "A"
+
+      FOR I := 1 TO LEN(MASFILES)
+
+         IF(LEN(MASFILES[I]) < 2 .OR. MASFILES[I, 2] = NIL, A2 := .F., A2 ;
+               := MASFILES[I, 2])
+         IF(LEN(MASFILES[I]) < 3 .OR. MASFILES[I, 3] = NIL, A3 := 3, A3 := ;
+               MASFILES[I, 3])
+         IF(LEN(MASFILES[I]) < 4 .OR. MASFILES[I, 4] = NIL, A4 := NIL, A4 ;
+               := MASFILES[I, 4])
+         IF(LEN(MASFILES[I]) < 5 .OR. MASFILES[I, 5] = NIL, A5 := NIL, A5 ;
+               := MASFILES[I, 5])
+         IF(LEN(MASFILES[I]) < 6 .OR. MASFILES[I, 6] = NIL, A6 := NIL, A6 ;
+               := MASFILES[I, 6])
+         IF(LEN(MASFILES[I]) < 7 .OR. MASFILES[I, 7] = NIL, A7 := NIL, A7 ;
+               := MASFILES[I, 7])
+         IF(LEN(MASFILES[I]) < 8 .OR. MASFILES[I, 8] = NIL, A8 := NIL, A8 ;
+               := MASFILES[I, 8])
+         IF(LEN(MASFILES[I]) < 9 .OR. MASFILES[I, 9] = NIL, A9 := NIL, A9 ;
+               := MASFILES[I, 9])
+
+         IF  .NOT. BASEOPEN(MASFILES[I, 1], A2, A3, A4, A5, A6, A7, A8, A9,;
+                {|LMODE,CFNAME|AO_SEE(LMODE, CFNAME)})
+
+            IF LEN(ERRNTX) = 0
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть базу данных " + UPPER(MASFILES[I, 1] ;
+                     + ".DBF") + " !", ;
+                     "Проверьте сохранность файла базы данных"}, {;
+                     " Выход "})
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть индексный файл " + UPPER(ERRNTX), ;
+                     "для базы данных " + UPPER(MASFILES[I, 1] + ".DBF") + ;
+                     " !", "Проверьте сохранность файла индекса"}, {;
+                     " Выход "})
+
+            ENDIF
+
+            RETURN .F.
+
+         ENDIF
+
+      NEXT
+
+   ELSE
+
+      IF(DOP1 = NIL, DOP1 := .F., "")
+      IF(DOP2 = NIL, DOP2 := 3, "")
+      IF(DOP3 = NIL, DOP3 := NIL, "")
+      IF(DOP4 = NIL, DOP4 := NIL, "")
+      IF(DOP5 = NIL, DOP5 := NIL, "")
+      IF(DOP6 = NIL, DOP6 := NIL, "")
+      IF(DOP7 = NIL, DOP7 := NIL, "")
+      IF(DOP8 = NIL, DOP8 := NIL, "")
+
+      IF  .NOT. BASEOPEN(MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, ;
+            DOP7, DOP8, {|LMODE,CFNAME|AO_SEE(LMODE, CFNAME)})
+
+         IF LEN(ERRNTX) = 0
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть базу данных " +;
+                   UPPER(MASFILES + ".DBF") + " !", ;
+                  "Проверьте сохранность файла базы данных"}, {" Выход "})
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", ;
+                  "Не могу открыть индексный файл " + UPPER(ERRNTX), ;
+                  "для базы данных " + UPPER(MASFILES + ".DBF") + " !", ;
+                  "Проверьте сохранность файла индекса"}, {" Выход "})
+
+         ENDIF
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: AREA_OPEN
+   Params: MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, DOP7, DOP8
+   Return: Logical
+  Example: AREA_OPEN(MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, DOP7, 
+                     DOP8)
+  ..........................................................................
+*/
+
+FUNCTION AREA_OPEN(MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, DOP7, ;
+                    DOP8)
+
+   LOCAL I, J, A2, A3, A4, A5, A6, A7, A8, A9, WIND
+
+   PRIVATE ERRNTX := ""
+   WIND := MESS(NIL, NIL, {"Идет открытие баз данных", "Ждите ..."})
+
+   IF VALTYPE(MASFILES) = "A"
+
+      FOR I := 1 TO LEN(MASFILES)
+
+         IF(LEN(MASFILES[I]) < 2 .OR. MASFILES[I, 2] = NIL, A2 := .F., A2 ;
+               := MASFILES[I, 2])
+         IF(LEN(MASFILES[I]) < 3 .OR. MASFILES[I, 3] = NIL, A3 := 3, A3 := ;
+               MASFILES[I, 3])
+         IF(LEN(MASFILES[I]) < 4 .OR. MASFILES[I, 4] = NIL, A4 := NIL, A4 ;
+               := MASFILES[I, 4])
+         IF(LEN(MASFILES[I]) < 5 .OR. MASFILES[I, 5] = NIL, A5 := NIL, A5 ;
+               := MASFILES[I, 5])
+         IF(LEN(MASFILES[I]) < 6 .OR. MASFILES[I, 6] = NIL, A6 := NIL, A6 ;
+               := MASFILES[I, 6])
+         IF(LEN(MASFILES[I]) < 7 .OR. MASFILES[I, 7] = NIL, A7 := NIL, A7 ;
+               := MASFILES[I, 7])
+         IF(LEN(MASFILES[I]) < 8 .OR. MASFILES[I, 8] = NIL, A8 := NIL, A8 ;
+               := MASFILES[I, 8])
+         IF(LEN(MASFILES[I]) < 9 .OR. MASFILES[I, 9] = NIL, A9 := NIL, A9 ;
+               := MASFILES[I, 9])
+
+         IF  .NOT. BASEOPEN(MASFILES[I, 1], A2, A3, A4, A5, A6, A7, A8, A9,;
+                {|LMODE,CFNAME|AO_SEE(LMODE, CFNAME)})
+
+            WINCLOSE(WIND)
+
+            IF LEN(ERRNTX) = 0
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть базу данных " + UPPER(MASFILES[I, 1] ;
+                     + ".DBF") + " !", ;
+                     "Проверьте сохранность файла базы данных"}, {;
+                     " Выход "})
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть индексный файл " + UPPER(ERRNTX), ;
+                     "для базы данных " + UPPER(MASFILES[I, 1] + ".DBF") + ;
+                     " !", "Проверьте сохранность файла индекса"}, {;
+                     " Выход "})
+
+            ENDIF
+
+            RETURN .F.
+
+         ENDIF
+
+      NEXT
+
+   ELSE
+
+      IF(DOP1 = NIL, DOP1 := .F., "")
+      IF(DOP2 = NIL, DOP2 := 3, "")
+      IF(DOP3 = NIL, DOP3 := NIL, "")
+      IF(DOP4 = NIL, DOP4 := NIL, "")
+      IF(DOP5 = NIL, DOP5 := NIL, "")
+      IF(DOP6 = NIL, DOP6 := NIL, "")
+      IF(DOP7 = NIL, DOP7 := NIL, "")
+      IF(DOP8 = NIL, DOP8 := NIL, "")
+
+      IF  .NOT. BASEOPEN(MASFILES, DOP1, DOP2, DOP3, DOP4, DOP5, DOP6, ;
+            DOP7, DOP8, {|LMODE,CFNAME|AO_SEE(LMODE, CFNAME)})
+
+         WINCLOSE(WIND)
+
+         IF LEN(ERRNTX) = 0
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть базу данных " +;
+                   UPPER(MASFILES + ".DBF") + " !", ;
+                  "Проверьте сохранность файла базы данных"}, {" Выход "})
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", ;
+                  "Не могу открыть индексный файл " + UPPER(ERRNTX), ;
+                  "для базы данных " + UPPER(MASFILES + ".DBF") + " !", ;
+                  "Проверьте сохранность файла индекса"}, {" Выход "})
+
+         ENDIF
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   WINCLOSE(WIND)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BASEOPEN
+   Params: CDBASE, LOPENMODE, NSECONDS, PATH_, ALIA, LNTX_, LBASE_, 
+           NTXPATH_, LREADONLY, UB_
+   Return: Logical
+  Example: BASEOPEN(CDBASE, LOPENMODE, NSECONDS, PATH_, ALIA, LNTX_, 
+                    LBASE_, NTXPATH_, LREADONLY, UB_)
+  ..........................................................................
+*/
+
+FUNCTION BASEOPEN(CDBASE, LOPENMODE, NSECONDS, PATH_, ALIA, LNTX_, LBASE_, ;
+                   NTXPATH_, LREADONLY, UB_)
+
+   PRIVATE PATH_DBF, PATH_NTX
+   PRIVATE CDATABASE := CDBASE, USERBLOCK := UB_, ALI
+   PRIVATE LNTX, LBASE
+   PRIVATE BASENAME := "", BASESTR := ARRAY(0), NTXSTR := ARRAY(0), ;
+         INITSTR := ARRAY(0)
+   IF(NSECONDS = NIL, NSECONDS := 2, "")
+   IF(LOPENMODE = NIL, LOPENMODE := .F., "")
+   IF(LREADONLY = NIL, LREADONLY := .F., "")
+   IF(ALIA = NIL, MEMVAR->ALI := CDATABASE, MEMVAR->ALI := ALIA)
+   IF(PATH_ = NIL, MEMVAR->PATH_DBF := "", MEMVAR->PATH_DBF := PATH_)
+   IF(LNTX_ = NIL, MEMVAR->LNTX := .T., MEMVAR->LNTX := LNTX_)
+   IF(LBASE_ = NIL, MEMVAR->LBASE := .T., MEMVAR->LBASE := LBASE_)
+   IF(NTXPATH_ = NIL, MEMVAR->PATH_NTX := PATH_DBF, MEMVAR->PATH_NTX := ;
+         NTXPATH_)
+
+   IF SELECT(CDATABASE) <> 0
+
+      IF &((MEMVAR->ALI))->(INDEXORD()) > 0
+
+         &((MEMVAR->ALI))->(DBSETORDER(1))
+
+      ENDIF
+
+      &((MEMVAR->ALI))->(DBGOTOP())
+      RETURN .T.
+
+   ENDIF
+
+   DBASESTR()
+
+   IF FILE(PATH_DBF + CDATABASE + ".dbf")
+
+      IF LNTX
+
+         IF  .NOT. NALNTX()
+
+            IF  .NOT. LREADONLY
+
+               IF NETUSE(PATH_DBF + CDATABASE, .T., NSECONDS, ALI) .AND. ;
+                     OPENNTX()
+
+                  DBCLOSEARE()
+
+               ELSE
+
+                  RETURN .F.
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Не найден индекс по базе " +;
+                      ALLTRIM(UPPER(CDATABASE)) + " !", ;
+                     "Используемый метод доступа - "+CHR(34)+"read-only"+;
+                     CHR(34)+",", "и создать индекс невозможно"}, {;
+                     " Выход "})
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+         MEMVAR->USERBLOCK := NIL
+
+         IF NETUSE(PATH_DBF + CDATABASE, LOPENMODE, NSECONDS, ALI, ;
+               LREADONLY) .AND. OPENNTX(LREADONLY)
+
+            RETURN .T.
+
+         ENDIF
+
+      ELSEIF NETUSE(PATH_DBF + CDATABASE, .T., NSECONDS, ALI, LREADONLY)
+
+         RETURN .T.
+
+      ELSE
+
+         RETURN .F.
+
+      ENDIF
+
+   ELSEIF LBASE
+
+      IF  .NOT. LREADONLY
+
+         DELNTX()
+
+         IF CREATDBF()
+
+            DBCLOSEARE()
+
+            IF LNTX
+
+               IF NETUSE(PATH_DBF + CDATABASE, LOPENMODE, NSECONDS, ALI) ;
+                     .AND. OPENNTX()
+
+                  RETURN .T.
+
+               ENDIF
+
+            ELSEIF NETUSE(PATH_DBF + CDATABASE, LOPENMODE, NSECONDS, ALI)
+
+               RETURN .T.
+
+            ENDIF
+
+         ENDIF
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Не найден файл базы данных " + ;
+               ALLTRIM(UPPER(CDATABASE)) + ".DBF !", ;
+               "Используемый метод доступа - "+CHR(34)+"read-only"+CHR(34)+;
+               ",", "и создать БД невозможно"}, {" Выход "})
+
+      ENDIF
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не найден файл базы данных " + ;
+            ALLTRIM(UPPER(CDATABASE)) + ".DBF !", ;
+            "Создавать данную БД запрещено"}, {" Выход "})
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STRPACK
+   Params: ST
+   Return: Undefined
+  Example: STRPACK(ST)
+  ..........................................................................
+*/
+
+FUNCTION STRPACK(ST)
+
+   LOCAL LN := LEN(ST)
+
+
+RETURN PADR(UPPER(CHARREM(" ", ST)), LN)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETINDEX
+   Params: None.
+   Return: Logical
+  Example: SETINDEX()
+  ..........................................................................
+*/
+
+FUNCTION SETINDEX()
+
+   LOCAL I
+
+   IF LEN(ARRIND) > 0
+
+      IF(USERBLOCK <> NIL .AND. VALTYPE(USERBLOCK) == "B", EVAL(USERBLOCK, ;
+            0, LEN(ARRIND)), "")
+
+      FOR I := 1 TO LEN(ARRIND)
+
+         IF  .NOT. FILE(PATH_NTX + MEMVAR->ARRIND[I, 1])
+
+            IF MEMVAR->ARRIND[I, 2] = NIL
+
+               IF(USERBLOCK <> NIL .AND. VALTYPE(USERBLOCK) == "B", EVAL(;
+                     USERBLOCK, 2, MEMVAR->ARRIND[I, 1]), "")
+               RETURN .F.
+
+            ELSE
+
+               IF(USERBLOCK <> NIL .AND. VALTYPE(USERBLOCK) == "B", EVAL(;
+                     USERBLOCK, 1, MEMVAR->ARRIND[I, 1]), "")
+               DBCREATEIN(PATH_NTX + MEMVAR->ARRIND[I, 1], MEMVAR->ARRIND[I, ;
+                     2], {||(&(ARRIND[I, 2]))}, NIL)
+
+            ENDIF
+
+         ELSE
+
+            IF(USERBLOCK <> NIL .AND. VALTYPE(USERBLOCK) == "B", EVAL(;
+                  USERBLOCK, 3, MEMVAR->ARRIND[I, 1]), "")
+
+         ENDIF
+
+      NEXT
+
+      ORDLISTCLE()
+      ORDLISTADD(PATH_NTX + MEMVAR->ARRIND[1, 1])
+      ORDLISTADD(IF(LEN(ARRIND) > 1, PATH_NTX + MEMVAR->ARRIND[2, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 2, PATH_NTX + MEMVAR->ARRIND[3, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 3, PATH_NTX + MEMVAR->ARRIND[4, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 4, PATH_NTX + MEMVAR->ARRIND[5, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 5, PATH_NTX + MEMVAR->ARRIND[6, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 6, PATH_NTX + MEMVAR->ARRIND[7, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 7, PATH_NTX + MEMVAR->ARRIND[8, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 8, PATH_NTX + MEMVAR->ARRIND[9, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 9, PATH_NTX + MEMVAR->ARRIND[10, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 10, PATH_NTX + MEMVAR->ARRIND[11, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 11, PATH_NTX + MEMVAR->ARRIND[12, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 12, PATH_NTX + MEMVAR->ARRIND[13, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 13, PATH_NTX + MEMVAR->ARRIND[14, 1], ""))
+      ORDLISTADD(IF(LEN(ARRIND) > 14, PATH_NTX + MEMVAR->ARRIND[15, 1], ""))
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADDONEFLD
+   Params: FLDNAME, FLDTYPE, FLDLEN, FLDDEC
+   Return: Logical
+  Example: ADDONEFLD(FLDNAME, FLDTYPE, FLDLEN, FLDDEC)
+  ..........................................................................
+*/
+
+FUNCTION ADDONEFLD(FLDNAME, FLDTYPE, FLDLEN, FLDDEC)
+
+   PRIVATE AL_BASE := ALIAS(SELECT())
+
+   IF ADDREC(3)
+
+      ((MEMVAR->AL_BASE))->FIELD_NAME := FLDNAME
+      ((MEMVAR->AL_BASE))->FIELD_TYPE := FLDTYPE
+      ((MEMVAR->AL_BASE))->FIELD_LEN := FLDLEN
+      ((MEMVAR->AL_BASE))->FIELD_DEC := FLDDEC
+      RETURN .T.
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DBCLOSE
+   Params: ABASE
+   Return: Logical
+  Example: DBCLOSE(ABASE)
+  ..........................................................................
+*/
+
+FUNCTION DBCLOSE(ABASE)
+
+   LOCAL I
+
+   IF LEN(ABASE) > 0
+
+      FOR I := 1 TO LEN(ABASE)
+
+         (ABASE[I])->(DBCLOSEARE())
+
+      NEXT
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: AO_SEE
+   Params: LMODE, CFNAME
+   Return: Logical
+  Example: AO_SEE(LMODE, CFNAME)
+  ..........................................................................
+*/
+
+FUNCTION AO_SEE(LMODE, CFNAME)
+
+   IF LMODE = 2
+
+      MEMVAR->ERRNTX := UPPER(ALLTRIM(CFNAME))
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NALNTX
+   Params: None.
+   Return: Logical
+  Example: NALNTX()
+  ..........................................................................
+*/
+
+STATIC FUNCTION NALNTX()
+
+   LOCAL I
+
+   IF LEN(NTXSTR) > 0
+
+      FOR I := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+         IF  .NOT. FILE(PATH_NTX + MEMVAR->NTXSTR[1, I, 1])
+
+            RETURN .F.
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OPENNTX
+   Params: LREADONLY
+   Return: Logical
+  Example: OPENNTX(LREADONLY)
+  ..........................................................................
+*/
+
+STATIC FUNCTION OPENNTX(LREADONLY)
+
+   LOCAL I
+
+   PRIVATE ARRIND := ARRAY(0)
+
+   IF LEN(NTXSTR) > 0
+
+      FOR I := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+         AADD(ARRIND, MEMVAR->NTXSTR[1, I])
+
+      NEXT
+
+      IF LREADONLY <> NIL .AND. LREADONLY
+
+         FOR I := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+            MEMVAR->ARRIND[I, 2] := NIL
+
+         NEXT
+
+      ENDIF
+
+      IF  .NOT. SETINDEX()
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DELNTX
+   Params: None.
+   Return: Logical
+  Example: DELNTX()
+  ..........................................................................
+*/
+
+STATIC FUNCTION DELNTX()
+
+   LOCAL I
+
+   IF LEN(NTXSTR) > 0
+
+      FOR I := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+         IF MEMVAR->NTXSTR[1, I, 2] <> NIL .AND. .NOT. DELFILE(PATH_NTX + ;
+               MEMVAR->NTXSTR[1, I, 1], 3)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", ;
+                  "Не могу удалить старый индексный файл", CHR(34) + UPPER(;
+                  ALLTRIM(MEMVAR->NTXSTR[1, I, 1])) + CHR(34)}, {" Выход "})
+            DBCLOSEALL()
+            RETURN .F.
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CREATDBF
+   Params: None.
+   Return: Logical
+  Example: CREATDBF()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CREATDBF()
+
+   LOCAL FNAME := PATH_DBF + "tmp" + PADL(LTRIM(STR(RANDOM(), 5)), 5, "0") ;
+         + ".str"
+   LOCAL I
+
+   IF LEN(BASESTR) > 0
+
+      DBSELECTAR("0")
+      __DBCREATE(FNAME, NIL, NIL, .F., NIL)
+
+      IF  .NOT. FILE(FNAME)
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Невозможно создать структуру", ;
+               "для базы "+CHR(34) + ALLTRIM(UPPER(CDATABASE)) + CHR(34)+;
+               " !"}, {" Выход "})
+         RETURN .F.
+
+      ENDIF
+
+      FOR I := 1 TO LEN(MEMVAR->BASESTR[1])
+
+         IF MEMVAR->BASESTR[1, I] <> NIL .AND. .NOT. ADDONEFLD(MEMVAR->;
+               BASESTR[1, I, 1], MEMVAR->BASESTR[1, I, 2], MEMVAR->BASESTR[1,;
+                I, 3], IF(LEN(MEMVAR->BASESTR[1, I]) > 3, MEMVAR->BASESTR[1, ;
+               I, 4], 0))
+
+            RETURN .F.
+
+         ENDIF
+
+      NEXT
+
+      __DBCREATE(("") + PATH_DBF + CDATABASE + ".dbf", FNAME, NIL, .F., ;
+            NIL)
+      DBCOMMITAL()
+      DBCLOSEARE()
+      DELFILE(FNAME, 3)
+
+      IF  .NOT. FILE(PATH_DBF + CDATABASE + ".dbf")
+
+         ERROR(NIL, NIL, {"Ошибка при создании базы", CHR(34) + ALLTRIM(;
+               UPPER(CDATABASE)) + CHR(34)+" !"}, {" Выход "})
+         RETURN .F.
+
+      ELSEIF LEN(INITSTR) > 0
+
+         DBUSEAREA(.T., NIL, PATH_DBF + CDATABASE, "____TMP___", .F., .F.)
+
+         IF  .NOT. NETERR()
+
+            DBAPPEND()
+
+            FOR I := 1 TO LEN(MEMVAR->INITSTR[1])
+
+               &("____TMP___")->&(MEMVAR->INITSTR[1, I, 1]) := MEMVAR->;
+                     INITSTR[1, I, 2]
+
+            NEXT
+
+            DBCOMMITAL()
+            DBCLOSEARE()
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Невозможно инициализировать", ;
+                  "базу данных "+CHR(34) + UPPER(ALLTRIM(CDATABASE)) + CHR(;
+                  34)}, {" Выход "})
+            DBCLOSEARE()
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+   ELSE
+
+      ERROR(NIL, NIL, {"База данных "+CHR(34) + ALLTRIM(UPPER(CDATABASE)) +;
+             CHR(34)+" не существует", "и нет прав на ее создание !"}, {;
+            " Выход "})
+      RETURN .F.
+
+   ENDIF
+
+
+RETURN .T.
+

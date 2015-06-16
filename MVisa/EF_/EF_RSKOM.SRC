@@ -1,0 +1,1141 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PLAT_REEST
+   Params: None.
+   Return: Logical
+  Example: PLAT_REEST()
+  ..........................................................................
+*/
+
+FUNCTION PLAT_REEST()
+
+   LOCAL WIN, OLDC := SETCOLOR(), KEY, REC, RW, LEV, NUML, ARR_ := {}
+   LOCAL KWO_IT := 0, SUM_IT := 0, KOD_T := 0, DAT_, UD_IT := 0
+   LOCAL SC_V1, KWO_T := 0, SUM_T := 0, SCHET_V, OTD_T, UD_MFO := 0
+   LOCAL KWO_SC := 0, SUM_SC := 0, SC_T := 0, UD_SC := 0
+   LOCAL NAM_S, NAM_P, KWO_MFO := 0, SUM_MFO := 0, MFO_T := 0, UD_T := ;
+         0, N_D_M := 1000
+
+   PRIVATE FNAME := ""
+   KEY := DIALOG(NIL, NIL, {"", "Формировать реестр ?"}, {"   Нет  ", ;
+         "   Да  "})
+
+   IF KEY <> 2
+
+      RETURN .T.
+
+   ENDIF
+
+   IF  .NOT. AREA_OPEN({{"ef_jpkpl"}, {"ef_s_ppl"}, {"ef_s_pgb"}, {;
+         "ef_s_gpl"}, {"ef_s_tkp"}, {"ef_s_pr"}, {"ef_s_sc"}, {"ef_od"}, {;
+         "ef_doc"}, {"ef_sys"}, {"ef_bank"}})
+
+      DBCLOSEALL()
+      RETURN .F.
+
+   ENDIF
+
+   DBSELECTAR("ef_doc")
+   DBSETORDER(2)
+   DBSELECTAR("ef_s_ppl")
+   DBSETORDER(2)
+   DBSELECTAR("ef_jpkpl")
+   DBSETORDER(3)
+
+   IF EF_SYS->FL_REESTR
+
+      KEY := ERROR(NIL, NIL, {"@Внимание !", "Платежный реестр ", ;
+            "уже сформирован !!"}, {" Выход ", " Продолжить "})
+
+      IF KEY = 0 .OR. KEY = 1
+
+         RETURN .T.
+
+      ENDIF
+
+   ENDIF
+
+   IF EF_S_PR->(DBSEEK("тпк"))
+
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+      MEMVAR->SC_D := EF_S_SC->SC_NEW
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@Внимание !", "В справочнике проводок ", ;
+            "не найдена запись с кодом "+CHR(34)+"тпк"+CHR(34)+" "}, {;
+            " Выход "})
+      RETURN .T.
+
+   ENDIF
+
+   DBSELECTAR("ef_doc")
+   DBSETORDER(2)
+
+   IF EF_SYS->FL_REESTR
+
+      DEL_RES()
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 10, 15, 69, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, " Ждите, идет формирование реестров  ... ")
+   CENTR(NIL, 3, " Сканирование базы документов EF_JPKPL.DBF ", "gr+/w")
+   MEMVAR->LIN := INOTDEAD(4, 18)
+   DBSELECTAR("ef_s_gpl")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      MEMVAR->DAT_N := EF_S_GPL->DAT_LAST + 1
+
+      IF EMPTY(EF_S_GPL->KVO_DEN)
+
+         MEMVAR->DAT_K := DAT_OD__
+
+      ELSEIF EF_S_GPL->PR_PER .AND. EF_S_GPL->KVO_DEN > 1
+
+         MEMVAR->DAT_K := DAT_N
+
+         DO WHILE .T.
+
+            IF DAT_K + EF_S_GPL->KVO_DEN - 1 <= DAT_OD__
+
+               MEMVAR->DAT_K := DAT_K + EF_S_GPL->KVO_DEN - 1
+
+            ELSE
+
+               EXIT
+
+            ENDIF
+
+         ENDDO
+
+      ELSEIF  .NOT. EF_S_GPL->PR_B_K
+
+         MEMVAR->DAT_K := DAT_OD__ - EF_S_GPL->KVO_DEN
+
+         IF DAT_K < DAT_N
+
+            DBSKIP()
+            LOOP
+
+         ENDIF
+
+      ELSE
+
+         EF_OD->(DBGOBOTTOM())
+
+         FOR II := 1 TO EF_S_GPL->KVO_DEN - 1
+
+            EF_OD->(DBSKIP(-1))
+
+         NEXT
+
+         MEMVAR->DAT_K := EF_OD->DAT_OD
+
+         IF DAT_K < DAT_N
+
+            DBSKIP()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DBSELECTAR("ef_jpkpl")
+      DBSEEK(STR(EF_S_GPL->KOD_VPL, 3) + DTOS(DAT_N), .T.)
+
+      IF EF_JPKPL->DAT_BANK <= DAT_K .AND. EF_JPKPL->KOD_VPL = EF_S_GPL->;
+            KOD_VPL
+
+         DO WHILE EF_JPKPL->( .NOT. EOF()) .AND. EF_JPKPL->DAT_BANK <= DAT_K ;
+               .AND. EF_JPKPL->KOD_VPL = EF_S_GPL->KOD_VPL
+
+            EF_S_PPL->(DBSEEK(EF_JPKPL->KOD_POL))
+            EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+
+            IF STR(EF_S_TKP->PRC_TB, 7, 2) == STR(EF_S_TKP->PRC_TKB, 7, 2) ;
+                  .AND. STR(EF_S_TKP->PRC_TKB, 7, 2) == STR(EF_S_TKP->;
+                  PRC_TKP, 7, 2) .AND. ALLTRIM(STR(EF_S_TKP->MIN_TB, 7, 2)) ;
+                  == "0.00" .AND. ALLTRIM(STR(EF_S_TKP->MIN_TKB, 7, 2)) == ;
+                  "0.00" .AND. ALLTRIM(STR(EF_S_TKP->MIN_TKP, 7, 2)) == ;
+                  "0.00" .AND. .NOT. EF_S_TKP->PR_PR_S
+
+               MEMVAR->FFF := .T.
+
+            ELSE
+
+               MEMVAR->FFF := .F.
+
+            ENDIF
+
+            IF EF_S_GPL->PR_PVGB
+
+               MEMVAR->QQQ := ASCAN(ARR_, {|X|X[3] == EF_S_PPL->KOD_POL})
+
+               IF QQQ > 0
+
+               ELSE
+
+                  EF_S_PGB->(DBSEEK(STR(EF_S_GPL->KOD_VPL, 3)))
+                  AADD(ARR_, {EF_S_GPL->KOD_VPL, 1000, EF_S_PPL->KOD_POL, ;
+                        305299, EF_S_PGB->SC, DAT_N, DAT_K, EF_S_GPL->;
+                        PR_PVGB, FFF, EF_S_TKP->PRC_TB, EF_S_GPL->PR_TAR})
+
+               ENDIF
+
+            ELSE
+
+               MEMVAR->QQQ := ASCAN(ARR_, {|X|X[3] == EF_S_PPL->KOD_POL})
+
+               IF QQQ > 0
+
+               ELSE
+
+                  AADD(ARR_, {EF_S_GPL->KOD_VPL, EF_S_PPL->KOD_POL, EF_S_PPL->;
+                        KOD_POL, EF_S_PPL->MFO, EF_S_PPL->SC, DAT_N, DAT_K, ;
+                        EF_S_GPL->PR_PVGB, FFF, EF_S_TKP->PRC_TB, EF_S_GPL->;
+                        PR_TAR})
+
+               ENDIF
+
+            ENDIF
+
+            EF_JPKPL->(DBSKIP())
+
+         ENDDO
+
+      ENDIF
+
+      DBSELECTAR("ef_s_gpl")
+      DBSKIP()
+      MEMVAR->LIN := INOTDEAD(LIN)
+
+   ENDDO
+
+   ASORT(ARR_, NIL, NIL, {|X,Y|STR(X[4], 6) + STR(X[3], 3) < STR(Y[4], 6) +;
+          STR(Y[3], 3)})
+   MEMVAR->FNAME := REP_PATH__ + DTOS(DAT_OD__) + ".res"
+   SET(24, ("") + FNAME, .F.)
+   SET(25, 0)
+   SET(20, "PRINTER")
+   RW := PROW()
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"!"+CHR(1))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"!"+CHR(4))
+   RW := PROW() + 1
+   LEV := 0
+   MEMVAR->SS := 99999999999999
+   MEMVAR->MM := 999999
+   MEMVAR->PP := 9999
+   UD_IT := 0
+   KWO_IT := 0
+   SUM_IT := 0
+   DBSELECTAR("ef_jpkpl")
+   DBSETORDER(4)
+
+   FOR I := 1 TO LEN(ARR_)
+
+      IF MM <> ARR_[I, 4]
+
+         UD_MFO := 0
+         SUM_MFO := 0
+         KWO_MFO := 0
+
+         IF ARR_[I, 8]
+
+            EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+            MEMVAR->N_B := "КБ "+CHR(34)+"Приватбанк"+CHR(34)
+
+         ELSE
+
+            EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+            MEMVAR->N_B := EF_S_PPL->BANK
+
+         ENDIF
+
+         MEMVAR->MM := ARR_[I, 4]
+
+      ENDIF
+
+      IF PP <> ARR_[I, 2]
+
+         UD_SC := 0
+         SUM_SC := 0
+         KWO_SC := 0
+
+         IF ARR_[I, 8]
+
+            EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+            MEMVAR->N_PP := EF_S_PGB->NAM_POL
+            MEMVAR->SS := EF_S_PGB->SC
+            MEMVAR->PP := ARR_[I, 2]
+
+         ELSE
+
+            EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+            MEMVAR->N_PP := EF_S_PPL->NAM_POL
+            MEMVAR->SS := EF_S_PPL->SC
+            MEMVAR->PP := ARR_[I, 2]
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         RW := RW + 4
+         DEVPOS(RW++, 0)
+         DEVOUT("Платник   : " + KOD_B__ + "   " + NAM_B__ + "   р/р " + ;
+               SC_D + "   " + ALLTRIM(GOROD__))
+         DEVPOS(RW++, 0)
+         DEVOUT("Одержувач : " + ALLTRIM(N_PP) + "  " + STR(MM, 6) + "  " +;
+                ALLTRIM(N_B) + "  ")
+         DEVPOS(RW++, 0)
+         DEVOUT("               р/р " + STR(SS, 14))
+         ++RW
+         DEVPOS(RW++, 13)
+         DEVOUT("                            ПЛАТIЖНИЙ РЕЄCТР      ")
+         DEVPOS(RW++, 5)
+         DEVOUT(("") + DTOC(DAT_OD__) + ;
+               " р.                      ( платежi громадян )")
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "===================================================================================================";
+               )
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!  N док.  !            Платник                !  Розрахунк   !     Особистий    !      Сума      !";
+               )
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!          !                                   !   рахунок    !      рахунок     !                !";
+               )
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!=================================================================================================!";
+               )
+
+      ENDIF
+
+      EF_S_GPL->(DBSEEK(STR(ARR_[I, 1], 3)))
+      EF_JPKPL->(DBSEEK(STR(ARR_[I, 3], 3) + DTOS(ARR_[I, 6]), .T.))
+
+      DO WHILE EF_JPKPL->DAT_BANK <= ARR_[I, 7] .AND. EF_JPKPL->KOD_POL = ;
+            ARR_[I, 3] .AND. .NOT. EOF()
+
+         DEVPOS(RW++, 0)
+         DEVOUT("!" + EF_JPKPL->NUM_DOC + "!  " + EF_JPKPL->NAM_PLAT + ;
+               "   !" + STR(SS, 14) + "!" + EF_JPKPL->LS_PLAT + "!" + STR(;
+               EF_JPKPL->SUMMA, 16, 2) + "!")
+         SUM_IT := SUM_IT + EF_JPKPL->SUMMA
+         SUM_MFO := SUM_MFO + EF_JPKPL->SUMMA
+         SUM_SC := SUM_SC + EF_JPKPL->SUMMA
+         ++KWO_IT
+         ++KWO_MFO
+         ++KWO_SC
+
+         IF EF_JPKPL->PR_TAR .AND. .NOT. EF_JPKPL->PR_KOM
+
+            UD_SC := UD_SC + EF_JPKPL->SUM_KOM
+
+         ENDIF
+
+         EF_JPKPL->(DBSKIP())
+         SET(20, "SCREEN")
+         MEMVAR->LIN := INOTDEAD(LIN)
+         SET(20, "PRINTER")
+
+      ENDDO
+
+      IF LEN(ARR_) < I + 1 .OR. ARR_[I + 1, 4] <> MM .OR. ARR_[I + 1, 2] ;
+            <> PP
+
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!=================================================================================================!";
+               )
+
+         IF ARR_[I, 9]
+
+            UD_SC := ROUND(SUM_SC * ARR_[I, 10] / 100, 2)
+            DEVPOS(RW++, 0)
+            DEVOUT("! Разом по рахунку " + STR(ARR_[I, 5], 14) + ;
+                  "                               сума прийнята   - " + ;
+                  STR(SUM_SC, 16, 2) + "!")
+            DEVPOS(RW++, 0)
+            DEVOUT("! документiв : " + STR(KWO_SC, 4) + "     " + ;
+                  "   тариф :" + STR(ARR_[I, 10], 7, 2) + ;
+                  "%                    сума вiдрахування - " + STR(UD_SC, ;
+                  16, 2) + "!")
+            DEVPOS(RW++, 0)
+            DEVOUT(;
+                  "!                                                             для перерахування - ";
+                   + STR(SUM_SC - UD_SC, 16, 2) + "!")
+
+         ELSE
+
+            DEVPOS(RW++, 0)
+            DEVOUT("! Разом по рахунку " + STR(ARR_[I, 5], 14) + ;
+                  "                               сума прийнята   - " + ;
+                  STR(SUM_SC, 16, 2) + "!")
+            DEVPOS(RW++, 0)
+            DEVOUT("! документiв : " + STR(KWO_SC, 4) + ;
+                  "                                           сума вiдрахування - ";
+                   + STR(UD_SC, 16, 2) + "!")
+            DEVPOS(RW++, 0)
+            DEVOUT(;
+                  "!                                                             для перерахування - ";
+                   + STR(SUM_SC - UD_SC, 16, 2) + "!")
+
+         ENDIF
+
+         UD_IT := UD_IT + UD_SC
+         UD_MFO := UD_MFO + UD_SC
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!=================================================================================================!";
+               )
+         RW := RW + 2
+         DEVPOS(RW++, 0)
+         DEVOUT("   Бухгалтер ")
+         RW := RW + 2
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               " -------------------------------------------------------------------------------------------------";
+               )
+         EF_S_GPL->(DBSEEK(STR(ARR_[I, 1], 3)))
+         EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+         EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+
+         IF EF_SYS->(RECLOCK(3)) .AND. EF_DOC->(ADDREC(3))
+
+            MEMVAR->NPP := EF_SYS->N_PP + 1
+            EF_DOC->TIP_DOC := "м"
+            EF_DOC->VID_OP := "06"
+            EF_DOC->NUM_DOC := NPP
+            EF_DOC->DAT_KL := DAT_OD__
+            EF_DOC->DAT_BANK := DAT_OD__
+            EF_DOC->SUMMA := SUM_SC - UD_SC
+            EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+            EF_DOC->NAM_DT := EF_S_SC->NAM_SC
+            EF_DOC->BANK_DT := NAM_B__
+            EF_DOC->MFO_DT := KOD_B__
+            EF_DOC->SC_DT := EF_S_SC->SC_NEW
+            EF_DOC->INDEX_DT := STR(POST_IND__, 6)
+            EF_DOC->OKPO_DT := KOD_OKPO__
+
+            IF EF_S_GPL->PR_PVGB
+
+               EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+
+               IF ALLTRIM(KOD_B__) == EF_BANK->MFO_PS .AND. VAL(KOD_OTD__) ;
+                     > 199
+
+                  EF_S_SC->(DBSEEK("ксг" + KOD_VUAH__))
+                  MEMVAR->N_B := NAM_B__ + NAM_FIL__
+                  MEMVAR->MFO_ := VAL(KOD_B__)
+                  MEMVAR->N_S := EF_S_SC->NAM_SC
+                  MEMVAR->SC_ := VAL(EF_S_SC->SC_NEW)
+                  MEMVAR->OSN_ := "Для зарах. на рах. " + STR(EF_S_PGB->SC, ;
+                        14) + " згiдно реєстру вiд " + DTOC(DAT_OD__) + ;
+                        " р."
+                  MEMVAR->OKPO_ := VAL(KOD_OKPO__)
+
+               ELSE
+
+                  MEMVAR->N_B := "КБ "+CHR(34)+"Приватбанк"+CHR(34)
+                  MEMVAR->MFO_ := 305299
+                  MEMVAR->N_S := EF_S_PGB->NAM_POL
+                  MEMVAR->SC_ := EF_S_PGB->SC
+                  MEMVAR->OSN_ := EF_S_GPL->OSN
+                  MEMVAR->OKPO_ := 0
+
+               ENDIF
+
+            ELSE
+
+               EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+               MEMVAR->N_B := EF_S_PPL->BANK
+               MEMVAR->MFO_ := EF_S_PPL->MFO
+               MEMVAR->N_S := EF_S_PPL->NAM_POL
+               MEMVAR->SC_ := EF_S_PPL->SC
+               MEMVAR->OKPO_ := EF_S_PPL->KOD_OKPO
+               MEMVAR->OSN_ := EF_S_GPL->OSN
+
+            ENDIF
+
+            EF_DOC->NAM_KT := N_S
+            EF_DOC->BANK_KT := N_B
+            EF_DOC->MFO_KT := STR(MFO_, 6)
+            EF_DOC->SC_KT := STR(SC_, 14)
+            EF_DOC->OKPO_KT := STR(OKPO_, 8)
+            EF_DOC->OSN := OSN_
+            EF_DOC->FIO_OP := FIO_OP__
+            EF_DOC->KOD_V := KOD_VUAH__
+            EF_DOC->FL_INF := .F.
+            EF_SYS->N_PP := NPP
+            EF_DOC->(DBUNLOCK())
+            EF_DOC->(DBCOMMIT())
+            EF_SYS->(DBUNLOCK())
+            EF_SYS->(DBCOMMIT())
+
+         ENDIF
+
+         DBCOMMITAL()
+         EF_S_GPL->(DBSEEK(STR(ARR_[I, 1], 3)))
+
+         IF EF_S_GPL->(RECLOCK(3))
+
+            EF_S_GPL->DAT_LAST := ARR_[I, 7]
+            EF_S_GPL->DAT_BANK := DAT_OD__
+            EF_S_GPL->(DBUNLOCK())
+            EF_S_GPL->(DBCOMMIT())
+
+         ENDIF
+
+      ENDIF
+
+      IF LEN(ARR_) < I + 1 .OR. ARR_[I + 1, 4] <> MM
+
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!=================================================================================================!";
+               )
+         DEVPOS(RW++, 0)
+         DEVOUT("! Разом по МФО  : " + STR(ARR_[I, 4], 6) + ;
+               "                                       сума прийнята    - ";
+                + STR(SUM_MFO, 16, 2) + "!")
+         DEVPOS(RW++, 0)
+         DEVOUT("! документiв : " + STR(KWO_MFO, 4) + ;
+               "                                           сума вiдрахування - ";
+                + STR(UD_MFO, 16, 2) + "!")
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!                                                             для перерахування - ";
+                + STR(SUM_MFO - UD_MFO, 16, 2) + "!")
+         DEVPOS(RW++, 0)
+         DEVOUT(;
+               "!=================================================================================================!";
+               )
+         RW := RW + 2
+
+      ENDIF
+
+   NEXT
+
+   DEVPOS(RW++, 0)
+   DEVOUT(;
+         "!=================================================================================================!";
+         )
+   DEVPOS(RW++, 0)
+   DEVOUT("! Разом документiв : " + STR(KWO_IT, 4) + ;
+         "                                      сума прийнята    - " + STR(;
+         SUM_IT, 16, 2) + "!")
+   DEVPOS(RW++, 0)
+   DEVOUT(;
+         "!                                                             сума вiдрахування - ";
+          + STR(UD_IT, 16, 2) + "!")
+   DEVPOS(RW++, 0)
+   DEVOUT(;
+         "!                                                           для перерахування   - ";
+          + STR(SUM_IT - UD_IT, 16, 2) + "!")
+   DEVPOS(RW++, 0)
+   DEVOUT(;
+         "!=================================================================================================!";
+         )
+   RW := RW + 2
+   DEVPOS(RW++, 13)
+   DEVOUT(" Бухгалтер     _______________")
+   SET(24, "")
+   SET(20, "SCREEN")
+   EF_SYS->(RECLOCK(3))
+   EF_SYS->FL_REESTR := .T.
+   EF_SYS->(DBUNLOCK())
+   DBCOMMITAL()
+   EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+   EF_DOC->(DBSEEK(DTOS(DAT_OD__) + EF_S_SC->SC_NEW))
+   MEMVAR->NAME_F := DTOS(DAT_OD__)
+   SET(24, ("") + ALLTRIM(REP_PATH__) + NAME_F + ".mo", .F.)
+
+   DO WHILE EF_DOC->DAT_BANK == DAT_OD__ .AND. EF_DOC->SC_DT == EF_S_SC->;
+         SC_NEW .AND. EF_DOC->( .NOT. EOF())
+
+      V_PV_MO1()
+      EF_DOC->(DBSKIP())
+
+   ENDDO
+
+   SET(24, "")
+   SET(20, "SCREEN")
+   WINCLOSE(WIN)
+   DIALOG(NIL, NIL, {"", " Платежные реестры и", ;
+         "соответствующие проводки ", "сформированы !!!"}, {;
+         " ~П~родолжить "})
+   SETCOLOR(OLDC)
+
+   IF FILE(("") + FNAME)
+
+      FILEVIEW(1, 0, 23, 79, FNAME, "@ Плaтежные реестры : " + FILENAMES(;
+            FNAME) + " ", {||PRINTPVD()}, {"~Esc-~выход", "~F2-~печать"})
+
+   ENDIF
+
+   MEMVAR->PPPP := .F.
+
+   FOR I := 1 TO LEN(ARR_)
+
+      IF ARR_[I, 8]
+
+         MEMVAR->PPPP := .T.
+
+      ENDIF
+
+   NEXT
+
+   IF PPPP
+
+      MEMVAR->FNAME := REP_PATH__ + "YR" + EF_BANK->BRANCH + ZERO_STR(DOY(;
+            DAT_OD__), 3) + "." + IF(EMPTY(EF_BANK->KOD_PVN), "txt", ;
+            EF_BANK->KOD_PVN)
+      SET(24, ("") + FNAME, .F.)
+      SET(25, 0)
+      SET(20, "PRINTER")
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(1))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      RW := PROW() + 1
+      LEV := 0
+      MEMVAR->SS := 99999999999999
+      MEMVAR->MM := 999999
+      MEMVAR->PP := 9999
+      UD_IT := 0
+      KWO_IT := 0
+      SUM_IT := 0
+      DBSELECTAR("ef_jpkpl")
+      DBSETORDER(4)
+
+      FOR I := 1 TO LEN(ARR_)
+
+         IF ARR_[I, 8]
+
+            IF MM <> ARR_[I, 4]
+
+               UD_MFO := 0
+               SUM_MFO := 0
+               KWO_MFO := 0
+
+               IF ARR_[I, 8]
+
+                  EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+                  MEMVAR->N_B := "КБ "+CHR(34)+"Приватбанк"+CHR(34)
+
+               ELSE
+
+                  EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+                  MEMVAR->N_B := EF_S_PPL->BANK
+
+               ENDIF
+
+               MEMVAR->MM := ARR_[I, 4]
+
+            ENDIF
+
+            IF PP <> ARR_[I, 2]
+
+               UD_SC := 0
+               SUM_SC := 0
+               KWO_SC := 0
+
+               IF ARR_[I, 8]
+
+                  EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+                  MEMVAR->N_PP := EF_S_PGB->NAM_POL
+                  MEMVAR->SS := EF_S_PGB->SC
+                  MEMVAR->PP := ARR_[I, 2]
+
+               ELSE
+
+                  EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+                  MEMVAR->N_PP := EF_S_PPL->NAM_POL
+                  MEMVAR->SS := EF_S_PPL->SC
+                  MEMVAR->PP := ARR_[I, 2]
+
+               ENDIF
+
+               SET(20, "PRINTER")
+               RW := RW + 4
+               DEVPOS(RW++, 0)
+               DEVOUT("Платник   : " + KOD_B__ + "   " + NAM_B__ + ;
+                     "   р/р " + SC_D + "   " + ALLTRIM(GOROD__))
+               DEVPOS(RW++, 0)
+               DEVOUT("Одержувач : " + ALLTRIM(N_PP) + "  " + STR(MM, 6) + ;
+                     "  " + ALLTRIM(N_B) + "  ")
+               DEVPOS(RW++, 0)
+               DEVOUT("               р/р " + STR(SS, 14))
+               ++RW
+               DEVPOS(RW++, 13)
+               DEVOUT("                            ПЛАТIЖНИЙ РЕЄCТР      ")
+               DEVPOS(RW++, 5)
+               DEVOUT(("") + DTOC(DAT_OD__) + ;
+                     " р.                      ( платежi громадян )")
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "===================================================================================================";
+                     )
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!  N док.  !            Платник                !  Розрахунк   !     Особистий    !      Сума      !";
+                     )
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!          !                                   !   рахунок    !      рахунок     !                !";
+                     )
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!=================================================================================================!";
+                     )
+
+            ENDIF
+
+            EF_S_GPL->(DBSEEK(STR(ARR_[I, 1], 3)))
+            EF_JPKPL->(DBSEEK(STR(ARR_[I, 3], 3) + DTOS(ARR_[I, 6]), .T.))
+
+            DO WHILE EF_JPKPL->DAT_BANK <= ARR_[I, 7] .AND. EF_JPKPL->;
+                  KOD_POL = ARR_[I, 3] .AND. .NOT. EOF()
+
+               DEVPOS(RW++, 0)
+               DEVOUT("!" + EF_JPKPL->NUM_DOC + "!  " + EF_JPKPL->NAM_PLAT + ;
+                     "   !" + STR(SS, 14) + "!" + EF_JPKPL->LS_PLAT + "!" + ;
+                     STR(EF_JPKPL->SUMMA, 16, 2) + "!")
+               SUM_IT := SUM_IT + EF_JPKPL->SUMMA
+               SUM_MFO := SUM_MFO + EF_JPKPL->SUMMA
+               SUM_SC := SUM_SC + EF_JPKPL->SUMMA
+               ++KWO_IT
+               ++KWO_MFO
+               ++KWO_SC
+
+               IF EF_JPKPL->PR_TAR .AND. .NOT. EF_JPKPL->PR_KOM
+
+                  UD_SC := UD_SC + EF_JPKPL->SUM_KOM
+                  UD_IT := UD_IT + EF_JPKPL->SUM_KOM
+                  UD_MFO := UD_MFO + EF_JPKPL->SUM_KOM
+
+               ENDIF
+
+               EF_JPKPL->(DBSKIP())
+               SET(20, "SCREEN")
+               MEMVAR->LIN := INOTDEAD(LIN)
+               SET(20, "PRINTER")
+
+            ENDDO
+
+            IF LEN(ARR_) < I + 1 .OR. ARR_[I + 1, 4] <> MM .OR. ARR_[I + 1,;
+                   2] <> PP
+
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!=================================================================================================!";
+                     )
+               DEVPOS(RW++, 0)
+               DEVOUT("! Разом по рахунку " + STR(ARR_[I, 5], 14) + ;
+                     "                               сума прийнята   - " + ;
+                     STR(SUM_SC, 16, 2) + "!")
+               DEVPOS(RW++, 0)
+               DEVOUT("! документiв : " + STR(KWO_SC, 4) + ;
+                     "                                           сума вiдрахування - ";
+                      + STR(UD_SC, 16, 2) + "!")
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!                                                             для перерахування - ";
+                      + STR(SUM_SC - UD_SC, 16, 2) + "!")
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!=================================================================================================!";
+                     )
+               RW := RW + 2
+               DEVPOS(RW++, 0)
+               DEVOUT("   Бухгалтер ")
+               RW := RW + 2
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     " -------------------------------------------------------------------------------------------------";
+                     )
+               EF_S_GPL->(DBSEEK(STR(ARR_[I, 1], 3)))
+               EF_S_PGB->(DBSEEK(STR(ARR_[I, 1], 3)))
+               EF_S_PPL->(DBSEEK(ARR_[I, 3]))
+
+            ENDIF
+
+            IF LEN(ARR_) < I + 1 .OR. ARR_[I + 1, 4] <> MM
+
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!=================================================================================================!";
+                     )
+               DEVPOS(RW++, 0)
+               DEVOUT("! Разом по МФО  : " + STR(ARR_[I, 4], 6) + ;
+                     "                                       сума прийнята    - ";
+                      + STR(SUM_MFO, 16, 2) + "!")
+               DEVPOS(RW++, 0)
+               DEVOUT("! документiв : " + STR(KWO_MFO, 4) + ;
+                     "                                           сума вiдрахування - ";
+                      + STR(UD_MFO, 16, 2) + "!")
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!                                                             для перерахування - ";
+                      + STR(SUM_MFO - UD_MFO, 16, 2) + "!")
+               DEVPOS(RW++, 0)
+               DEVOUT(;
+                     "!=================================================================================================!";
+                     )
+               RW := RW + 2
+
+            ENDIF
+
+         ENDIF
+
+      NEXT
+
+      DEVPOS(RW++, 0)
+      DEVOUT(;
+            "!=================================================================================================!";
+            )
+      DEVPOS(RW++, 0)
+      DEVOUT("! Разом документiв : " + STR(KWO_IT, 4) + ;
+            "                                      сума прийнята    - " + ;
+            STR(SUM_IT, 16, 2) + "!")
+      DEVPOS(RW++, 0)
+      DEVOUT(;
+            "!                                                             сума вiдрахування - ";
+             + STR(UD_IT, 16, 2) + "!")
+      DEVPOS(RW++, 0)
+      DEVOUT(;
+            "!                                                           для перерахування   - ";
+             + STR(SUM_IT - UD_IT, 16, 2) + "!")
+      DEVPOS(RW++, 0)
+      DEVOUT(;
+            "!=================================================================================================!";
+            )
+      RW := RW + 2
+      DEVPOS(RW++, 13)
+      DEVOUT(" Бухгалтер     _______________")
+      SET(24, "")
+      SET(20, "SCREEN")
+      DIALOG(NIL, NIL, {"", " Сформирован платежные реестр", ;
+            "для головного банка ", "файл " + FNAME, ;
+            "не забудте отправить !!!"}, {" ~П~родолжить "})
+
+   ENDIF
+
+   DBCLOSEALL()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DEL_RES
+   Params: None.
+   Return: Logical
+  Example: DEL_RES()
+  ..........................................................................
+*/
+
+STATIC FUNCTION DEL_RES()
+
+   LOCAL S_K, S_D, M_K, M_D
+
+   DBSELECTAR("ef_s_gpl")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF EF_S_GPL->DAT_BANK = DAT_OD__
+
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+         M_D := KOD_B__
+         S_D := EF_S_SC->SC_NEW
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+         M_K := KOD_B__
+         S_K := EF_S_SC->SC_NEW
+         SET(11, "OFF")
+         EF_DOC->(DBSEEK(DTOS(DAT_OD__) + S_D + PADR(M_D, 9)))
+
+         DO WHILE DTOS(DAT_OD__) + S_D + PADR(M_D, 9) == DTOS(EF_DOC->;
+               DAT_BANK) + EF_DOC->SC_DT + EF_DOC->MFO_DT .AND. EF_DOC->( ;
+               .NOT. EOF())
+
+            IF S_K + PADR(M_K, 9) <> EF_DOC->SC_KT + EF_DOC->MFO_KT
+
+               EF_DOC->(RECLOCK(3))
+               EF_DOC->(DBDELETE())
+               EF_DOC->(DBUNLOCK())
+               EF_DOC->(DBSKIP())
+
+            ENDIF
+
+         ENDDO
+
+         SET(11, "ON")
+
+         IF EF_S_GPL->(RECLOCK(3))
+
+            EF_S_GPL->DAT_LAST := EF_S_GPL->DAT_PD
+            EF_S_GPL->(DBUNLOCK())
+
+         ENDIF
+
+         DBCOMMITAL()
+
+      ENDIF
+
+      DBSELECTAR("ef_s_gpl")
+      DBSKIP()
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_PV_MO1
+   Params: None.
+   Return: Logical
+  Example: V_PV_MO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION V_PV_MO1()
+
+   LOCAL WIN, RW, I, NB := CHR(34) + ALIAS() + CHR(34)
+   LOCAL SUMPROP := ""
+   LOCAL CL, NN
+
+   SET(25, 3)
+   SET(20, "PRINTER")
+   RW := PROW()
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"@")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"x" + CHR(0))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"!"+CHR(4))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"3"+CHR(25))
+   RW := RW + 3
+
+   FOR I := 1 TO 1
+
+      DEVPOS(RW + 0, 58)
+      DEVOUT(;
+            "--------------------------                         ---------------------";
+            )
+      DEVPOS(RW + 1, 16)
+      DEVOUT("М Е М О Р I А Л Ь Н И Й   О Р Д Е Р  N    !       " + STR(;
+            EF_DOC->NUM_DOC, 10) + ;
+            "       !                         !      0401009      !")
+      DEVPOS(RW + 2, 58)
+      DEVOUT(;
+            "--------------------------                         ---------------------";
+            )
+      CL := INT((130 - LEN(ZERO_STR(DAY(EF_DOC->DAT_BANK), 2) + " " + ;
+            CMONTHUI(EF_DOC->DAT_BANK) + " " + STR(YEAR(EF_DOC->DAT_BANK), 4);
+             + " г.")) / 2)
+      DEVPOS(RW + 4, CL)
+      DEVOUT(ZERO_STR(DAY(EF_DOC->DAT_BANK), 2) + " " + CMONTHUI(EF_DOC->;
+            DAT_BANK) + " " + STR(YEAR(EF_DOC->DAT_BANK), 4) + " р.")
+      DEVPOS(RW + 6, 0)
+      DEVOUT("Платник   : " + EF_DOC->NAM_DT)
+      DEVPOS(RW + 6, 90)
+      DEVOUT("Д Е Б Е Т              С у м а  ")
+      DEVPOS(RW + 7, 83)
+      DEVOUT("===============================================")
+      DEVPOS(RW + 8, 0)
+      DEVOUT(;
+            "----------------------------                                                       !                      !                      !";
+            )
+      DEVPOS(RW + 9, 0)
+      DEVOUT("! Код   " + ALLTRIM(KOD_OKPO__) + ;
+            "           !                                                       !    ";
+             + EF_DOC->SC_DT + "    !                      !")
+      DEVPOS(RW + 10, 0)
+      DEVOUT(;
+            "-----------------------------------------------------------------==================!                      !                      !";
+            )
+      DEVPOS(RW + 11, 65)
+      DEVOUT(;
+            "!                 !рах. N                !                      !";
+            )
+      DEVPOS(RW + 12, 0)
+      DEVOUT("Банк платника   : " + ALLTRIM(EF_DOC->BANK_DT))
+      DEVPOS(RW + 12, 65)
+      DEVOUT("! Код  " + EF_DOC->MFO_DT + ;
+            "  !======================!                      !")
+      DEVPOS(RW + 13, 0)
+      DEVOUT(;
+            "-----------------------------------------------------------------===================                      !                      !";
+            )
+      DEVPOS(RW + 14, 0)
+      DEVOUT("Одержувач : " + EF_DOC->NAM_KT)
+      DEVPOS(RW + 14, 89)
+      DEVOUT("К Р Е Д И Т      !   " + SUBSTR(STR(EF_DOC->SUMMA, 16, 2), 1, ;
+            13) + "=" + SUBSTR(STR(EF_DOC->SUMMA, 16, 2), 15, 2) + "   !")
+      DEVPOS(RW + 15, 83)
+      DEVOUT("=======================!                      !")
+      DEVPOS(RW + 16, 0)
+      DEVOUT(;
+            "----------------------------                                                       !                      !                      !";
+            )
+      DEVPOS(RW + 17, 0)
+      DEVOUT("! Код   " + EF_DOC->OKPO_KT + ;
+            "           !                                                       !                      !                      !";
+            )
+      DEVPOS(RW + 18, 0)
+      DEVOUT(;
+            "-----------------------------------------------------------------==================!    ";
+             + EF_DOC->SC_KT + "    !                      !")
+      DEVPOS(RW + 19, 65)
+      DEVOUT(;
+            "!                 !                      !                      !";
+            )
+      DEVPOS(RW + 20, 0)
+      DEVOUT("Банк одержувача: " + ALLTRIM(EF_DOC->BANK_KT))
+      DEVPOS(RW + 20, 65)
+      DEVOUT("! Код  " + EF_DOC->MFO_KT + ;
+            "  !рах. N                !                      !")
+      DEVPOS(RW + 21, 0)
+      DEVOUT(;
+            "-----------------------------------------------------------------=================================================================";
+            )
+      SUMPROP := SUM_PROP(EF_DOC->SUMMA, .T.)
+      TOKENUPPER(@SUMPROP, 1)
+      DEVPOS(RW + 23, 0)
+      DEVOUT("Сумма прописом: ")
+
+      IF LEN(SUMPROP) <= 115
+
+         DEVPOS(RW + 23, 16)
+         DEVOUT(SUMPROP)
+
+      ELSEIF LEN(SUMPROP) <= 230
+
+         NN := 115
+
+         DO WHILE .T.
+
+            IF SUBSTR(SUMPROP, NN + 1, 1) = " "
+
+               EXIT
+
+            ELSE
+
+               --NN
+
+            ENDIF
+
+         ENDDO
+
+         DEVPOS(RW + 23, 16)
+         DEVOUT(SUBSTR(SUMPROP, 1, NN))
+         DEVPOS(RW + 24, 16)
+         DEVOUT(SUBSTR(SUMPROP, NN + 2))
+         ++RW
+
+      ENDIF
+
+      DEVPOS(RW + 24, 0)
+      DEVOUT(;
+            "----------------------------------------------------------------------------------------------------------------------------------";
+            )
+      DEVPOS(RW + 25, 0)
+      DEVOUT("Призначення платежу: " + EF_DOC->OSN)
+      DEVPOS(RW + 25, 119)
+      DEVOUT("Коди")
+      DEVPOS(RW + 26, 100)
+      DEVOUT("==============================")
+      DEVPOS(RW + 27, 100)
+      DEVOUT("! Вид опер. !                !")
+      DEVPOS(RW + 28, 100)
+      DEVOUT("!-----------+----------------!")
+      DEVPOS(RW + 29, 100)
+      DEVOUT("!Призн плат.!                !")
+      DEVPOS(RW + 30, 100)
+      DEVOUT("!-----------+----------------!")
+      DEVPOS(RW + 31, 100)
+      DEVOUT("!Строк плат.!                !")
+      DEVPOS(RW + 32, 100)
+      DEVOUT("!-----------+----------------!")
+      DEVPOS(RW + 33, 100)
+      DEVOUT("!Очер. плат.!                !")
+      DEVPOS(RW + 34, 100)
+      DEVOUT("!-----------+----------------!")
+      DEVPOS(RW + 35, 100)
+      DEVOUT("!N гр. банку!                !")
+      DEVPOS(RW + 36, 100)
+      DEVOUT("==============================")
+      DEVPOS(RW + 38, 0)
+      DEVOUT(;
+            "Додаток    на _______________ сторiнках                                     Пiдписи";
+            )
+      DEVPOS(RW + 39, 0)
+      DEVOUT("")
+
+      IF I = 1
+
+         DEVPOS(RW + 40, 0)
+         DEVOUT(;
+               "----------------------------------------------------------------------------------------------------------------------------------";
+               )
+         RW := RW + 44
+
+      ENDIF
+
+   NEXT
+
+   IF  .NOT. EF_BANK->PR_R_L
+
+      __EJECT()
+
+   ELSE
+
+      RW := PROW() + 1
+
+      FOR I := 1 TO EF_BANK->KVO_STR
+
+         DEVPOS(RW + I, 0)
+         DEVOUT("")
+
+      NEXT
+
+   ENDIF
+
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"@")
+   SET(20, "SCREEN")
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRINTPVD
+   Params: None.
+   Return: Number
+  Example: PRINTPVD()
+  ..........................................................................
+*/
+
+STATIC FUNCTION PRINTPVD()
+
+   IF SCANCODE() = -1
+
+      IF PRINTYES()
+
+         PRINTFILE(FVIEWFILE, .T.)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN 0
+

@@ -1,0 +1,891 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DBASESTR
+   Params: LNAMES
+   Return: Undefined
+  Example: DBASESTR(LNAMES)
+  ..........................................................................
+*/
+
+FUNCTION DBASESTR(LNAMES)
+
+   LOCAL BASENAME := ARRAY(0)
+   LOCAL TEMPO1, TEMPO2, TEMPO3
+
+   IF(LNAMES = NIL, LNAMES := .F., "")
+   IF(TYPE("cDataBase") <> "C", MEMVAR->CDATABASE := "", "")
+
+   IF UPPER(CDATABASE) == "SPR_KOMP"
+
+      AADD(BASENAME, "SPR_KOMP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"spr_komp.ntx", NIL}}), ARRAY(;
+               0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "PS_S_PAS"
+
+      AADD(BASENAME, "PS_S_PAS")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"s_pas_01.ntx", NIL}}), ARRAY(;
+               0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "PS_S_POL"
+
+      AADD(BASENAME, "PS_S_POL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"s_pol_01.ntx", NIL}}), ARRAY(;
+               0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_SYS"
+
+      AADD(BASENAME, "EF_SYS")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"DAT_OD", "D", 8, 0}, {;
+               "DAT_PD", "D", 8, 0}, {"DAT_PPAK", "D", 8, 0}, {"HO_CODE", ;
+               "C", 3, 0}, {"KEY_SP", "N", 6, 0}, {"N_F", "N", 2, 0}, {;
+               "N_T", "N", 2, 0}, {"N_S", "N", 2, 0}, {"N_R", "N", 2, 0}, {;
+               "N_P", "N", 2, 0}, {"N_D", "N", 2, 0}, {"N_PKT", "N", 7, 0},;
+                {"N_PP", "N", 7, 0}, {"N_SL", "N", 10, 0}, {"N_SPP", "N", ;
+               4, 0}, {"NIRO_USD", "N", 7, 0}, {"NIRO_UAH", "N", 7, 0}, {;
+               "IRO_USD_D", "L", 1, 0}, {"IRO_USD_V", "L", 1, 0}, {;
+               "IRO_UAH_D", "L", 1, 0}, {"IRO_UAH_V", "L", 1, 0}, {;
+               "NIPO_UAH", "N", 7, 0}, {"IPO_UAH_D", "L", 1, 0}, {;
+               "IPO_UAH_V", "L", 1, 0}, {"FL_VUD", "L", 1, 0}, {"N_PF", ;
+               "N", 7, 0}, {"KURS", "N", 8, 5}, {"FL_IPD_N", "L", 1, 0}, {;
+               "FL_IPD_V", "L", 1, 0}, {"FL_KOM", "L", 1, 0}, {"FL_REESTR",;
+                "L", 1, 0}, {"LAST_NUM", "N", 10, 0}}), ARRAY(0) )
+         AADD(INITSTR, {{"DAT_OD", DATE()}, {"DAT_PD", DATE() - 1}, {;
+               "DAT_PPAK", DATE() - 1}, {"HO_CODE", "  1"}, {"KEY_SP", 1}, ;
+               {"N_F", 1}, {"N_T", 1}, {"N_S", 1}, {"N_R", 1}, {"N_SL", 1},;
+                {"N_SPP", 1}, {"N_PKT", 1}})
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_BANK"
+
+      AADD(BASENAME, "EF_BANK")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"NAM_B", "C", 20, 0}, {;
+               "POST_IND", "N", 6, 0}, {"GOS", "C", 20, 0}, {"OBL", "C", ;
+               20, 0}, {"GOROD", "C", 20, 0}, {"CITY", "C", 13, 0}, {;
+               "KOD_B", "C", 9, 0}, {"KOD_OKPO", "C", 8, 0}, {"NAM_FIL", ;
+               "C", 25, 0}, {"BOSS", "C", 20, 0}, {"N_BOSS_K", "C", 20, 0},;
+                {"N_GLB_K", "C", 20, 0}, {"B1_711", "C", 20, 0}, {;
+               "N_B1_711_K", "C", 20, 0}, {"B2_711", "C", 20, 0}, {;
+               "N_B2_711_K", "C", 20, 0}, {"REP_PATH", "C", 40, 0}, {;
+               "MB_PATH", "C", 40, 0}, {"VL_PATH", "C", 40, 0}, {;
+               "KEY_PATH", "C", 40, 0}, {"IN_PATH", "C", 40, 0}, {;
+               "OUT_PATH", "C", 40, 0}, {"CP_PATH", "C", 40, 0}, {;
+               "POS_PATH", "C", 40, 0}, {"POSE_PATH", "C", 40, 0}, {;
+               "POS_FNAME", "C", 12, 0}, {"MIN_KUP", "N", 7, 2}, {;
+               "KOD_NAC", "C", 3, 0}, {"NAM_NAC", "C", 20, 0}, {"KOD_VALT",;
+                "C", 3, 0}, {"NAM_VALT", "C", 20, 0}, {"KOD_NACN", "N", 3, ;
+               0}, {"KOD_VALTN", "N", 3, 0}, {"OD_NAC", "C", 1, 0}, {;
+               "OD_VALT", "C", 1, 0}, {"PR_KAS", "C", 1, 0}, {"BRANCH", ;
+               "C", 3, 0}, {"OI", "N", 2, 0}, {"ch_kplan_p", "C", 2, 0}, {;
+               "ch_kplan_r", "C", 2, 0}, {"ch_kpl_t", "C", 2, 0}, {;
+               "ch_kpl_k", "C", 2, 0}, {"MFO_PS", "C", 6, 0}, {"N_SHEM", ;
+               "N", 1, 0}, {"KOD_PVN", "C", 3, 0}, {"PR_POSE", "L", 1, 0}, ;
+               {"PR_ZAPR", "L", 1, 0}, {"K_CR", "N", 1, 0}, {"PRC_CRED", ;
+               "N", 6, 2}, {"BR_SYB", "C", 4, 0}, {"VERIFY_LIM", "N", 4, 0};
+               , {"ID", "C", 4, 0}}), ARRAY(0) )
+         AADD(INITSTR, {{"NAM_B", "КБ "+CHR(34)+"ПРИВАТБАНК"+CHR(34)}, {;
+               "POST_IND", 320000}, {"GOS", "Украина"}, {"OBL", ;
+               "Днепропетровская"}, {"GOROD", "г.Днепропетровск"}, {"CITY",;
+                "DNEPROPETROVS"}, {"KOD_B", "305299"}, {"KOD_OKPO", ;
+               "14360570"}, {"NAM_FIL", "Cводная бух. Индив. бизнеса"}, {;
+               "BOSS", "Председатель Правл."}, {"N_BOSS_K", "С.Л. Тигипко"};
+               , {"N_GLB_K", "Л.И. Городненко"}, {"B1_711", ;
+               "Зам. Предс. правл."}, {"N_B1_711_K", "В.В. Пушкарев"}, {;
+               "B2_711", "Гл. бух. Инд.бизнеса"}, {"N_B2_711_K", ;
+               "А.И. Бондик"}, {"REP_PATH", "c:\mo\cf\rep\"}, {"IN_PATH", ;
+               "c:\mo\cf\in\"}, {"OUT_PATH", "c:\mo\cf\out\"}, {"CP_PATH", ;
+               "c:\mo\cf\copy\"}, {"MIN_KUP", 0.01}, {"KOD_NAC", "UAH"}, {;
+               "KOD_VALT", "USD"}, {"NAM_NAC", "Гривня"}, {"NAM_VALT", ;
+               "Доллары США"}, {"BRANCH", "000"}, {"PR_KAS", "д"}, {;
+               "N_SHEM", 1}, {"K_CR", 1}, {"PRC_CRED", 0.00}})
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_HEAD" .OR. LNAMES
+
+      AADD(BASENAME, "EF_HEAD")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"HO_CODE", "C", 3, 0}, {;
+               "HEAD_OFICE", "C", 30, 0}, {"RUS_NAME", "C", 30, 0}, {;
+               "HO_ADRES", "C", 30, 0}, {"PHONE", "C", 25, 0}, {"PERSON", ;
+               "C", 30, 0}, {"DAT_TR", "D", 8, 0}, {"TREATY", "C", 8, 0}, {;
+               "ACOUNT", "C", 14, 0}, {"MFO", "C", 6, 0}, {"OKPO", "C", 25,;
+                0}, {"COR_ACOUNT", "C", 14, 0}, {"PR_SWIFT", "L", 1, 0}, {;
+               "BBF_BIC", "C", 11, 0}, {"BBF_NAM1", "C", 35, 0}, {;
+               "BBF_NAM2", "C", 35, 0}, {"BBF_NAM3", "C", 35, 0}, {;
+               "BBF_NAM4", "C", 35, 0}, {"BF_SC_ISO", "C", 34, 0}, {;
+               "BF_NAM1_SC", "C", 35, 0}, {"BF_NAM2_SC", "C", 35, 0}, {;
+               "BF_NAM3_SC", "C", 35, 0}, {"BF_NAM4_SC", "C", 35, 0}, {;
+               "BPS_SC_ISO", "C", 34, 0}, {"BPS_BIC", "C", 11, 0}, {;
+               "BPS_NAM1", "C", 35, 0}, {"BPS_NAM2", "C", 35, 0}, {;
+               "BPS_NAM3", "C", 35, 0}, {"BPS_NAM4", "C", 35, 0}, {;
+               "COMPBRANCH", "L", 1, 0}, {"OPLBRANCH", "C", 3, 0}}), AADD(;
+               NTXSTR, {{"head_01.ntx", "ho_code"}, {"head_02.ntx", ;
+               "head_ofice"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_HEADZ" .OR. LNAMES
+
+      AADD(BASENAME, "EF_HEADZ")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"HO_CODE", "C", 3, 0}, {;
+               "DAT_BANK", "D", 8, 0}, {"NEW", "L", 1, 0}, {"DAT_PKT", "D",;
+                8, 0}, {"NAM_PKT", "C", 12, 0}, {"FL_INS", "L", 1, 0}}), ;
+               AADD(NTXSTR, {{"headz_01.ntx", ;
+               "substr(NAM_PKT,1,1)+DTOS(DAT_PKT)+HO_CODE"}, {;
+               "headz_02.ntx", "HO_CODE"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "F_TMP"
+
+      AADD(BASENAME, "F_TMP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"BRANCH", "C", 3, 0}, {;
+               "HO_CODE", "C", 3, 0}, {"NEW", "L", 1, 0}, {"HEAD_OFICE", ;
+               "C", 30, 0}, {"RUS_NAME", "C", 30, 0}, {"HO_ADRES", "C", 30,;
+                0}, {"PHONE", "C", 25, 0}, {"PERSON", "C", 30, 0}, {;
+               "DAT_TR", "D", 8, 0}, {"TREATY", "C", 8, 0}, {"ACOUNT", "C",;
+                14, 0}, {"MFO", "C", 6, 0}, {"OKPO", "C", 25, 0}, {;
+               "COR_ACOUNT", "C", 14, 0}, {"PR_SWIFT", "L", 1, 0}, {;
+               "BBF_OPT", "C", 1, 0}, {"BBF_SC_ISO", "C", 34, 0}, {;
+               "BBF_BIC", "C", 11, 0}, {"BBF_NAM1", "C", 35, 0}, {;
+               "BBF_NAM2", "C", 35, 0}, {"BBF_NAM3", "C", 35, 0}, {;
+               "BBF_NAM4", "C", 35, 0}, {"BF_SC_ISO", "C", 34, 0}, {;
+               "BF_NAM1_SC", "C", 35, 0}, {"BF_NAM2_SC", "C", 35, 0}, {;
+               "BF_NAM3_SC", "C", 35, 0}, {"BF_NAM4_SC", "C", 35, 0}, {;
+               "WHO_PAY", "C", 3, 0}, {"BPS_OPT", "C", 1, 0}, {;
+               "BPS_SC_ISO", "C", 34, 0}, {"BPS_BIC", "C", 11, 0}, {;
+               "BPS_NAM1", "C", 35, 0}, {"BPS_NAM2", "C", 35, 0}, {;
+               "BPS_NAM3", "C", 35, 0}, {"BPS_NAM4", "C", 35, 0}, {;
+               "COMPBRANCH", "L", 1, 0}, {"OPLBRANCH", "C", 3, 0}}), ARRAY(;
+               0) )
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_MERCH" .OR. LNAMES
+
+      AADD(BASENAME, "EF_MERCH")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KEY_SP", "N", 6, 0}, {;
+               "HO_CODE", "C", 3, 0}, {"MERCH", "C", 8, 0}, {"TYPE", "C", ;
+               1, 0}, {"CITY", "C", 13, 0}, {"HEAD_OFICE", "C", 30, 0}, {;
+               "MERCH_NAME", "C", 25, 0}, {"RUS_NAME", "C", 25, 0}, {;
+               "ADRESS", "C", 25, 0}, {"ADRESS_R", "C", 25, 0}, {"TEL", ;
+               "C", 25, 0}, {"CONT_PERSO", "C", 20, 0}, {"VID", "C", 30, 0};
+               , {"MCC", "C", 4, 0}, {"LIM_PB", "N", 3, 0}, {"LIM_V", "N", ;
+               3, 0}, {"LIM_EM", "N", 3, 0}, {"COM_PB", "N", 5, 2}, {;
+               "COM_V", "N", 5, 2}, {"COM_EM", "N", 5, 2}, {"PRO_PB", "N", ;
+               5, 2}, {"PRO_V", "N", 5, 2}, {"PRO_EM", "N", 5, 2}, {;
+               "VOZM_PB", "N", 2, 0}, {"VOZM_V", "N", 2, 0}, {"VOZM_EM", ;
+               "N", 2, 0}, {"CURR", "C", 3, 0}, {"CURR_M", "C", 3, 0}, {;
+               "IMPRINTER", "L", 1, 0}, {"POS", "L", 1, 0}, {"PC_POS", "L",;
+                1, 0}, {"DAT_RAB", "D", 8, 0}, {"DAT_EMB", "D", 8, 0}, {;
+               "DISCOUTN", "N", 5, 2}, {"TYPE1", "C", 1, 0}, {"CREDIT", ;
+               "L", 1, 0}, {"MANUAL", "L", 1, 0}, {"MULTICASH", "L", 1, 0},;
+                {"VERIFY_LIM", "N", 4, 0}, {"PREAUTH", "L", 1, 0}}), AADD(;
+               NTXSTR, {{"merch_01.ntx", "ho_code"}, {"merch_02.ntx", ;
+               "merch"}, {"merch_03.ntx", "MERCH_NAME"}, {"merch_04.ntx", ;
+               "str(key_sp,6)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_MRCHZ" .OR. LNAMES
+
+      AADD(BASENAME, "EF_MRCHZ")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KEY_SP", "N", 6, 0}, {;
+               "DAT_BANK", "D", 8, 0}, {"NEW", "L", 1, 0}, {"DAT_PKT", "D",;
+                8, 0}, {"NAM_PKT", "C", 12, 0}, {"STEP", "C", 1, 0}, {;
+               "FL_INS", "L", 1, 0}}), AADD(NTXSTR, {{"mrchz_01.ntx", ;
+               "substr(NAM_PKT,1,1)+DTOS(DAT_PKT)+str(key_sp,6)"}, {;
+               "mrchz_02.ntx", "str(key_sp,6)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "T_TMP"
+
+      AADD(BASENAME, "T_TMP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"KEY_SP", "N", 6, 0}, {"NEW", ;
+               "L", 1, 0}, {"HO_CODE", "C", 3, 0}, {"BRANCH", "C", 3, 0}, {;
+               "MERCH", "C", 8, 0}, {"TYPE", "C", 1, 0}, {"CITY", "C", 13, ;
+               0}, {"HEAD_OFICE", "C", 30, 0}, {"MERCH_NAME", "C", 25, 0}, ;
+               {"RUS_NAME", "C", 25, 0}, {"ADRESS", "C", 25, 0}, {;
+               "ADRESS_R", "C", 25, 0}, {"TEL", "C", 25, 0}, {"CONT_PERSO",;
+                "C", 20, 0}, {"VID", "C", 30, 0}, {"MCC", "C", 4, 0}, {;
+               "LIM_PB", "N", 3, 0}, {"LIM_V", "N", 3, 0}, {"LIM_EM", "N", ;
+               3, 0}, {"COM_PB", "N", 5, 2}, {"COM_V", "N", 5, 2}, {;
+               "COM_EM", "N", 5, 2}, {"PRO_PB", "N", 5, 2}, {"PRO_V", "N", ;
+               5, 2}, {"PRO_EM", "N", 5, 2}, {"VOZM_PB", "N", 2, 0}, {;
+               "VOZM_V", "N", 2, 0}, {"VOZM_EM", "N", 2, 0}, {"CURR", "C", ;
+               3, 0}, {"CURR_M", "C", 3, 0}, {"IMPRINTER", "L", 1, 0}, {;
+               "POS", "L", 1, 0}, {"PC_POS", "L", 1, 0}, {"DAT_RAB", "D", ;
+               8, 0}, {"DAT_EMB", "D", 8, 0}, {"DISCOUTN", "N", 5, 2}, {;
+               "STEP", "C", 1, 0}, {"TYPE1", "C", 1, 0}, {"CREDIT", "L", 1,;
+                0}, {"MANUAL", "L", 1, 0}, {"MULTICASH", "L", 1, 0}, {;
+               "VERIFY_LIM", "N", 4, 0}, {"PREAUTH", "L", 1, 0}}), ARRAY(0);
+                )
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_SLIP" .OR. LNAMES
+
+      AADD(BASENAME, "EF_SLIP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"CODE", "C", 2, 0}, {;
+               "PR_DATE", "D", 8, 0}, {"NO_SLIP", "N", 10, 0}, {;
+               "TRAN_DATE", "D", 8, 0}, {"CH_NO", "C", 19, 0}, {"DC", "L", ;
+               1, 0}, {"E_NAME", "C", 25, 0}, {"EXP_DATE", "C", 4, 0}, {;
+               "MERCH", "C", 8, 0}, {"CITY", "C", 15, 0}, {"CURR", "C", 3, ;
+               0}, {"CURR_M", "C", 3, 0}, {"AMOUNT", "N", 11, 2}, {;
+               "AMOUNT_H", "N", 11, 2}, {"AMOUNT_M", "N", 11, 2}, {;
+               "AUTH_NO", "C", 6, 0}, {"FIO_OPER", "C", 30, 0}, {;
+               "DAT_ACCPT", "D", 8, 0}, {"DAT_PAY", "D", 8, 0}, {;
+               "IMPORTFILE", "C", 8, 0}, {"EXPORTFILE", "C", 8, 0}, {;
+               "SENDDATE", "D", 8, 0}, {"DAT_A_OPL", "D", 8, 0}, {;
+               "PS_DATE", "D", 8, 0}, {"DAT_OK", "D", 8, 0}, {"OPL_KEY", ;
+               "C", 10, 0}, {"AMOUNT_PS", "N", 11, 2}, {"AMOUNT_V", "N", ;
+               11, 2}, {"AMOUNT_FIL", "N", 11, 2}, {"AMOUNT_DPK", "N", 11, ;
+               2}, {"MAGTRACKRD", "N", 1, 0}, {"PR_AVT", "L", 1, 0}, {;
+               "WHOSE", "C", 1, 0}, {"FL_INS", "L", 1, 0}, {"PR_PK", "L", ;
+               1, 0}}), AADD(NTXSTR, {{"slip_01.ntx", ;
+               "code+Dtos(pr_date)+Padr(Alltrim(Str(no_slip,10)),10)"}, {;
+               "slip_02.ntx", "Padr(Alltrim(Str(no_slip,10)),10)"}, {;
+               "slip_03.ntx", ;
+               "code+Dtos(tran_date)+merch+Str(no_slip,10)+Str(amount,11,2)";
+               }, {"slip_04.ntx", "merch+Dtos(tran_date)+Str(no_slip,10)"},;
+                {"slip_05.ntx", "If(Empty(senddate),"+CHR(34)+"0"+CHR(34)+;
+               ","+CHR(34)+"1"+CHR(34)+")+If(Empty(dat_accpt),"+CHR(34)+;
+               "0"+CHR(34)+","+CHR(34)+"1"+CHR(34)+;
+               ")+If(Empty(dat_a_opl),"+CHR(34)+"0"+CHR(34)+","+CHR(34)+;
+               "1"+CHR(34)+")+If(Empty(dat_pay),"+CHR(34)+"0"+CHR(34)+","+;
+               CHR(34)+"1"+CHR(34)+")+merch"}, {"slip_06.ntx", ;
+               "merch+Dtos(dat_pay)+Str(no_slip,10)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "C_TMP"
+
+      AADD(BASENAME, "C_TMP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"CODE", "C", 2, 0}, {"PR_DATE",;
+                "D", 8, 0}, {"NO_SLIP", "N", 10, 0}, {"TRAN_DATE", "D", 8, ;
+               0}, {"CH_NO", "C", 19, 0}, {"E_NAME", "C", 25, 0}, {;
+               "EXP_DATE", "C", 4, 0}, {"MERCH", "C", 8, 0}, {"BRANCH", ;
+               "C", 3, 0}, {"CURR", "C", 3, 0}, {"CURR_M", "C", 3, 0}, {;
+               "AMOUNT", "N", 11, 2}, {"AMOUNT_H", "N", 11, 2}, {;
+               "AMOUNT_M", "N", 11, 2}, {"AUTH_NO", "C", 6, 0}, {;
+               "FIO_OPER", "C", 30, 0}, {"DAT_ACCPT", "D", 8, 0}, {;
+               "DAT_PAY", "D", 8, 0}, {"IMPORTFILE", "C", 8, 0}, {;
+               "EXPORTFILE", "C", 8, 0}, {"SENDDATE", "D", 8, 0}, {;
+               "DAT_A_OPL", "D", 8, 0}, {"PS_DATE", "D", 8, 0}, {"OPL_KEY",;
+                "C", 10, 0}, {"AMOUNT_PS", "N", 11, 2}, {"AMOUNT_V", "N", ;
+               11, 2}, {"AMOUNT_FIL", "N", 11, 2}, {"AMOUNT_DPK", "N", 11, ;
+               2}, {"MAGTRACKRD", "N", 1, 0}}), ARRAY(0) )
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_PR" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_PR")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_PR", "C", 3, 0}, {;
+               "MERCH", "C", 8, 0}, {"PR_VKL", "L", 1, 0}, {"SC_DT", "C", ;
+               3, 0}, {"SC_KT", "C", 3, 0}, {"NAM_PROV", "C", 15, 0}, {;
+               "OSN", "C", 50, 0}}), AADD(NTXSTR, {{"s_pr_01.ntx", ;
+               "kod_pr+MERCH"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_TAR" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_TAR")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"VALT", "C", 3, 0}, {"CH_NO", ;
+               "C", 16, 0}, {"KOM", "N", 5, 2}, {"PR_BLOK", "L", 1, 0}}), ;
+               AADD(NTXSTR, {{"s_tar_01.ntx", "VALT+CH_NO"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_PL" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_PL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_VPL", "N", 3, 0}, {;
+               "KOD_PL", "C", 3, 0}, {"PR_TEL", "L", 1, 0}, {"NAM_PL", "C",;
+                20, 0}}), AADD(NTXSTR, {{"s_pl_01.ntx", ;
+               "Str(kod_vpl,3)+kod_pl"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_GPL" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_GPL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_VPL", "N", 3, 0}, {;
+               "NAM_VPL", "C", 20, 0}, {"PR_TAR", "L", 1, 0}, {"PR_PER", ;
+               "L", 1, 0}, {"KVO_DEN", "N", 3, 0}, {"PR_B_K", "L", 1, 0}, {;
+               "DAT_LAST", "D", 8, 0}, {"DAT_PD", "D", 8, 0}, {"DAT_BANK", ;
+               "D", 8, 0}, {"CH_KPLAN", "C", 2, 0}, {"PR_RVGB", "L", 1, 0},;
+                {"PR_PVGB", "L", 1, 0}, {"PR_KOM", "L", 1, 0}, {"BIN_SOV", ;
+               "C", 6, 0}, {"PERIOD", "C", 2, 0}, {"TIME_LAST", "C", 2, 0},;
+                {"OSN", "C", 50, 0}}), AADD(NTXSTR, {{"s_gpl_01.ntx", ;
+               "Str(kod_vpl,3)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_PPL" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_PPL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_VPL", "N", 3, 0}, {;
+               "KOD_TAR", "N", 3, 0}, {"KOD_BPOL", "N", 3, 0}, {"KOD_POL", ;
+               "N", 3, 0}, {"NAM_POL", "C", 35, 0}, {"MFO", "N", 6, 0}, {;
+               "BANK", "C", 50, 0}, {"SC", "N", 14, 0}, {"KOD_OKPO", "N", ;
+               8, 0}, {"OKPO_BANK", "N", 8, 0}}), AADD(NTXSTR, {{;
+               "s_ppl_01.ntx", "Str(kod_vpl,3)"}, {"s_ppl_02.ntx", ;
+               "kod_pol"}, {"s_ppl_03.ntx", "sc"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_PGB" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_PGB")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_VPL", "N", 3, 0}, {;
+               "NAM_POL", "C", 35, 0}, {"SC", "N", 14, 0}}), AADD(NTXSTR, {;
+               {"s_pgb_01.ntx", "Str(kod_vpl,3)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_TKP" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_TKP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_TAR", "N", 3, 0}, {;
+               "KOD_VPL", "N", 3, 0}, {"PRC_TB", "N", 7, 2}, {"MIN_TB", ;
+               "N", 7, 2}, {"PRC_TKB", "N", 7, 2}, {"MIN_TKB", "N", 7, 2}, ;
+               {"PRC_TKP", "N", 7, 2}, {"MIN_TKP", "N", 7, 2}, {"PRC_SOV", ;
+               "N", 7, 2}, {"MIN_SOV", "N", 7, 2}, {"OSN", "C", 35, 0}, {;
+               "PR_PR_S", "L", 1, 0}}), AADD(NTXSTR, {{"s_tkp_01.ntx", ;
+               "Str(kod_tar,3)"}, {"s_tkp_02.ntx", "Str(kod_vpl,3)"}}), ;
+               ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_SC" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_SC")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_SC", "C", 3, 0}, {"VALT",;
+                "C", 3, 0}, {"SC", "C", 10, 0}, {"SC_NEW", "C", 10, 0}, {;
+               "NAM_SC", "C", 25, 0}}), AADD(NTXSTR, {{"s_sc_01.ntx", ;
+               "KOD_SC+VALT"}, {"s_sc_02.ntx", "SC"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_POST" .OR. LNAMES
+
+      AADD(BASENAME, "EF_POST")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"NAM_FILE", "C", 12, 0}, {;
+               "DAT_POST", "D", 8, 0}, {"TIME_POST", "C", 8, 0}, {"PR_V_I",;
+                "L", 1, 0}}), AADD(NTXSTR, {{"post_01.ntx", ;
+               "NAM_FILE+DTOS(dat_post)"}, {"post_02.ntx", ;
+               "DTOS(dat_post)+time_post+NAM_FILE"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "CB_S_TC" .OR. LNAMES
+
+      AADD(BASENAME, "CB_S_TC")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"TYPE", "C", 4, 0}, {;
+               "BIN_KOD", "C", 6, 0}, {"BIN_DOP", "C", 1, 0}, {"VALT", "C",;
+                3, 0}, {"FOR_CM", "C", 2, 0}, {"SROK", "N", 2, 0}, {;
+               "NAM_TYP", "C", 20, 0}, {"PR_DOP", "L", 1, 0}}), AADD(;
+               NTXSTR, {{"s_tc_01.ntx", "BIN_KOD+bin_dop"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_KASR" .OR. LNAMES
+
+      AADD(BASENAME, "EF_KASR")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"NO_SLIP", "N", 10, 0}, {;
+               "N_PP", "N", 7, 0}, {"NUM_DOC", "N", 10, 0}, {"DAT_BANK", ;
+               "D", 8, 0}, {"DAT_DOC", "D", 8, 0}, {"SUMMA", "N", 16, 2}, {;
+               "SUM_V", "N", 16, 2}, {"OSN", "C", 50, 0}, {"PL", "C", 50, ;
+               0}, {"CH_KPLAN", "C", 2, 0}, {"BANK_DT", "C", 50, 0}, {;
+               "MFO_DT", "C", 9, 0}, {"SC_DT", "C", 14, 0}, {"KOD_V", "C", ;
+               3, 0}, {"SC_KT", "C", 14, 0}, {"PASP_S", "C", 8, 0}, {;
+               "PASP_N", "N", 6, 0}, {"PASP_VYD", "C", 40, 0}, {"PASP_DAT",;
+                "D", 8, 0}, {"FIO_OP", "C", 20, 0}, {"FIO_KAS", "C", 20, 0};
+               , {"PR_OPL", "C", 1, 0}, {"NAM_DT", "C", 45, 0}, {"P_V_P", ;
+               "C", 1, 0}, {"PR_PK", "L", 1, 0}}), AADD(NTXSTR, {{;
+               "kasr_01.ntx", "Dtos(Dat_bank)+fio_op+kod_v+Str(num_doc)"}, ;
+               {"kasr_02.ntx", "Dtos(Dat_bank)+Str(no_slip,10)"}}), ARRAY(;
+               0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_KASP" .OR. LNAMES
+
+      AADD(BASENAME, "EF_KASP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"NO_SLIP", "N", 10, 0}, {;
+               "N_PP", "N", 7, 0}, {"NUM_DOC", "N", 10, 0}, {"DAT_BANK", ;
+               "D", 8, 0}, {"DAT_DOC", "D", 8, 0}, {"SUMMA", "N", 16, 2}, {;
+               "SUM_V", "N", 16, 2}, {"OSN", "C", 50, 0}, {"PL", "C", 50, ;
+               0}, {"CH_KPLAN", "C", 2, 0}, {"BANK_KT", "C", 50, 0}, {;
+               "MFO_KT", "C", 9, 0}, {"SC_DT", "C", 14, 0}, {"KOD_V", "C", ;
+               3, 0}, {"SC_KT", "C", 14, 0}, {"FIO_OP", "C", 20, 0}, {;
+               "FIO_KAS", "C", 20, 0}, {"PR_OPL", "C", 1, 0}, {"NAM_DT", ;
+               "C", 45, 0}, {"NAM_KT", "C", 45, 0}, {"P_V_P", "C", 1, 0}, {;
+               "PR_PK", "L", 1, 0}}), AADD(NTXSTR, {{"kasp_01.ntx", ;
+               "Dtos(Dat_bank)+fio_op+kod_v+Str(num_doc)"}, {"kasp_02.ntx",;
+                "Dtos(Dat_bank)+Str(no_slip,10)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_PROV" .OR. LNAMES
+
+      AADD(BASENAME, "EF_PROV")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"VALT", "C", 3, 0}, {"SUMMA", ;
+               "N", 16, 2}, {"FIO_OP", "C", 20, 0}, {"SC", "C", 10, 0}, {;
+               "NAM_SC", "C", 50, 0}, {"DAT_BANK", "D", 8, 0}, {"NUM_DOC", ;
+               "C", 10, 0}, {"VID_OP", "C", 2, 0}, {"PR_DT_KT", "C", 1, 0},;
+                {"MFO_KOR", "C", 6, 0}, {"N_PP", "N", 7, 0}, {"SC_KOR", ;
+               "C", 10, 0}, {"PR_SVER", "L", 1, 0}, {"FL_INF", "L", 1, 0}});
+               , AADD(NTXSTR, {{"prov_01.ntx", ;
+               "Dtos(dat_bank)+valt+pr_dt_kt"}, {"prov_02.ntx", ;
+               "Dtos(dat_bank)+Str(n_pp,7)"}, {"prov_03.ntx", ;
+               "Dtos(dat_bank)+valt+sc"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_JPKPL" .OR. LNAMES
+
+      AADD(BASENAME, "EF_JPKPL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_VPL", "N", 3, 0}, {;
+               "KOD_PL", "C", 3, 0}, {"KOD_POL", "N", 3, 0}, {"NUM_DOC", ;
+               "C", 10, 0}, {"DAT_BANK", "D", 8, 0}, {"DAT_OPL", "D", 8, 0};
+               , {"SUMMA", "N", 16, 2}, {"SUM_KOM", "N", 16, 2}, {;
+               "NAM_PLAT", "C", 30, 0}, {"LS_PLAT", "C", 18, 0}, {;
+               "NUM_TEL", "C", 10, 0}, {"ADRES", "C", 30, 0}, {"FIO_OP", ;
+               "C", 20, 0}, {"NUM_OTPR", "N", 10, 0}, {"DAT_OTPR", "D", 8, ;
+               0}, {"PR_OPL", "L", 1, 0}, {"PR_PK", "L", 1, 0}, {"PR_TAR", ;
+               "L", 1, 0}, {"PR_OTPR", "L", 1, 0}, {"PR_KOM", "L", 1, 0}, {;
+               "KOD_PVN", "C", 3, 0}, {"KOD_SOV", "N", 3, 0}, {"PR_N_K", ;
+               "L", 1, 0}}), AADD(NTXSTR, {{"jpkpl_01.ntx", ;
+               "DTOS(dat_bank)+Str(kod_vpl,3)+kod_pl"}, {"jpkpl_02.ntx", ;
+               "DTOS(dat_bank)+nam_plat"}, {"jpkpl_03.ntx", ;
+               "Str(kod_vpl,3)+DTOS(dat_bank)"}, {"jpkpl_04.ntx", ;
+               "Str(kod_pol,3)+DTOS(dat_bank)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "FOR_VED" .OR. LNAMES
+
+      AADD(BASENAME, "FOR_VED")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"CODE", "C", 2, 0}, {"TIP", ;
+               "C", 1, 0}, {"DAT_BANK", "D", 8, 0}, {"N_PP", "N", 7, 0}, {;
+               "NO_SLIP", "N", 10, 0}, {"TRAN_DATE", "D", 8, 0}, {"CH_NO", ;
+               "C", 19, 0}, {"MERCH", "C", 8, 0}}), AADD(NTXSTR, {{;
+               "forv_01.ntx", "Dtos(dat_bank)+Str(n_pp,7)"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "KN_KAS_R"
+
+      AADD(BASENAME, "KN_KAS_R")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"knkasr01.ntx", NIL}, {;
+               "knkasr02.ntx", NIL}, {"knkasr03.ntx", NIL}, {;
+               "knkasr04.ntx", NIL}, {"knkasr05.ntx", NIL}, {;
+               "knkasr06.ntx", NIL}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "KN_KAS_P"
+
+      AADD(BASENAME, "KN_KAS_P")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"knkasp01.ntx", NIL}, {;
+               "knkasp02.ntx", NIL}, {"knkasp03.ntx", NIL}, {;
+               "knkasp04.ntx", NIL}, {"knkasp05.ntx", NIL}, {;
+               "knkasp06.ntx", NIL}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "KN_SYS"
+
+      AADD(BASENAME, "KN_SYS")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->NTXSTR := ARRAY(0)
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "KV_KAS_R"
+
+      AADD(BASENAME, "KV_KAS_R")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"kvkasr01.ntx", NIL}, {;
+               "kvkasr02.ntx", NIL}, {"kvkasr03.ntx", NIL}, {;
+               "kvkasr04.ntx", NIL}, {"kvkasr05.ntx", NIL}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "KV_KAS_P"
+
+      AADD(BASENAME, "KV_KAS_P")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"kvkasp01.ntx", NIL}, {;
+               "kvkasp02.ntx", NIL}, {"kvkasp03.ntx", NIL}, {;
+               "kvkasp04.ntx", NIL}, {"kvkasp05.ntx", NIL}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "KV_SYS"
+
+      AADD(BASENAME, "KV_SYS")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->NTXSTR := ARRAY(0)
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "SPR_VALT"
+
+      AADD(BASENAME, "SPR_VALT")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->BASESTR := ARRAY(0)
+         MEMVAR->INITSTR := ( AADD(NTXSTR, {{"valt_01.ntx", NIL}, {;
+               "valt_02.ntx", NIL}, {"valt_03.ntx", NIL}, {"valt_04.ntx", ;
+               NIL}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_DOC" .OR. LNAMES
+
+      AADD(BASENAME, "EF_DOC")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"VID_OP", "C", 2, 0}, {;
+               "TIP_DOC", "C", 1, 0}, {"NUM_DOC", "N", 7, 0}, {"KOD_V", ;
+               "C", 3, 0}, {"DAT_KL", "D", 8, 0}, {"DAT_BANK", "D", 8, 0}, ;
+               {"SUMMA", "N", 16, 2}, {"NAM_DT", "C", 27, 0}, {"BANK_DT", ;
+               "C", 45, 0}, {"MFO_DT", "C", 9, 0}, {"SC_DT", "C", 14, 0}, {;
+               "INDEX_DT", "C", 6, 0}, {"OKPO_DT", "C", 8, 0}, {"NAM_KT", ;
+               "C", 27, 0}, {"BANK_KT", "C", 45, 0}, {"MFO_KT", "C", 9, 0},;
+                {"SC_KT", "C", 14, 0}, {"INDEX_KT", "C", 6, 0}, {"OKPO_KT",;
+                "C", 8, 0}, {"OSN", "C", 60, 0}, {"NO_SLIP", "N", 10, 0}, {;
+               "FL_INF", "L", 1, 0}, {"FIO_OP", "C", 20, 0}}), AADD(NTXSTR,;
+                {{"doc_01.ntx", "Dtos(Dat_bank)+Str(num_doc)"}, {;
+               "doc_02.ntx", "Dtos(dat_bank)+Sc_dt+mfo_dt+sc_kt+mfo_kt"}, {;
+               "doc_03.ntx", "Dtos(Dat_bank)+Str(no_slip,10)"}}), ARRAY(0) ;
+               )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_MOP" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_MOP")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"FIO_OP", "C", 20, 0}, {;
+               "UAH_MERCH", "C", 8, 0}, {"USD_MERCH", "C", 8, 0}, {;
+               "KOM_MERCH", "C", 8, 0}, {"NIRO_USD", "N", 7, 0}, {;
+               "NIRO_UAH", "N", 7, 0}, {"IRO_USD_D", "L", 1, 0}, {;
+               "IRO_USD_V", "L", 1, 0}, {"IRO_UAH_D", "L", 1, 0}, {;
+               "IRO_UAH_V", "L", 1, 0}}), AADD(NTXSTR, {{"s_mop_01.ntx", ;
+               "fio_op"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_S_KUR" .OR. LNAMES
+
+      AADD(BASENAME, "EF_S_KUR")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"KOD_V", "C", 3, 0}, {;
+               "DAT_KURS", "D", 8, 0}, {"KUR_NBU", "N", 16, 8}, {"KUR_PAY",;
+                "N", 16, 8}, {"KUR_SALE", "N", 16, 8}, {"KUR_NBU1", "N", ;
+               16, 4}, {"KUR_PAY1", "N", 16, 4}, {"KUR_SALE1", "N", 16, 4},;
+                {"KUR_NBU2", "N", 16, 4}, {"KUR_PAY2", "N", 16, 4}, {;
+               "KUR_SALE2", "N", 16, 4}}), AADD(NTXSTR, {{"s_kur_01.ntx", ;
+               "kod_v"}}), ARRAY(0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_BADSL" .OR. LNAMES
+
+      AADD(BASENAME, "EF_BADSL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->INITSTR := ( AADD(BASESTR, {{"NO_SLIP", "N", 10, 0}, {;
+               "PR_DATE", "D", 8, 0}, {"CH_NO", "C", 19, 0}, {"CURR", "C", ;
+               3, 0}, {"AMOUNT", "N", 11, 2}, {"FIO_OP", "C", 20, 0}, {;
+               "KOMENT", "C", 40, 0}}), AADD(NTXSTR, {{"badsl_01.ntx", ;
+               "Dtos(pr_date)+Padr(Alltrim(Str(no_slip,10)),10)"}}), ARRAY(;
+               0) )
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "FOR_MB"
+
+      AADD(BASENAME, "FOR_MB")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"TIP", "N", 1, 0}, {"N_D", "N",;
+                4, 0}, {"DATE", "D", 8, 0}, {"SUMMA", "N", 15, 2}, {;
+               "NAME_A", "C", 27, 0}, {"BANK_A", "C", 45, 0}, {"MFO_A", ;
+               "N", 6, 0}, {"COUNT_A", "N", 14, 0}, {"KSCH_A", "N", 9, 0}, ;
+               {"NAME_B", "C", 27, 0}, {"BANK_B", "C", 45, 0}, {"MFO_B", ;
+               "N", 6, 0}, {"COUNT_B", "N", 14, 0}, {"KSCH_B", "N", 9, 0}, ;
+               {"N_P", "C", 160, 0}, {"USER", "C", 20, 0}, {"VAL", "C", 4, ;
+               0}, {"PACKET", "C", 1, 0}, {"K_S", "C", 6, 0}, {"SKP", "C", ;
+               2, 0}, {"OKPO_A", "N", 9, 0}, {"OKPO_B", "N", 9, 0}, {;
+               "PR_INF", "L", 1, 0}}), ARRAY(0) )
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "FOR_VL"
+
+      AADD(BASENAME, "FOR_VL")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"KOD_V", "C", 3, 0}, {;
+               "TIP_DOC", "C", 2, 0}, {"NUM_DOC", "C", 10, 0}, {"DAT_BANK",;
+                "D", 8, 0}, {"SUMMA", "N", 18, 2}, {"NAM_DT", "C", 27, 0}, ;
+               {"BANK_DT", "C", 50, 0}, {"MFO_DT", "C", 6, 0}, {"SC_DT", ;
+               "C", 14, 0}, {"KSCH_DT", "C", 10, 0}, {"INDEX_DT", "C", 6, ;
+               0}, {"NAM_KT", "C", 27, 0}, {"BANK_KT", "C", 50, 0}, {;
+               "MFO_KT", "C", 6, 0}, {"SC_KT", "C", 14, 0}, {"KSCH_KT", ;
+               "C", 10, 0}, {"INDEX_KT", "C", 6, 0}, {"OSN", "C", 160, 0}});
+               , ARRAY(0) )
+         MEMVAR->INITSTR := ARRAY(0)
+
+      ENDIF
+
+   ENDIF
+
+   IF SUBSTR(UPPER(CDATABASE), 1, 4) == "TMP_" .AND. .NOT. LNAMES
+
+      MEMVAR->NTXSTR := ( AADD(BASESTR, {{"KOD_VPL", "N", 3, 0}, {"KOD_PL", ;
+            "C", 3, 0}, {"KOD_POL", "N", 3, 0}, {"NUM_DOC", "C", 10, 0}, {;
+            "DAT_BANK", "D", 8, 0}, {"DAT_OPL", "D", 8, 0}, {"SUMMA", "N", ;
+            16, 2}, {"SUM_KOM", "N", 16, 2}, {"NAM_PLAT", "C", 30, 0}, {;
+            "LS_PLAT", "C", 18, 0}, {"ADRES", "C", 30, 0}, {"NUM_TEL", "C",;
+             10, 0}, {"FIO_OP", "C", 20, 0}, {"NUM_OTPR", "N", 10, 0}, {;
+            "DAT_OTPR", "D", 8, 0}, {"PR_OPL", "L", 1, 0}, {"PR_PK", "L", ;
+            1, 0}, {"PR_TAR", "L", 1, 0}, {"PR_OTPR", "L", 1, 0}, {;
+            "PR_KOM", "L", 1, 0}, {"KOD_PVN", "C", 3, 0}, {"KOD_SOV", "N", ;
+            3, 0}, {"PR_N_K", "L", 1, 0}}), ARRAY(0) )
+      MEMVAR->INITSTR := ARRAY(0)
+
+   ENDIF
+
+   IF UPPER(CDATABASE) == "EF_OD"
+
+      AADD(BASENAME, "EF_OD")
+
+      IF  .NOT. LNAMES
+
+         MEMVAR->NTXSTR := ( AADD(BASESTR, {{"DAT_OD", "D", 8, 0}}), ARRAY(;
+               0) )
+         AADD(INITSTR, {{"DAT_OD", DATE() - 1}})
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN BASENAME
+

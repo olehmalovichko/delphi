@@ -1,0 +1,23 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: START_EF
+   Params: PASV, DOSTUP, KOD_K
+   Return: Variable
+  Example: START_EF(PASV, DOSTUP, KOD_K)
+  ..........................................................................
+*/
+
+FUNCTION START_EF(PASV, DOSTUP, KOD_K)
+
+   INITEXTEND()
+
+   IF PCOUNT() <> 3
+
+      ERROR(NIL, NIL, {"Не корректный запуск комплекса"}, {" Выход "})
+      RETURN .F.
+
+   ENDIF
+
+   EF_MAIN(PASV, DOSTUP, KOD_K)
+
+RETURN NIL
+

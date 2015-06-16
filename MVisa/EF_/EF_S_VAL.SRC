@@ -1,0 +1,522 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SPRVALT
+   Params: None.
+   Return: Variable
+  Example: SPRVALT()
+  ..........................................................................
+*/
+
+FUNCTION SPRVALT()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, DESKTOP, ABROWSE
+
+   PRIVATE BROWSE, COLUMN
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~F5-~ввод курса"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+
+   IF  .NOT. AREA_OPEN({{"spr_valt", .F., 3, PUT_PATH__}, {"ef_s_kur"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("spr_valt")
+   SPR_VALT->(DBSETORDER(4))
+   MEMVAR->CFL := {"Kod_v", "C_Kod_v", "Nam_Resp", "Nam_V", "Abbrev"}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "spr_valt->")
+   MEMVAR->SEP := {" ", "  ", "             ", "  ", "  ", " "}
+   ABROWSE := CREATTBROW(3, 1, 12, 78, "Abbrev", {||CREATSTR(CAL, CFL, SEP);
+         })
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := ""
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " СПРАВОЧНИК ВАЛЮТ ")
+   SCR_IO1()
+   STATUSLINE(BOTIO_1)
+   OBRIO1()
+   DBCLOSEALL()
+   WINCLOSE(DESKTOP)
+   CHECKKURS("1")
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: AS_VVOD_KU
+   Params: None.
+   Return: Logical
+  Example: AS_VVOD_KU()
+  ..........................................................................
+*/
+
+FUNCTION AS_VVOD_KU()
+
+   LOCAL WIN1, OLDC := SETCOLOR(), KODV := "000"
+   LOCAL KNBU1 := 0, KPOK1 := 0, KPR1 := 0
+   LOCAL KNBU2 := 0, KPOK2 := 0, KPR2 := 0
+   LOCAL KEY
+
+   IF EF_S_KUR->(DBSEEK(SPR_VALT->ABBREV))
+
+      IF  .NOT. EF_S_KUR->(RECLOCK(3))
+
+         ERROR(NIL, NIL, {" Ошибка !", "Невозможно заблокировать запись", ;
+               "в справочнике курсов валют"}, {" Выход "})
+         RETURN .F.
+
+      ELSE
+
+         KODV := EF_S_KUR->KOD_V
+         KNBU1 := EF_S_KUR->KUR_NBU1
+         KPOK1 := EF_S_KUR->KUR_PAY1
+         KPR1 := EF_S_KUR->KUR_SALE1
+         KNBU2 := EF_S_KUR->KUR_NBU2
+         KPOK2 := EF_S_KUR->KUR_PAY2
+         KPR2 := EF_S_KUR->KUR_SALE2
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR("w+/w,w+/b,,,w+/bg")
+   WIN1 := WIN(8, 6, 16, 72, "d", "tm")
+   CENTR(NIL, 7, "Esc - выход     F10 - ввод ")
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   CENTR(NIL, 0, " Ввод курса валюты ")
+   CENTR(NIL, 1, " Валюта : " + SPR_VALT->KOD_V + " ( " + SPR_VALT->ABBREV + ;
+         " )")
+   SAYS(2, 30, "Единицы валюты     Единицы грив.")
+   SAYS(3, 2, "Курс НацБанка Украины    : ")
+   SAYS(4, 2, "Курс покупки ПриватБанка : ")
+   SAYS(5, 2, "Курс продажи ПриватБанка : ")
+   SETKEYON()
+
+   DO WHILE .T.
+
+      SETPOS(3, 29)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KNBU1, KNBU1 := _1)}, "knbu1",;
+             "99999999999.9999", NIL, NIL):DISPLAY())
+      SETPOS(3, 47)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KNBU2, KNBU2 := _1)}, "knbu2",;
+             "99999999999.9999", NIL, NIL):DISPLAY())
+      SETPOS(4, 29)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KPOK1, KPOK1 := _1)}, "kpok1",;
+             "99999999999.9999", NIL, NIL):DISPLAY())
+      SETPOS(4, 47)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KPOK2, KPOK2 := _1)}, "kpok2",;
+             "99999999999.9999", NIL, NIL):DISPLAY())
+      SETPOS(5, 29)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KPR1, KPR1 := _1)}, "kpr1", ;
+            "99999999999.9999", NIL, NIL):DISPLAY())
+      SETPOS(5, 47)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KPR2, KPR2 := _1)}, "kpr2", ;
+            "99999999999.9999", NIL, NIL):DISPLAY())
+      SET(28, "ON")
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SET(28, "OFF")
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF KNBU1 > 0.00001 .AND. KNBU2 > 0.00001 .AND. KPOK1 > 0.00001 ;
+               .AND. KPOK2 > 0.00001 .AND. KPR1 > 0.00001 .AND. KPR2 > ;
+               0.00001
+
+            EXIT
+
+         ELSE
+
+            ERROR(NIL, NIL, {"Указаный курс должен быть больше нуля !"}, {;
+                  " Выход "})
+
+         ENDIF
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   SETKEYOF()
+   WINCLOSE(WIN1)
+
+   IF KEY = -9
+
+      IF EF_S_KUR->(DBSEEK(SPR_VALT->ABBREV)) .AND. EF_S_KUR->(RECLOCK(3))
+
+         EF_S_KUR->KOD_V := SPR_VALT->ABBREV
+         EF_S_KUR->DAT_KURS := DAT_OD__
+         EF_S_KUR->KUR_NBU1 := KNBU1
+         EF_S_KUR->KUR_PAY1 := KPOK1
+         EF_S_KUR->KUR_SALE1 := KPR1
+         EF_S_KUR->KUR_NBU2 := KNBU2
+         EF_S_KUR->KUR_PAY2 := KPOK2
+         EF_S_KUR->KUR_SALE2 := KPR2
+         EF_S_KUR->KUR_NBU := KNBU2 / KNBU1
+         EF_S_KUR->KUR_PAY := KPOK2 / KPOK1
+         EF_S_KUR->KUR_SALE := KPR2 / KPR1
+
+      ELSEIF EF_S_KUR->(ADDREC(3))
+
+         EF_S_KUR->KOD_V := SPR_VALT->ABBREV
+         EF_S_KUR->DAT_KURS := DAT_OD__
+         EF_S_KUR->KUR_NBU1 := KNBU1
+         EF_S_KUR->KUR_PAY1 := KPOK1
+         EF_S_KUR->KUR_SALE1 := KPR1
+         EF_S_KUR->KUR_NBU2 := KNBU2
+         EF_S_KUR->KUR_PAY2 := KPOK2
+         EF_S_KUR->KUR_SALE2 := KPR2
+         EF_S_KUR->KUR_NBU := KNBU2 / KNBU1
+         EF_S_KUR->KUR_PAY := KPOK2 / KPOK1
+         EF_S_KUR->KUR_SALE := KPR2 / KPR1
+
+      ELSE
+
+         ERROR(NIL, NIL, {" Ошибка !", "Невозможно добавить запись", ;
+               "в справочнике курсов валют"}, {" Выход "})
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+   DBUNLOCKAL()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_
+   Params: FLAG
+   Return: Logical
+  Example: VVOD_(FLAG)
+  ..........................................................................
+*/
+
+FUNCTION VVOD_(FLAG)
+
+   LOCAL MAS := ARRAY(3), OLDC := SETCOLOR()
+
+   IF FLAG = 1
+
+      MAS[1] := "конвертируемая"
+      MAS[2] := "замкнутая     "
+      MAS[3] := "CНГ           "
+      SETCOLOR("w+/w")
+
+      IF GR == "к" .OR. GR == "К"
+
+         MEMVAR->GR_V_V := "1"
+         DEVPOS(19, 26)
+         DEVOUT(MAS[1])
+         MEMVAR->GR := "к"
+
+      ELSEIF GR == "з" .OR. GR == "З"
+
+         MEMVAR->GR_V_V := "2"
+         DEVPOS(19, 26)
+         DEVOUT(MAS[2])
+         MEMVAR->GR := "з"
+
+      ELSEIF GR == "с" .OR. GR == "С"
+
+         MEMVAR->GR_V_V := "3"
+         DEVPOS(19, 26)
+         DEVOUT(MAS[3])
+         MEMVAR->GR := "С"
+
+      ELSE
+
+         SETCOLOR(OLDC)
+         RETURN .F.
+
+      ENDIF
+
+   ELSEIF FLAG = 2
+
+      SETCOLOR("w+/w")
+
+      IF CTRL == "д"
+
+         MEMVAR->PR_CTRL_V := "1"
+         DEVPOS(20, 43)
+         DEVOUT("да ")
+
+      ELSEIF CTRL == "н"
+
+         MEMVAR->PR_CTRL_V := "0"
+         DEVPOS(20, 43)
+         DEVOUT("нет")
+
+      ELSE
+
+         SETCOLOR(OLDC)
+         RETURN .F.
+
+      ENDIF
+
+   ELSEIF FLAG = 3
+
+      SETCOLOR("w+/w")
+
+      IF OKR == "д"
+
+         MEMVAR->PR_OKR_V := .T.
+         DEVPOS(20, 72)
+         DEVOUT("да ")
+
+      ELSEIF OKR == "н"
+
+         MEMVAR->PR_OKR_V := .F.
+         DEVPOS(20, 72)
+         DEVOUT("нет")
+
+      ELSE
+
+         SETCOLOR(OLDC)
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Logical
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+
+   IF SPR_VALT->GR_V == "1"
+
+      MEMVAR->GR := "конвертируемая"
+
+   ELSEIF SPR_VALT->GR_V == "2"
+
+      MEMVAR->GR := "замкнутая     "
+
+   ELSEIF SPR_VALT->GR_V == "3"
+
+      MEMVAR->GR := "CНГ           "
+
+   ENDIF
+
+   DEVPOS(19, 26)
+   DEVOUTPICT(GR, REPLICATE("X", 14))
+   DEVPOS(19, 57)
+   DEVOUTPICT(SPR_VALT->MIN_KUP, "9999.99")
+   DEVPOS(20, 43)
+   DEVOUTPICT(IF(SPR_VALT->PR_CONTROL == "1", "да ", "нет"), "XXX")
+   DEVPOS(20, 72)
+   DEVOUTPICT(IF(SPR_VALT->PR_OKR, "да ", "нет"), "XXX")
+   EF_S_KUR->(DBSEEK(SPR_VALT->ABBREV))
+   DEVPOS(15, 33)
+   DEVOUTPICT(EF_S_KUR->KUR_NBU1, "99999999999.9999")
+   DEVPOS(15, 52)
+   DEVOUTPICT(EF_S_KUR->KUR_NBU2, "99999999999.9999")
+   DEVPOS(16, 33)
+   DEVOUTPICT(EF_S_KUR->KUR_PAY1, "99999999999.9999")
+   DEVPOS(16, 52)
+   DEVOUTPICT(EF_S_KUR->KUR_PAY2, "99999999999.9999")
+   DEVPOS(17, 33)
+   DEVOUTPICT(EF_S_KUR->KUR_SALE1, "99999999999.9999")
+   DEVPOS(17, 52)
+   DEVOUTPICT(EF_S_KUR->KUR_SALE2, "99999999999.9999")
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCR_IO1
+   Params: None.
+   Return: Logical
+  Example: SCR_IO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCR_IO1()
+
+   LOCAL OLDCOLOR := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(2, 0)
+   DEVOUT("╟")
+   DEVPOS(2, 79)
+   DEVOUT("╢")
+   DEVPOS(2, 1)
+   DEVOUT(REPLICATE("─", 78))
+   DEVPOS(18, 0)
+   DEVOUT("╟")
+   DEVPOS(18, 79)
+   DEVOUT("╢")
+   DEVPOS(18, 1)
+   DEVOUT(REPLICATE("─", 78))
+   DEVPOS(13, 0)
+   DEVOUT("╟")
+   DEVPOS(13, 79)
+   DEVOUT("╢")
+   DEVPOS(13, 1)
+   DEVOUT(REPLICATE("─", 78))
+   SETCOLOR("gr+/w")
+   DEVPOS(13, 4)
+   DEVOUT(" Курс ")
+   DEVPOS(18, 4)
+   DEVOUT(" Атрибуты ")
+   SETCOLOR("N/W")
+   DEVPOS(1, 6)
+   DEVOUT(;
+         "Код  Символьный код  Страна           Наименование валюты        Аббрев.";
+         )
+   DEVPOS(19, 10)
+   DEVOUT("Группа валюты :                   Мин.купюра :")
+   DEVPOS(20, 2)
+   DEVOUT(;
+         "  Требуется ввод курса при открытии ОД :       Требуется округление :";
+         )
+   DEVPOS(14, 34)
+   DEVOUT("Единицы валюты      Единицы грив.")
+   DEVPOS(15, 6)
+   DEVOUT("   Курс НацБанка Украины :                                    ")
+   DEVPOS(16, 6)
+   DEVOUT("Курс покупки ПриватБанка : ")
+   DEVPOS(17, 6)
+   DEVOUT("Курс продажи ПриватБанка : ")
+   SETCOLOR(OLDCOLOR)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO1
+   Params: None.
+   Return: Logical
+  Example: OBRIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+            TONE(125, 0)
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         BROWSE:GOTOP()
+
+      CASE NKEY == 6
+
+         BROWSE:GOBOTTOM()
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -1
+
+         ENDIF
+
+         IF NKEY == -4
+
+            COLORWIN2(BROWSE:NTOP() + BROWSE:ROWPOS() - 1, 2, BROWSE:NTOP();
+                   + BROWSE:ROWPOS() - 1, 78, "gr+/w")
+            AS_VVOD_KU()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+         ENDIF
+
+         IF NKEY == -3
+
+         ENDIF
+
+      END CASE
+
+   ENDDO
+
+
+RETURN .T.
+

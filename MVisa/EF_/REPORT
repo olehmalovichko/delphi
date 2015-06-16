@@ -1,0 +1,862 @@
+ Rescue5 1.0 (c) APTware 1993, 94 AFAAJCAA-DEMO
+
+  EXE Name      : EF_KP.EXE
+  EXE Dated     : Fri Apr 14 15:24:02 2000
+  Source files  :      57
+  Procedures    :     558
+  Total lines   :   29493
+  Total bytes   : 1264657
+
+  Indent mode   : Space 3
+  Right margin  :      76
+  LIB threshold :    1024
+  Graphic chars : Literals
+  Key words     : Upper
+  Memvars       : Upper
+  Procedures    : Upper
+
+  CA-Clipper    : CA-Clipper: 5.2d Intl. (x215)  (1994.03.25)
+  Linker        : Linker: RTLink 3.13/3.14x.
+
+  START_EF.SRC            Lines           Bytes
+  ---------------------------------------------
+      start_ef                7             468
+                    ===========     ===========
+                              7             468
+
+  EF_ZAKOD.UDF            Lines           Bytes
+  ---------------------------------------------
+      ef_zakod               87            3464
+      putdatnod              48            2197
+      close_od               97            2807
+      mainpackba             18             808
+      calc_ost                1             249
+      lpackbase              11             626
+                    ===========     ===========
+                            262           10151
+
+  ERRORSYS.UDF            Lines           Bytes
+  ---------------------------------------------
+      deferror               54            1566
+      errorsys                2             282
+      errormessa             20             825
+                    ===========     ===========
+                             76            2673
+
+  GETSYS.UDF              Lines           Bytes
+  ---------------------------------------------
+      readkill                5             317
+      readmodal              26             828
+      getprevali             17             574
+      getpostval             29             832
+      getdosetke             14             492
+      cleargetsy             19             557
+      settle                 52            1180
+      postactive              4             320
+      getreader              16             622
+      restoreget             10             418
+      getapplyke             78            1892
+      showscoreb              9             434
+      datemsg                14             524
+      readexit                1             257
+      getactive               5             320
+      getreadvar              7             469
+      __setforma              2             296
+      __killread              2             267
+      updated                 1             246
+      readinsert              1             263
+      rangecheck             25             930
+      readupdate              5             323
+      readformat              5             323
+                    ===========     ===========
+                            347           12684
+
+  EXT.SRC                 Lines           Bytes
+  ---------------------------------------------
+      initextend              6             323
+      error                  12             720
+      timewait                4             321
+      menu                   36            1406
+      wincloseal              3             288
+      dialog                106            2927
+      curmenuclo             27             853
+      standart               12             489
+      comment                26             878
+      lencomment              6             351
+      wbrowser               92            2997
+      win                    21             809
+      winclose               19             612
+      statusopt              90            3531
+      centr                  28             794
+      statusline             51            1727
+      menu_popup             51            2866
+      colorwin2               4             384
+      zero_str               14             710
+      strfind                48            1935
+      getwin                195            9869
+      bt_creat                3             303
+      _checkboxe             11             704
+      _getseparc              1             281
+      _chboxread             42            1704
+      _getreader             27            1226
+      _button                12            1066
+      _array_                 3             362
+      _rdbuttonr             30            1352
+      bt_set                  5             351
+      mess                   90            2645
+      fileview               49            2063
+      filenames               7             468
+      scancode               24             731
+      printyes               24            1033
+      inotdead               28            1103
+      split                  22             802
+      says                   16             617
+      rb_creat                4             341
+      _radiobutt             11             694
+      _getseparr              1             290
+      _rdbutread             38            1573
+      cmonth_l               28             817
+      cmonthui               28             818
+      rb_set                  5             351
+      liner                  42            1876
+      buttons               108            3201
+      menu_pop               34            1325
+      cmonthu                28             823
+      wstatuslin             14             659
+      browser2              404           15477
+      getboxkey              41            1784
+      _clickbutt             41            1607
+      akk                    10             477
+      bwhenakk                5             384
+      bvalidakk               7             456
+      shadow                 26            1118
+      _textbackg              7             505
+      _getapplyk            106            3258
+      showscoreb              9             447
+      frames                  7             452
+      initwin                 4             309
+      initmenu                2             417
+      winmove                51            1630
+      textbackgr              5             461
+      movetouser             64            2521
+      clickbutto             24             941
+      clickbut               35            1148
+      strtomas               32            1033
+      cx2                     8             446
+      cx                     17             573
+      cy                     17             573
+      cls                    51            2143
+      isrange                16             524
+      str2mas                12             476
+      biggest                26             884
+      whead                  13             558
+      scale                  12             549
+      butlen                  5             335
+      browser               101            2783
+      hotsel                 28             901
+      rusupper               77            2533
+      hlenth                 16             648
+      readinst               74            2362
+      menudraw              153            5822
+      optselect              49            1840
+      optstep                29            1022
+      menuclose               6             406
+      freeopt                12             532
+      dispetcher            116            3855
+      hotkey                 67            2946
+      readrus2en            131            2655
+      ruslower               77            2533
+      readaltkey             88            2192
+      getsysopt              24            1217
+      getstatuso              5             439
+      curmenudra             42            1490
+      nameopt                77            3020
+      exeon                   8             581
+      exeoff                  7             500
+      lincolor               11             534
+      redbrowser             25             902
+      strz                    3             358
+      lencom                  9             413
+      txtopt                 14             625
+      obrhead                19            1203
+      __clip                  4             484
+      winheader              11             769
+      fpopup                 42            1970
+      cmonthi                 7             432
+      cmonthr                 2             340
+      cyeari                 22             688
+      cyearui                22             692
+      saycol                 29            1147
+      printf9                 9             449
+                    ===========     ===========
+                           4059          157138
+
+  OPEN.SRC                Lines           Bytes
+  ---------------------------------------------
+      nalntx                  9             449
+      baseopen               63            3437
+      openntx                16             670
+      delntx                 11             732
+      creatdbf               40            2305
+      hidden_ope             40            3331
+      area_open              44            3466
+      strpack                 2             300
+      setindex               34            2313
+      addonefld               9             616
+      dbclose                 7             378
+      ao_see                  4             349
+                    ===========     ===========
+                            279           18346
+
+  EF_SLIP.SRC             Lines           Bytes
+  ---------------------------------------------
+      vvio1                  67            2312
+      ved_slip               72            3450
+      scrio_1                48            1317
+      obrio_1               119            4186
+      v_slip                133            6135
+      r_slip                126            5593
+      d_slip                 25             766
+      find_slip              24             872
+      vvod_dat               20            1011
+      vyb_point              20             910
+      zapros                 80            4291
+      ch_trd                 13             577
+      ch_num                 55            2114
+      ch_end                 14             745
+      ch_merch               25            1236
+      ch_sum                 37            1662
+      ch_avtor               33            1440
+      vyb_firm                1             253
+      fndcard                10             529
+                    ===========     ===========
+                            922           39399
+
+  EF_KOMP.SRC             Lines           Bytes
+  ---------------------------------------------
+      vvio1                  78            2628
+      kom_slip               71            3284
+      scrio_1                50            1378
+      obrio_1                93            3269
+      find_slip              24             872
+      vvod_dat               20            1011
+      vyb_point              20             910
+      zapros                 80            4291
+      vyb_firm                1             253
+                    ===========     ===========
+                            437           17896
+
+  EF_CASH.SRC             Lines           Bytes
+  ---------------------------------------------
+      vvio1                  67            2293
+      ved_cash               83            4247
+      scrio_1                50            1349
+      obrio_1               137            5537
+      v_cash                 25            1116
+      d_slip                 45            1730
+      find_slip              24             873
+      vvod_dat               23            1103
+      vyb_point              21             923
+      zapros                 80            4289
+      v_slip                233            9788
+      ch_merch               27            1444
+      ch_sum                  4             441
+      card_reade             74            2665
+      ch_num                 73            2679
+      ch_end                 14             718
+      ch_avtor               10             520
+      check_avt              52            2875
+      check_bal              11             755
+      fnd_card               10             532
+                    ===========     ===========
+                           1063           45877
+
+  EF_POPLN.SRC            Lines           Bytes
+  ---------------------------------------------
+      vvio1                  38            1386
+      ved_popoln             84            4168
+      scrio_1                44            1200
+      obrio_1               127            4805
+      v_pop                  11             567
+      d_slip                 49            1916
+      find_ppln              24             873
+      vvod_dat               23            1115
+      vyb_point              21             929
+      zapros                 80            4301
+      v_slip                154            6487
+      ch_num                 63            2550
+      ch_end                 14             725
+      ch_merch               23            1284
+      ch_sum                  4             423
+                    ===========     ===========
+                            759           32729
+
+  EF_FIRM.SRC             Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  6             350
+      ef_firm                39            1689
+      vvio1                  97            2463
+      scrio_1                50            1707
+      obrio_1                68            1933
+      vvod                  186            9589
+      red                   207           11289
+      udl                    50            1436
+      find_fio               28            1150
+      merch                  46            2081
+      vipiska               157            8488
+      chk_eng1               12             876
+      chk_eng                11             685
+      chk_rus                11             861
+      prnvipiska              6             358
+      skipfind               15             646
+                    ===========     ===========
+                            989           45601
+
+  EF_MERCH.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  6             377
+      ef_merch               40            1712
+      vvio1                 178            4347
+      scrio_1                60            2067
+      obrio_1                70            2163
+      vvod                  220           12061
+      red                   281           16227
+      udl                    50            1434
+      find_fio               28            1133
+      pos_term              177            7944
+      chk_ho_cod             13             733
+      skipfndm               15             647
+                    ===========     ===========
+                           1138           50845
+
+  EF_OPKTT.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                 19             900
+      ef_opktt               41            1854
+      vvio1                  19             715
+      scrio_1                15             684
+      obrio_1                81            2604
+      out_pkt               144            5382
+                    ===========     ===========
+                            319           12139
+
+  EF_OPKTF.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                 18             699
+      ef_opktf               39            1809
+      vvio1                  15             588
+      scrio_1                13             624
+      obrio_1                81            2604
+      out_pkt               134            5039
+                    ===========     ===========
+                            300           11363
+
+  EF_OPKTE.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                 15             662
+      ef_opkte               49            2036
+      vvio1                  11             536
+      scrio_1                13             559
+      obrio_1                98            3750
+      out_pkt               129            4768
+                    ===========     ===========
+                            315           12311
+
+  EF_OPKTS.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                 15             700
+      ef_opkts               68            2580
+      vvio1                  11             536
+      scrio_1                13             570
+      obrio_1               120            4875
+      out_pkt               231            9766
+      prn_memord            143            7616
+      print_mem               9             433
+                    ===========     ===========
+                            610           27076
+
+  EF_OPRES.SRC            Lines           Bytes
+  ---------------------------------------------
+      ef_opres              115            5502
+                    ===========     ===========
+                            115            5502
+
+  EF_KPPE.SRC             Lines           Bytes
+  ---------------------------------------------
+      ef_kpres               87            3529
+                    ===========     ===========
+                             87            3529
+
+  EF_PPKP.SRC             Lines           Bytes
+  ---------------------------------------------
+      ef_ppkp               145            7188
+                    ===========     ===========
+                            145            7188
+
+  EF_PPKTE.SRC            Lines           Bytes
+  ---------------------------------------------
+      add_rtr                88            4161
+      ef_ppkte              155            8467
+                    ===========     ===========
+                            243           12628
+
+  EF_PPKTS.SRC            Lines           Bytes
+  ---------------------------------------------
+      ef_ppkts              409           20388
+                    ===========     ===========
+                            409           20388
+
+  EF_S_SC.SRC             Lines           Bytes
+  ---------------------------------------------
+      scrio_1                 9             511
+      sprsc                  35            1500
+      obrio_1                58            1724
+      vvod_sc                95            4402
+      red_sc                 96            3975
+      udl_sc                 30             836
+      vvio1                   1             240
+                    ===========     ===========
+                            324           13188
+
+  EF_S_PR.SRC             Lines           Bytes
+  ---------------------------------------------
+      crstr                   3             434
+      sprprov                33            1369
+      vvio1                   3             290
+      scrio_1                20             686
+      obrio_1                54            1670
+      vvod_osn               72            3116
+      red_osn                60            2553
+      udl_osn                25             767
+      ch_kod                 15             833
+      ch_sc                   6             449
+                    ===========     ===========
+                            291           12167
+
+  EF_S_TAR.SRC            Lines           Bytes
+  ---------------------------------------------
+      scrio_1                13             515
+      sprtarif               38            1581
+      obrio_1                58            1898
+      vvod                   74            3275
+      red                    60            2603
+      udl                    25             755
+      ch_mr                  11             651
+                    ===========     ===========
+                            279           11278
+
+  EF_S_TC.SRC             Lines           Bytes
+  ---------------------------------------------
+      scrio_1                 9             463
+      sprvidcard             33            1392
+      obrio_1                46            1443
+      vvio1                   1             240
+                    ===========     ===========
+                             89            3538
+
+  EF_PSLIP.SRC            Lines           Bytes
+  ---------------------------------------------
+      stread                 29            1217
+      pos_slip               77            3495
+      add_slip              180            6963
+      printimp                6             353
+      ch_trd                 16             656
+      ch_num                 44            1477
+      ch_end                 22             968
+      ch_merch               16             694
+      ch_avtor               67            2546
+                    ===========     ===========
+                            457           18369
+
+  EF_SVVED.SRC            Lines           Bytes
+  ---------------------------------------------
+      vipiska               235           12139
+      ef_svved               23             987
+      prnved                  6             346
+                    ===========     ===========
+                            264           13472
+
+  EF_S_PL.SRC             Lines           Bytes
+  ---------------------------------------------
+      vvio1                  48            1796
+      ef_s_pl                40            1730
+      scrio_1                42            1340
+      obrio_1                65            1913
+      vvod_pl               138            7040
+      red_pl                113            5831
+      udl_pl                 31            1108
+      vid_pl                 25            1170
+      add_arr                12             590
+      ch_per                 16             581
+      ch_bk                  13             496
+      crstr                   2             374
+      obrio_2                58            1742
+      vv_pl                  67            2912
+      r_pl                   54            2319
+      d_pl                   25             765
+                    ===========     ===========
+                            749           31707
+
+  EF_S_PPL.SRC            Lines           Bytes
+  ---------------------------------------------
+      vvio1                  12             629
+      ef_s_ppl               43            1769
+      scrio_1                25             829
+      obrio_1                54            1658
+      vvod_ppl              102            4524
+      red_ppl                66            3095
+      udl_ppl                25             769
+      new_kod_pl             17             673
+      ch_kod_tar             24             958
+                    ===========     ===========
+                            368           14904
+
+  EF_S_TK.SRC             Lines           Bytes
+  ---------------------------------------------
+      vvio1                  59            1832
+      ef_s_tkp               43            1698
+      scrio_1                21             678
+      obrio_1                54            1658
+      vvod_tkp              107            5589
+      red_tkp                86            4694
+      udl_tkp                25             769
+      c_str                   1             481
+      new_kod_pl             97            3593
+                    ===========     ===========
+                            493           20992
+
+  EF_BUXKP.SRC            Lines           Bytes
+  ---------------------------------------------
+      kp_vv                  40            1717
+      ef_buxkp               63            3080
+      vsego_doc              11             590
+      scrio_1                71            1843
+      obrio_1                69            2147
+      it_p_ord               30            1545
+      it_tar                203           10484
+      printpvd                6             353
+      reestr_kom            128            6787
+                    ===========     ===========
+                            621           28546
+
+  EF_RSKOM.SRC            Lines           Bytes
+  ---------------------------------------------
+      del_res                32            1375
+      plat_reest            495           25579
+      v_pv_mo1              136            6880
+      printpvd                6             353
+                    ===========     ===========
+                            669           34187
+
+  EF_BUH.SRC              Lines           Bytes
+  ---------------------------------------------
+      vvio1                  69            2339
+      ved_buh                74            3549
+      scrio_1                52            1410
+      obrio_1                90            3521
+      find_slip              23             857
+      d_slip                 43            1482
+      ef_iro                 44            2177
+      fnd__card              10             556
+                    ===========     ===========
+                            405           15891
+
+  EF_ITOG.SRC             Lines           Bytes
+  ---------------------------------------------
+      itprovday             367           16653
+      shablon                11             491
+      j_sv_prix              85            3926
+      j_sv_rasx              76            3468
+                    ===========     ===========
+                            539           24538
+
+  EF_S_U2M.SRC            Lines           Bytes
+  ---------------------------------------------
+      add_arr                15             815
+      spruser2m              39            1678
+      scrio_1                13             566
+      obrio_1                59            1761
+      vvod_user              70            3165
+      red_user               56            2518
+      udl_user               25             770
+      ch_us                  35            1083
+      ch_mr                  15             779
+                    ===========     ===========
+                            327           13135
+
+  EF_S_VAL.SRC            Lines           Bytes
+  ---------------------------------------------
+      vvio1                  32            1284
+      sprvalt                37            1563
+      scr_io1                42            1374
+      obrio1                 49            1590
+      as_vvod_ku             90            4139
+      vvod_                  56            1609
+                    ===========     ===========
+                            306           11559
+
+  EF__IND.SRC             Lines           Bytes
+  ---------------------------------------------
+      rentx                  18            1084
+      admreindex             54            2059
+      see                    20             903
+                    ===========     ===========
+                             92            4046
+
+  EF__INDV.SRC            Lines           Bytes
+  ---------------------------------------------
+      dbfext                  5             364
+      admmyindex             64            2279
+      rentx                  33            1923
+      ntxpoint               61            2532
+      myindex                39            1765
+      delassocia             13             744
+      see2                   16             774
+      tab                     5             391
+                    ===========     ===========
+                            236           10772
+
+  EF__PAK.SRC             Lines           Bytes
+  ---------------------------------------------
+      admpackbas             29            1090
+      packbase               15             725
+                    ===========     ===========
+                             44            1815
+
+  EF_NASTR.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvpape               241            8125
+      ef_nastr              115            3943
+      editpape              299           15526
+                    ===========     ===========
+                            655           27594
+
+  LOCKS52.SRC             Lines           Bytes
+  ---------------------------------------------
+      reclock                62            2039
+      addrec                 55            1845
+      delfile                36            1352
+      netuse                 58            2216
+      fillock                33            1256
+      flcopy                 34            1385
+      ttsbeg                  6             508
+      ttsab                   6             508
+      scr_tts                 6             346
+                    ===========     ===========
+                            296           11455
+
+  EF.SRC                  Lines           Bytes
+  ---------------------------------------------
+      ef_main               111            9087
+      pointrouti             32            2100
+      check                   1             276
+      endwork                11             566
+      handleeven            103            2834
+      newdatod               16            1134
+      checkkurs              38            2039
+      sscreen               106            3288
+      users                  23             960
+      setkeyon                3             320
+      clget                   3             283
+      setkeyof                3             280
+      setkeyon1               4             367
+      setkeyof1               4             307
+      setkeyon2               4             366
+      setkeyof2               4             306
+      quitmain                7             370
+      prnready                4             391
+      closearea               7             398
+      error1                 39            1328
+      dir_alt                12             477
+      mxtoc                   2             392
+      mytrim                  1             262
+      num_pak                19             613
+      getkursval             21            1277
+                    ===========     ===========
+                            578           30021
+
+  BROWSE.SRC              Lines           Bytes
+  ---------------------------------------------
+      creattbrow              4             561
+      creatstr               15             781
+      ustantbrow              6             819
+      dbempty                 4             298
+      newrecy                18             783
+      reccolor                8             618
+      refresh                 4             314
+      skipper                61            2715
+      bot                    73            2401
+      top                    25            1188
+                    ===========     ===========
+                            218           10478
+
+  EF_KASR.SRC             Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  2             369
+      ef_kasr                44            1845
+      v_p_bl_o               49            1411
+      obrio_1                71            2136
+      v_p_vv_o              353           12771
+      summ                   26             932
+      ob_vv                  72            2073
+                    ===========     ===========
+                            617           21537
+
+  EF_PST_P.SRC            Lines           Bytes
+  ---------------------------------------------
+      v_p_ch                112            6969
+      v_p_rch               163            8253
+      v_p_brch              111            5360
+      v_p_ro                179            8285
+      prkasprnva            130            5615
+      v_p_zpo               102            4045
+      v_p_po                178            7656
+      pr_kasprnv            121            5180
+      v_pv_pp               139            7149
+      v_pv_mo               166            8222
+      prnchek                 6             349
+      v_p_pe_k              635           21980
+      split_str              16             661
+                    ===========     ===========
+                           2058           89724
+
+  EF_AVTRZ.SRC            Lines           Bytes
+  ---------------------------------------------
+      ef_balans             155            7108
+      ef_avtrz              173            7844
+      stread                 27            1166
+                    ===========     ===========
+                            355           16118
+
+  EF_KASP.SRC             Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  2             369
+      ef_kasp                49            1978
+      ob_vv                  66            1931
+      v_p_bl_o               43            1266
+      obrio_1                67            2056
+      v_p_vv_o              342           12007
+      summ                   26             932
+                    ===========     ===========
+                            595           20539
+
+  EF_BNALP.SRC            Lines           Bytes
+  ---------------------------------------------
+      vvio1                  40            1702
+      mem_ord                44            2000
+      scrio_1                53            1456
+      obrio_1                67            2109
+      vvod_mem              144            5334
+                    ===========     ===========
+                            348           12601
+
+  EF_BADSL.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  6             506
+      ef_badsl               21            1158
+      vvio1                  11             443
+      scrio_1                14             594
+      obrio_1                49            1522
+                    ===========     ===========
+                            101            4223
+
+  EF_KASRI.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  2             369
+      ef_kasri               42            1908
+      ob_vv                  74            2127
+      v_p_bl_o               49            1411
+      obrio_1               122            5264
+      v_p_vv_o              388           13938
+      v_p_udl_o              80            3129
+      summ                   26             932
+                    ===========     ===========
+                            783           29078
+
+  EF_KASPI.SRC            Lines           Bytes
+  ---------------------------------------------
+      vyvstr                  2             369
+      ef_kaspi               52            2251
+      ob_vv                  66            1931
+      v_p_bl_o               43            1266
+      obrio_1                75            2489
+      v_p_vv_o              252            8913
+      v_p_udl_o              47            1938
+      summ                   26             932
+                    ===========     ===========
+                            563           20089
+
+  SUM_PROP.SRC            Lines           Bytes
+  ---------------------------------------------
+      sprp_1                 95            4062
+      sum_prop               32            1602
+                    ===========     ===========
+                            127            5664
+
+  EF_MB.SRC               Lines           Bytes
+  ---------------------------------------------
+      ipd_sb_mai            119            5056
+      ipd_to_mai              8             426
+      ipd_2_bk               57            2415
+      vvio1                  23             868
+      prov_mb                36            1595
+      scrio_1                31            1153
+      obrio_1                60            1911
+      prn_mb                 74            3198
+      ipd_2_mb              104            4262
+      ipd_2_vl               64            2860
+      printsld                6             346
+      nbu_dat                 5             615
+                    ===========     ===========
+                            587           24705
+
+  EF_BASE.SRC             Lines           Bytes
+  ---------------------------------------------
+      dbasestr              280           33426
+                    ===========     ===========
+                            280           33426
+
+  EF_KPLAT.SRC            Lines           Bytes
+  ---------------------------------------------
+      kp_vv1                 40            1657
+      v_plat                 43            1955
+      kp_vv                  40            1717
+      ef_kplat               72            3399
+      vsego_doc              11             590
+      obrio_1               112            3747
+      scrio_1                71            1843
+      r_kplat                59            2730
+      vvod_fio               15             839
+      vvod_plat              23            1046
+      prn_shtamp             58            1691
+      obrio_2                99            3747
+      new_pol                47            1873
+      read_dog               15             793
+      check_opl              17             683
+      kp_vvo_pl             170            7303
+      rr_kplat               77            3882
+      dd_kplat               23             747
+      oplata                 70            3044
+      check_opl1             44            1829
+      new_kod_pl            136            5408
+      new_k_pl               53            1877
+      pr_vv                  11             456
+      opl_nal                53            1807
+      opl_card               20             958
+      avtor_sum              67            2931
+      vv_slip               330           14306
+      add_prov               48            1857
+                    ===========     ===========
+                           1824           74715
+
+  ZST_PRN.SRC             Lines           Bytes
+  ---------------------------------------------
+      zst_prn                24            1025
+                    ===========     ===========
+                             24            1025
+
+  LIB.UDF                 Lines           Bytes
+  ---------------------------------------------
+      winmenu                50            1630
+                    ===========     ===========
+                             50            1630

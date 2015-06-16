@@ -1,0 +1,1373 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_S_PL
+   Params: None.
+   Return: Logical
+  Example: EF_S_PL()
+  ..........................................................................
+*/
+
+FUNCTION EF_S_PL()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, DESKTOP, ABROWSE
+
+   PRIVATE BROWSE, COLUMN, ARR_VPL := {}
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~F2-~ввод", "~F3-~редактирование", ;
+         "~F4-~удаление", "~F5-~Виды платежей"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+   PRIVATE BOTIO_3 := {"~Esc-~выход", "~F2-~ввод", "~F3-~редактирование", ;
+         "~F4-~удаление"}
+
+   IF  .NOT. AREA_OPEN({{"ef_s_pl"}, {"ef_s_gpl"}, {"ef_s_pgb"}, {"ef_sys"};
+         })
+
+      DBCLOSEALL()
+      RETURN .F.
+
+   ENDIF
+
+   DBSELECTAR("ef_s_pl")
+   DBSETORDER(1)
+   DBSELECTAR("ef_s_gpl")
+   DBSETORDER(1)
+   DBGOTOP()
+   MEMVAR->CFL := {"Kod_vpl", "Nam_vpl"}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "ef_s_gpl->")
+   MEMVAR->SEP := {"", " ", ""}
+   ABROWSE := CREATTBROW(3, 1, 21, 24, "Kod_tr", {||CREATSTR(CAL, CFL, SEP);
+         })
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := ""
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, SINGLE)
+   CENTR(NIL, 0, " СПРАВОЧНИК ПЛАТЕЖЕЙ ")
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   OBRIO_1()
+   DBCLOSEALL()
+   WINCLOSE(DESKTOP)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR("W+/W")
+   LOCAL I := 1, ARR_ := {}
+
+   EF_S_PL->(DBSEEK(STR(EF_S_GPL->KOD_VPL, 3)))
+
+   DO WHILE EF_S_PL->( .NOT. EOF()) .AND. EF_S_PL->KOD_VPL = EF_S_GPL->;
+         KOD_VPL
+
+      AADD(ARR_, "    " + EF_S_PL->KOD_PL + "   " + EF_S_PL->NAM_PL + "    " ;
+            + IF(EF_S_PL->PR_TEL, "[√]", "   ") + " ")
+      EF_S_PL->(DBSKIP())
+
+   ENDDO
+
+   DEVPOS(1, 28)
+   DEVOUT(IF(EF_S_GPL->PR_TAR, "√", " "), "W+/W")
+   DEVPOS(1, 71)
+   DEVOUT(EF_S_GPL->CH_KPLAN, "W+/W")
+   DEVPOS(2, 28)
+   DEVOUT(IF(EF_S_GPL->PR_RVGB, "√", " "), "W+/W")
+   DEVPOS(2, 56)
+   DEVOUT(IF(EF_S_GPL->PR_KOM, "√", " "), "W+/W")
+   DEVPOS(3, 28)
+   DEVOUT(IF(EF_S_GPL->PR_PVGB, "√", " "), "W+/W")
+   DEVPOS(3, 72)
+   DEVOUT(EF_S_GPL->BIN_SOV, "W+/W")
+
+   IF EF_S_GPL->PR_PVGB
+
+      EF_S_PGB->(DBSEEK(STR(EF_S_GPL->KOD_VPL, 3)))
+      DEVPOS(5, 27)
+      DEVOUT(STR(EF_S_PGB->SC, 14) + " " + EF_S_PGB->NAM_POL)
+
+   ELSE
+
+      DEVPOS(5, 27)
+      DEVOUT(SPACE(50))
+
+   ENDIF
+
+   DEVPOS(6, 58)
+   DEVOUT(IF(EF_S_GPL->PR_PER, "периодично", "отсрочка  "), "W+/W")
+   DEVPOS(7, 37)
+   DEVOUT(EF_S_GPL->KVO_DEN, "W+/W")
+   DEVPOS(7, 58)
+   DEVOUT(IF(EF_S_GPL->PR_B_K, "банковских ", "календарных"), "W+/W")
+   DEVPOS(8, 61)
+   DEVOUT(DTOC(EF_S_GPL->DAT_LAST), "W+/W")
+   DEVPOS(10, 27)
+   DEVOUT(EF_S_GPL->OSN, "W+/W")
+   DISPBOX(13, 26, 21, 78, "         ")
+
+   IF LEN(ARR_) > 0
+
+      FOR I := 1 TO LEN(ARR_)
+
+         IF I > 9
+
+            EXIT
+
+         ENDIF
+
+         DEVPOS(12 + I, 26)
+         DEVOUT(ARR_[I])
+
+      NEXT
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Logical
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DISPBOX(1, 25, 22, 25, SINGLE)
+   DISPBOX(2, 1, 2, 25, SINGLE)
+   DISPBOX(11, 25, 11, 79, SINGLE)
+   DEVPOS(2, 0)
+   DEVOUT("├")
+   DEVPOS(2, 25)
+   DEVOUT("┤")
+   DEVPOS(11, 25)
+   DEVOUT("├")
+   DEVPOS(11, 79)
+   DEVOUT("┤")
+   DEVPOS(0, 25)
+   DEVOUT("┬")
+   DEVPOS(22, 25)
+   DEVOUT("┴")
+   SETCOLOR("n/w")
+   DEVPOS(1, 1)
+   DEVOUT("Код Hаименование платежа")
+   DEVPOS(1, 27)
+   DEVOUT("[ ] Тариф c получателя     Символ кас.плана")
+   DEVPOS(2, 27)
+   DEVOUT("[ ] Реестр в головной банк  [ ] Комиссию не взымать")
+   DEVPOS(3, 27)
+   DEVOUT("[ ] Платежи в головной банк Bin сов.карточки       ")
+   DEVPOS(4, 27)
+   DEVOUT("   счет           наименование счета ")
+   DEVPOS(6, 27)
+   DEVOUT("Платежи получателю (о/п)")
+   DEVPOS(7, 27)
+   DEVOUT("Кол. дней          (б/к)")
+   DEVPOS(8, 27)
+   DEVOUT("Дата последнеднего движения")
+   DEVPOS(9, 27)
+   DEVOUT("      Назначение платежа ")
+   DEVPOS(11, 35)
+   DEVOUT(" Виды платежей ")
+   DEVPOS(12, 27)
+   DEVOUT(" Код     Наименование       Обяз. ввод N тел. ")
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Logical
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -1
+
+            VVOD_PL()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+            RECCOLOR("gr+/w")
+            RED_PL()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -3
+
+            RECCOLOR("gr+/w")
+            UDL_PL()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -4
+
+            RECCOLOR("gr+/w")
+            VID_PL()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_PL
+   Params: None.
+   Return: Nil
+  Example: VVOD_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD_PL()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL REC := MEMVAR->CUR_REC := RECNO(), DBERR := .F., BIN_V := ;
+         "      ", PKOM_V := .F.
+   LOCAL KOD_R := 0, NAME_R := SPACE(20), TIP_V := " ", KVO_R := ;
+         0, PR_P := "о", PR_B := "б"
+   LOCAL DAT_R := EF_SYS->DAT_PD, REC_G := EF_S_GPL->(RECNO()), ;
+         KOD_GR := 0, PR_TAR_V, CH_KP := "  "
+   LOCAL PR_TEL_V := .F., PR_R_V := .F., PR_P_V := .F., SC_V := 0,;
+          NAM_S_V := SPACE(35)
+
+   PRIVATE NAM_GR := SPACE(20)
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := NEWRECY(BROWSE)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   STATUSLINE(BOTIO_2)
+
+   DO WHILE  .NOT. KEY == 27
+
+      IF M > BROWSE:NBOTTOM()
+
+         SCROLL(BROWSE:NTOP(), BROWSE:NLEFT(), BROWSE:NBOTTOM(), ;
+               BROWSE:NRIGHT(), 1)
+         M := BROWSE:NBOTTOM()
+
+      ENDIF
+
+      SETCOLOR("n/w,w+/b,,,w+/bg")
+      COLORWIN2(M, BROWSE:NLEFT(), M, BROWSE:NRIGHT(), COLORFON)
+      KOD_GR := 0
+      NAME_R := SPACE(20)
+      TIP_V := "н"
+      KVO_R := 0
+      PR_B := "б"
+      PR_P := "о"
+      MEMVAR->O_V := SPACE(50)
+      PR_R_V := .F.
+      PR_P_V := .F.
+      PR_TAR_V := .F.
+      SC_V := 0
+      CH_KP := "  "
+      PKOM_V := .F.
+      BIN_V := SPACE(6)
+      MEMVAR->NAM_SC_V := SPACE(35)
+
+      DO WHILE .T.
+
+         SETPOS(M, 5)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NAME_R, NAME_R := _1)}, ;
+               "name_r", REPLICATE("X", 20), NIL, NIL):DISPLAY())
+         AADD(GETLIST, _CHECKBOXE(1, 27, "pr_tar_v", NIL, NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_TAR_V) + ;
+               " Тариф c получателя    ", IF(VALTYPE(L) == "L", PR_TAR_V ;
+               := L, PR_TAR_V))}
+         ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         SETPOS(1, 71)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, CH_KP, CH_KP := _1)}, ;
+               "ch_kp", "99", NIL, NIL):DISPLAY())
+         AADD(GETLIST, _CHECKBOXE(2, 27, "pr_r_v", NIL, NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_R_V) + ;
+               " Реестр в головной банк  ", IF(VALTYPE(L) == "L", PR_R_V ;
+               := L, PR_R_V))}
+         ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _CHECKBOXE(3, 27, "pr_p_v", NIL, NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_P_V) + ;
+               " Платежи в головной банк ", IF(VALTYPE(L) == "L", PR_P_V ;
+               := L, PR_P_V))}
+         ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         AADD(GETLIST, _CHECKBOXE(2, 55, "pkom_v", NIL, NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PKOM_V) + ;
+               " Комиссию не взымать", IF(VALTYPE(L) == "L", PKOM_V := L, ;
+               PKOM_V))}
+         ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         SETPOS(3, 72)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, BIN_V, BIN_V := _1)}, ;
+               "bin_v", "XXXXXX", NIL, NIL):DISPLAY())
+         SETPOS(5, 27)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, SC_V, SC_V := _1)}, "sc_v",;
+                REPLICATE("9", 14), NIL, {||PR_P_V}):DISPLAY())
+         SETPOS(5, 42)
+         AADD(GETLIST, __GET(NIL, "nam_sc_v", REPLICATE("X", 35), NIL, {||;
+               PR_P_V}):DISPLAY())
+         SETPOS(6, 58)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, PR_P, PR_P := _1)}, "pr_p",;
+                "X", {||CH_PER(PR_P, @PR_B)}, NIL):DISPLAY())
+         SETPOS(7, 37)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KVO_R, KVO_R := _1)}, ;
+               "kvo_r", "999", NIL, NIL):DISPLAY())
+         SETPOS(7, 58)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, PR_B, PR_B := _1)}, "pr_b",;
+                "X", {||CH_BK(PR_B)}, {||PR_P == "о"}):DISPLAY())
+         SETPOS(8, 61)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, DAT_R, DAT_R := _1)}, ;
+               "dat_r", "99.99.9999", NIL, NIL):DISPLAY())
+         SETPOS(10, 27)
+         AADD(GETLIST, __GET(NIL, "o_v", REPLICATE("X", 50), NIL, NIL);
+               :DISPLAY())
+         SETKEYON()
+         SETCURSOR(1)
+         READMODAL(GETLIST)
+         MEMVAR->GETLIST := {}
+         SETCURSOR(0)
+         SETKEYOF()
+         KEY := LASTKEY()
+
+         IF KEY = -9
+
+            IF  .NOT. ((PR_P = "о" .OR. PR_P = "п") .AND. (PR_B = "б" .OR. ;
+                  PR_B = "к"))
+
+               DBGOTO(REC)
+               LOOP
+
+            ENDIF
+
+            EF_S_GPL->(DBSEEK("900", .T.))
+
+            IF EF_S_GPL->(EOF())
+
+               EF_S_GPL->(DBGOBOTTOM())
+               KOD_GR := EF_S_GPL->KOD_VPL + 1
+
+            ELSE
+
+               EF_S_GPL->(DBSKIP(-1))
+
+               IF EF_S_GPL->(BOF())
+
+                  KOD_GR := 1
+
+               ELSE
+
+                  KOD_GR := EF_S_GPL->KOD_VPL + 1
+
+               ENDIF
+
+            ENDIF
+
+            EF_S_GPL->(DBGOTO(REC_G))
+            DBERR := DBSEEK(STR(KOD_GR, 3))
+            DBGOTO(CUR_REC)
+
+            IF DBERR
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Запись с данным кодом", ;
+                     "уже есть в справочнике !"}, {" Выход "})
+               LOOP
+
+            ENDIF
+
+            EXIT
+
+         ELSEIF KEY = 27
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+      COLORWIN2(M, BROWSE:NLEFT() - 1, M, BROWSE:NRIGHT(), "w+/w")
+
+      IF KEY = -9
+
+         IF ADDREC(3) .AND. IF(PR_P_V, EF_S_PGB->(ADDREC(3)), .T.)
+
+            EF_S_GPL->KOD_VPL := KOD_GR
+            EF_S_GPL->NAM_VPL := NAME_R
+            EF_S_GPL->CH_KPLAN := CH_KP
+            EF_S_GPL->PR_RVGB := PR_R_V
+            EF_S_GPL->PR_PVGB := PR_P_V
+            EF_S_GPL->PR_TAR := PR_TAR_V
+            EF_S_GPL->PR_PER := IF(PR_P == "п", .T., .F.)
+            EF_S_GPL->PR_B_K := IF(PR_B == "б", .T., .F.)
+            EF_S_GPL->KVO_DEN := KVO_R
+            EF_S_GPL->DAT_LAST := DAT_R
+            EF_S_GPL->DAT_PD := DAT_R
+            EF_S_GPL->DAT_BANK := DAT_R
+            EF_S_GPL->OSN := O_V
+            EF_S_GPL->PR_KOM := PKOM_V
+            EF_S_GPL->BIN_SOV := BIN_V
+
+            IF PR_P_V
+
+               EF_S_PGB->KOD_VPL := KOD_GR
+               EF_S_PGB->NAM_POL := NAM_SC_V
+               EF_S_PGB->SC := SC_V
+               EF_S_PGB->(DBUNLOCK())
+
+            ENDIF
+
+            DBCOMMIT()
+            DBUNLOCK()
+
+         ELSE
+
+            RESTSCREEN(0, 0, 24, 79, WIN)
+
+         ENDIF
+
+      ELSEIF KEY = 27
+
+         DBGOTO(REC)
+         RESTSCREEN(0, 0, 24, 79, WIN)
+
+      ENDIF
+
+      ++M
+
+   ENDDO
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RED_PL
+   Params: None.
+   Return: Nil
+  Example: RED_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION RED_PL()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL CUR_REC := RECNO(), BIN_V := "      ", PKOM_V := .F.
+   LOCAL V_KOD, V_NAM, V_PR, V_BR, V_S, V_D_K, V_MCC, CH_KP, KOD_R := 0,;
+          NAME_R := SPACE(20), TIP_V := " ", KVO_R := 0, PR_P := "о", PR_B ;
+         := "б"
+   LOCAL DAT_R := EF_SYS->DAT_PD, REC_G := EF_S_GPL->(RECNO()), ;
+         KOD_GR := 0
+   LOCAL PR_TEL_V, ADD_R := .F.
+
+   PRIVATE NAM_GR := SPACE(20)
+
+   IF DBEMPTY()
+
+      RETURN NIL
+
+   ENDIF
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := BROWSE:ROWPOS() + (BROWSE:NTOP() - 1)
+   STATUSLINE(BOTIO_2)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   NAME_R := EF_S_GPL->NAM_VPL
+   MEMVAR->PR_TAR_V := EF_S_GPL->PR_TAR
+   KVO_R := EF_S_GPL->KVO_DEN
+   PR_P := IF(EF_S_GPL->PR_PER, "п", "о")
+   PR_B := IF(EF_S_GPL->PR_B_K, "б", "к")
+   DAT_R := EF_S_GPL->DAT_LAST
+   CH_KP := EF_S_GPL->CH_KPLAN
+   MEMVAR->O_V := EF_S_GPL->OSN
+   MEMVAR->PR_R_V := EF_S_GPL->PR_RVGB
+   MEMVAR->PR_P_V := EF_S_GPL->PR_PVGB
+   PKOM_V := EF_S_GPL->PR_KOM
+   BIN_V := EF_S_GPL->BIN_SOV
+
+   IF PR_P_V
+
+      MEMVAR->SC_V := EF_S_PGB->SC
+      MEMVAR->NAM_SC_V := EF_S_PGB->NAM_POL
+      ADD_R := .F.
+
+   ELSE
+
+      MEMVAR->SC_V := 0
+      MEMVAR->NAM_SC_V := SPACE(35)
+      ADD_R := .T.
+
+   ENDIF
+
+   DO WHILE .T.
+
+      SETPOS(M, 5)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NAME_R, NAME_R := _1)}, ;
+            "name_r", REPLICATE("X", 20), NIL, NIL):DISPLAY())
+      AADD(GETLIST, _CHECKBOXE(1, 27, "pr_tar_v", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_TAR_V) + ;
+            " Тариф c получателя    ", IF(VALTYPE(L) == "L", MEMVAR->;
+            PR_TAR_V := L, PR_TAR_V))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETPOS(1, 71)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, CH_KP, CH_KP := _1)}, "ch_kp",;
+             "99", NIL, NIL):DISPLAY())
+      AADD(GETLIST, _CHECKBOXE(2, 27, "pr_r_v", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_R_V) + ;
+            " Реестр в головной банк  ", IF(VALTYPE(L) == "L", MEMVAR->;
+            PR_R_V := L, PR_R_V))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(3, 27, "pr_p_v", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_P_V) + ;
+            " Платежи в головной банк ", IF(VALTYPE(L) == "L", MEMVAR->;
+            PR_P_V := L, PR_P_V))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(2, 55, "pkom_v", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PKOM_V) + ;
+            " Комиссию не взымать", IF(VALTYPE(L) == "L", PKOM_V := L, ;
+            PKOM_V))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETPOS(3, 72)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, BIN_V, BIN_V := _1)}, "bin_v",;
+             "XXXXXX", NIL, NIL):DISPLAY())
+      SETPOS(5, 27)
+      AADD(GETLIST, __GET(NIL, "sc_v", REPLICATE("9", 14), NIL, {||PR_P_V});
+            :DISPLAY())
+      SETPOS(5, 42)
+      AADD(GETLIST, __GET(NIL, "nam_sc_v", REPLICATE("X", 35), NIL, {||;
+            PR_P_V}):DISPLAY())
+      SETPOS(6, 58)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, PR_P, PR_P := _1)}, "pr_p", ;
+            "X", {||CH_PER(PR_P, @PR_B)}, NIL):DISPLAY())
+      SETPOS(7, 37)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KVO_R, KVO_R := _1)}, "kvo_r",;
+             "999", NIL, NIL):DISPLAY())
+      SETPOS(7, 58)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, PR_B, PR_B := _1)}, "pr_b", ;
+            "X", {||CH_BK(PR_B)}, {||PR_P == "о"}):DISPLAY())
+      SETPOS(8, 61)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, DAT_R, DAT_R := _1)}, "dat_r",;
+             "99.99.99", NIL, NIL):DISPLAY())
+      SETPOS(10, 27)
+      AADD(GETLIST, __GET(NIL, "o_v", REPLICATE("X", 50), NIL, NIL);
+            :DISPLAY())
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF  .NOT. ((PR_P = "о" .OR. PR_P = "п") .AND. (PR_B = "б" .OR. ;
+               PR_B = "к"))
+
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY == -9 .AND. RECLOCK(3)
+
+      IF IF(PR_P_V, IF(ADD_R, EF_S_PGB->(ADDREC(3)), EF_S_PGB->(RECLOCK(3)) );
+            , .T. )
+
+         EF_S_GPL->NAM_VPL := NAME_R
+         EF_S_GPL->PR_RVGB := PR_R_V
+         EF_S_GPL->PR_PVGB := PR_P_V
+         EF_S_GPL->CH_KPLAN := CH_KP
+         EF_S_GPL->PR_TAR := PR_TAR_V
+         EF_S_GPL->PR_PER := IF(PR_P == "п", .T., .F.)
+         EF_S_GPL->PR_B_K := IF(PR_B == "б", .T., .F.)
+         EF_S_GPL->KVO_DEN := KVO_R
+         EF_S_GPL->DAT_LAST := DAT_R
+         EF_S_GPL->DAT_PD := DAT_R
+         EF_S_GPL->DAT_BANK := DAT_R
+         EF_S_GPL->OSN := O_V
+         EF_S_GPL->PR_KOM := PKOM_V
+         EF_S_GPL->BIN_SOV := BIN_V
+
+         IF PR_P_V
+
+            EF_S_PGB->KOD_VPL := EF_S_GPL->KOD_VPL
+            EF_S_PGB->NAM_POL := NAM_SC_V
+            EF_S_PGB->SC := SC_V
+            EF_S_PGB->(DBUNLOCK())
+
+         ENDIF
+
+         DBCOMMIT()
+         DBUNLOCK()
+
+      ENDIF
+
+   ENDIF
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: UDL_PL
+   Params: None.
+   Return: Nil
+  Example: UDL_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION UDL_PL()
+
+   LOCAL KEY
+
+   IF DBEMPTY()
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Удалять строку ?"}, {"  Да ", " Нет "}, 2)
+
+   IF EF_S_PL->(DBSEEK(STR(EF_S_GPL->KOD_VPL, 3)))
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "У данного платежа ", ;
+            "есть виды платежей !"}, {" Выход "})
+
+   ELSEIF KEY = 1 .AND. RECLOCK(3) .AND. IF(EF_S_GPL->PR_PVGB, EF_S_PGB->(;
+         RECLOCK(3)), .T.)
+
+      IF EF_S_GPL->PR_PVGB
+
+         EF_S_PGB->(DBDELETE())
+         EF_S_PGB->(DBUNLOCK())
+
+      ENDIF
+
+      DBDELETE()
+      DBCOMMITAL()
+      DBUNLOCK()
+
+   ELSE
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   DISPBEGIN()
+   BROWSE:REFRESHALL()
+
+   DO WHILE  .NOT. BROWSE:STABILIZE()
+
+   ENDDO
+
+   IF BROWSE:ROWPOS() = 1
+
+      BROWSE:REFRESHALL()
+
+      DO WHILE  .NOT. BROWSE:STABILIZE()
+
+      ENDDO
+
+   ENDIF
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VID_PL
+   Params: None.
+   Return: Logical
+  Example: VID_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VID_PL()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, DESKTOP, ABROWSE
+
+   PRIVATE BROWSE1, COLUMN1
+   PRIVATE INDEXBLOCK, BL_PR_US1
+   PRIVATE IKEY_TOP1 := STR(EF_S_GPL->KOD_VPL, 3), IKEY_BOT1 := STR(;
+         EF_S_GPL->KOD_VPL, 3)
+   PRIVATE COLORFON1, COLORCUR1, VYVBLOCK1, CAL, CFL, SEP
+   DBSELECTAR("ef_s_pl")
+   DBSETORDER(1)
+   DBGOTOP()
+   ABROWSE := CREATTBROW(0, 0, 7, 38, "Kod_tr", {||CRSTR()})
+   MEMVAR->BROWSE1 := ABROWSE[1]
+   MEMVAR->COLUMN1 := ABROWSE[2]
+   MEMVAR->COLORFON1 := "N/W"
+   MEMVAR->COLORCUR1 := "W+/GB"
+   MEMVAR->VYVBLOCK1 := ""
+   MEMVAR->BL_PR_US1 := ""
+   MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 3) == ;
+         IKEY_TOP1}
+   USTANTBROW(BROWSE1, COLORFON1, COLORCUR1, IKEY_TOP1, IKEY_BOT1, ;
+         INDEXBLOCK, BL_PR_US1)
+   SETCOLOR("w+/w")
+   DESKTOP := WIN(14, 27, 22, 78)
+   STATUSLINE(BOTIO_3)
+   DBSEEK(IKEY_TOP1)
+   OBRIO_2()
+   WINCLOSE(DESKTOP)
+   DBSELECTAR("ef_s_gpl")
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADD_ARR
+   Params: None.
+   Return: Logical
+  Example: ADD_ARR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION ADD_ARR()
+
+   LOCAL REC := EF_S_GPL->(RECNO())
+
+   EF_S_GPL->(DBGOTOP())
+   MEMVAR->ARR_VPL := {}
+   AADD(ARR_VPL, {"      Новая        ", 0})
+
+   DO WHILE EF_S_GPL->( .NOT. EOF())
+
+      IF EF_S_GPL->PR_GRP
+
+         AADD(ARR_VPL, {EF_S_GPL->NAM_VPL, EF_S_GPL->KOD_VPL})
+
+      ENDIF
+
+      EF_S_GPL->(DBSKIP())
+
+   ENDDO
+
+   EF_S_GPL->(DBGOTO(REC))
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_PER
+   Params: KOD, KK
+   Return: Undefined
+  Example: CH_PER(KOD, KK)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_PER(KOD, KK)
+
+   LOCAL RET := .F.
+
+   IF KOD == "о"
+
+      DEVPOS(6, 58)
+      DEVOUT("отсрочка  ", "W+/W")
+      RET := .T.
+
+   ELSEIF KOD == "п"
+
+      DEVPOS(6, 58)
+      DEVOUT("периодично", "W+/W")
+      DEVPOS(7, 58)
+      DEVOUT("календарных", "W+/W")
+      KK := "к"
+      RET := .T.
+
+   ELSE
+
+      RET := .F.
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_BK
+   Params: KOD
+   Return: Undefined
+  Example: CH_BK(KOD)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_BK(KOD)
+
+   LOCAL RET := .F.
+
+   IF KOD == "б"
+
+      DEVPOS(7, 58)
+      DEVOUT("банковских ", "W+/W")
+      RET := .T.
+
+   ELSEIF KOD == "к"
+
+      DEVPOS(7, 58)
+      DEVOUT("календарных", "W+/W")
+      RET := .T.
+
+   ELSE
+
+      RET := .F.
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CRSTR
+   Params: None.
+   Return: Undefined
+  Example: CRSTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CRSTR()
+
+   LOCAL AA := "   " + EF_S_PL->KOD_PL + "   " + EF_S_PL->NAM_PL + "    " + ;
+         IF(EF_S_PL->PR_TEL, "[√]", "   ") + "  "
+
+
+RETURN AA
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_2
+   Params: None.
+   Return: Logical
+  Example: OBRIO_2()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_2()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE1:STABLE()
+
+         BROWSE1:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK1) == "B", EVAL(VYVBLOCK1), NIL)
+
+      IF BROWSE1:STABLE()
+
+         IF BROWSE1:HITTOP() .OR. BROWSE1:HITBOTTOM()
+
+            BROWSE1:HITTOP := .F.
+            BROWSE1:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE1:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE1:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE1:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE1:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE1:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE1:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE1:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK1) == "B", EVAL(VYVBLOCK1), NIL)
+
+         IF NKEY == -1
+
+            VV_PL()
+            BROWSE1:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+            R_PL()
+            BROWSE1:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -3
+
+            RECCOLOR("gr+/w")
+            D_PL()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VV_PL
+   Params: None.
+   Return: Nil
+  Example: VV_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VV_PL()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL REC := MEMVAR->CUR_REC := RECNO(), DBERR := .F.
+   LOCAL KOD_R := 0, NAME_R := SPACE(20), PR_TEL_V := .F.
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := NEWRECY(BROWSE1)
+   COLORWIN2(BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NLEFT(), ;
+         BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NRIGHT(), ;
+         COLORFON)
+   STATUSLINE(BOTIO_2)
+
+   DO WHILE  .NOT. KEY == 27
+
+      IF M > BROWSE1:NBOTTOM()
+
+         SCROLL(BROWSE1:NTOP(), BROWSE1:NLEFT(), BROWSE1:NBOTTOM(), ;
+               BROWSE1:NRIGHT(), 1)
+         M := BROWSE1:NBOTTOM()
+
+      ENDIF
+
+      SETCOLOR("n/w,w+/b,,,w+/bg")
+      COLORWIN2(M, BROWSE1:NLEFT(), M, BROWSE1:NRIGHT(), COLORFON)
+      KOD_R := "   "
+      NAME_R := SPACE(20)
+      PR_TEL_V := .F.
+
+      DO WHILE .T.
+
+         SETPOS(M, 3)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KOD_R, KOD_R := _1)}, ;
+               "kod_r", REPLICATE("X", 3), NIL, NIL):DISPLAY())
+         SETPOS(M, 9)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NAME_R, NAME_R := _1)}, ;
+               "name_r", REPLICATE("X", 20), NIL, NIL):DISPLAY())
+         AADD(GETLIST, _CHECKBOXE(M, 33, "pr_tel_v", NIL, NIL, NIL, ;
+               "n/w,gr+/w"))
+         ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_TEL_V) + ;
+               " ", IF(VALTYPE(L) == "L", PR_TEL_V := L, PR_TEL_V))}
+         ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+         ATAIL(GETLIST):DISPLAY()
+         SETKEYON()
+         SETCURSOR(1)
+         READMODAL(GETLIST)
+         MEMVAR->GETLIST := {}
+         SETCURSOR(0)
+         SETKEYOF()
+         KEY := LASTKEY()
+
+         IF KEY = -9
+
+            IF EMPTY(KOD_R) .OR. EMPTY(NAME_R)
+
+               DBGOTO(REC)
+               LOOP
+
+            ENDIF
+
+            DBERR := DBSEEK(KOD_R)
+            DBGOTO(CUR_REC)
+
+            IF DBERR
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Запись с данным кодом", ;
+                     "уже есть в справочнике !"}, {" Выход "})
+               LOOP
+
+            ENDIF
+
+            EXIT
+
+         ELSEIF KEY = 27
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+      COLORWIN2(M, BROWSE1:NLEFT() - 1, M, BROWSE1:NRIGHT(), "w+/w")
+
+      IF KEY = -9
+
+         IF ADDREC(3)
+
+            EF_S_PL->KOD_VPL := EF_S_GPL->KOD_VPL
+            EF_S_PL->KOD_PL := KOD_R
+            EF_S_PL->NAM_PL := NAME_R
+            EF_S_PL->PR_TEL := PR_TEL_V
+            DBCOMMIT()
+            DBUNLOCK()
+
+         ELSE
+
+            RESTSCREEN(0, 0, 24, 79, WIN)
+
+         ENDIF
+
+      ELSEIF KEY = 27
+
+         DBGOTO(REC)
+         RESTSCREEN(0, 0, 24, 79, WIN)
+
+      ENDIF
+
+      ++M
+
+   ENDDO
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: R_PL
+   Params: None.
+   Return: Nil
+  Example: R_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION R_PL()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL REC := MEMVAR->CUR_REC := RECNO(), DBERR := .F.
+   LOCAL KOD_R := 0, NAME_R := SPACE(20), PR_TEL_V := .F.
+
+   IF DBEMPTY()
+
+      RETURN NIL
+
+   ENDIF
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1)
+   STATUSLINE(BOTIO_2)
+   COLORWIN2(BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NLEFT(), ;
+         BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NRIGHT(), ;
+         COLORFON)
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   KOD_R := EF_S_PL->KOD_PL
+   NAME_R := EF_S_PL->NAM_PL
+   PR_TEL_V := EF_S_PL->PR_TEL
+
+   DO WHILE .T.
+
+      SETPOS(M, 3)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KOD_R, KOD_R := _1)}, "kod_r",;
+             REPLICATE("X", 3), NIL, NIL):DISPLAY())
+      SETPOS(M, 9)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NAME_R, NAME_R := _1)}, ;
+            "name_r", REPLICATE("X", 20), NIL, NIL):DISPLAY())
+      AADD(GETLIST, _CHECKBOXE(M, 33, "pr_tel_v", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(PR_TEL_V) + " ", ;
+            IF(VALTYPE(L) == "L", PR_TEL_V := L, PR_TEL_V))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF EMPTY(KOD_R) .OR. EMPTY(NAME_R)
+
+            LOOP
+
+         ENDIF
+
+         DBERR := DBSEEK(KOD_R)
+         DBGOTO(CUR_REC)
+
+         IF DBERR .AND. RECNO() <> CUR_REC
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Запись с данным кодом", ;
+                  "уже есть в справочнике !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         DBGOTO(CUR_REC)
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY == -9 .AND. RECLOCK(3)
+
+      EF_S_PL->KOD_PL := KOD_R
+      EF_S_PL->NAM_PL := NAME_R
+      EF_S_PL->PR_TEL := PR_TEL_V
+      DBCOMMIT()
+      DBUNLOCK()
+
+   ENDIF
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: D_PL
+   Params: None.
+   Return: Nil
+  Example: D_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION D_PL()
+
+   LOCAL KEY
+
+   IF DBEMPTY()
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Удалять строку ?"}, {"  Да ", " Нет "}, 2)
+
+   IF KEY = 1 .AND. RECLOCK(3)
+
+      DBDELETE()
+      DBCOMMITAL()
+      DBUNLOCK()
+
+   ELSE
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   DISPBEGIN()
+   BROWSE1:REFRESHALL()
+
+   DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+   ENDDO
+
+   IF BROWSE1:ROWPOS() = 1
+
+      BROWSE1:REFRESHALL()
+
+      DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+      ENDDO
+
+   ENDIF
+
+   DISPEND()
+
+RETURN NIL
+

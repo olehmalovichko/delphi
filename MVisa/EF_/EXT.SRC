@@ -1,0 +1,8591 @@
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _CHBOXREAD
+   Params: GET, GETLIST
+   Return: Nil
+  Example: _CHBOXREAD(GET, GETLIST)
+  ..........................................................................
+*/
+
+FUNCTION _CHBOXREAD(GET, GETLIST)
+
+   LOCAL L, CH, NCUR := SETCURSOR()
+
+   IF GETPREVALI(GET)
+
+      GET:SETFOCUS()
+
+      DO WHILE GET:EXITSTATE() == 0
+
+         DO WHILE GET:EXITSTATE() == 0
+
+            SETPOS(GET:ROW(), GET:COL() + 1)
+            SETCURSOR(NCUR)
+            CH := INKEY(0)
+            SETCURSOR(0)
+
+            DO CASE
+
+            CASE CH == 32
+
+               L := EVAL(GET:BLOCK(), 0)
+               EVAL(GET:BLOCK(),  .NOT. L)
+               GET:KILLFOCUS()
+               GET:DISPLAY()
+               GET:SETFOCUS()
+               EVAL(GET:CARGO())
+               EVAL(GET:BLOCK())
+               GET:KILLFOCUS()
+               GET:DISPLAY()
+               GET:SETFOCUS()
+
+            OTHERWISE
+
+               GETBOXKEY(GET, CH, .F., GETLIST)
+
+            END CASE
+
+         ENDDO
+
+         IF  .NOT. GETPOSTVAL(GET)
+
+            GET:EXITSTATE := 0
+
+         ENDIF
+
+      ENDDO
+
+      IF LEN(GETLIST) > 0
+
+         IF GET:EXITSTATE() = 1 .AND. GETLIST[1]:NAME() = GET:NAME() .AND. ;
+               EVAL(GETLIST[1]:CARGO()) = EVAL(GET:CARGO())
+
+            GET:EXITSTATE := 4
+
+         ELSEIF GET:EXITSTATE() = 2 .AND. GETLIST[LEN(GETLIST)]:NAME() = ;
+               GET:NAME() .AND. EVAL(GETLIST[LEN(GETLIST)]:CARGO()) = EVAL(;
+               GET:CARGO())
+
+            GET:EXITSTATE := 3
+
+         ENDIF
+
+      ELSEIF GET:EXITSTATE() = 1
+
+         GET:EXITSTATE := 4
+
+      ENDIF
+
+      GET:KILLFOCUS()
+
+   ENDIF
+
+   SETCURSOR(NCUR)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _RDBUTTONR
+   Params: GET, GETLIST, NAMOPT
+   Return: Nil
+  Example: _RDBUTTONR(GET, GETLIST, NAMOPT)
+  ..........................................................................
+*/
+
+FUNCTION _RDBUTTONR(GET, GETLIST, NAMOPT)
+
+   LOCAL L, I, NUM, CH
+
+   IF GETPREVALI(GET)
+
+      GET:SETFOCUS()
+
+      DO WHILE GET:EXITSTATE() == 0
+
+         DO WHILE GET:EXITSTATE() == 0
+
+            CH := INKEY(0)
+            AFILL(GET:CARGO[2], .F.)
+            EVAL(GET:BLOCK(), .T.)
+            AEVAL(GETLIST, {|O|O:DISPLAY()})
+            GETBOXKEY(GET, CH, .T., GETLIST)
+
+         ENDDO
+
+      ENDDO
+
+      IF GET:EXITSTATE() = 5 .OR. GET:EXITSTATE() = 6
+
+         _CLICKBUTT(GET)
+
+      ENDIF
+
+      IF  .NOT. GETPOSTVAL(GET)
+
+         GET:EXITSTATE := 0
+
+      ENDIF
+
+      IF LEN(GETLIST) > 0
+
+         IF GET:EXITSTATE() = 1 .AND. GETLIST[1]:NAME() = GET:NAME() .AND. ;
+               GETLIST[1]:CARGO[1] = GET:CARGO[1]
+
+            GET:EXITSTATE := 4
+
+         ELSEIF GET:EXITSTATE() = 2 .AND. GETLIST[LEN(GETLIST)]:NAME() = ;
+               GET:NAME() .AND. GETLIST[LEN(GETLIST)]:CARGO[1] = GET:CARGO[;
+               1]
+
+            GET:EXITSTATE := 3
+
+         ENDIF
+
+      ELSEIF GET:EXITSTATE() = 1
+
+         GET:EXITSTATE := 4
+
+      ENDIF
+
+      GET:KILLFOCUS()
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _RDBUTREAD
+   Params: GET, GETLIST
+   Return: Nil
+  Example: _RDBUTREAD(GET, GETLIST)
+  ..........................................................................
+*/
+
+FUNCTION _RDBUTREAD(GET, GETLIST)
+
+   LOCAL L, I, NUM, CH, NCUR := SETCURSOR()
+
+   IF GETPREVALI(GET)
+
+      GET:SETFOCUS()
+
+      DO WHILE GET:EXITSTATE() == 0
+
+         DO WHILE GET:EXITSTATE() == 0
+
+            SETPOS(GET:ROW(), GET:COL() + 1)
+            SETCURSOR(NCUR)
+            CH := INKEY(0)
+            SETCURSOR(0)
+
+            DO CASE
+
+            CASE CH == 32
+
+               NUM := 1
+               AFILL(GET:CARGO[2], .F.)
+               EVAL(GET:BLOCK(), .T.)
+               GET:KILLFOCUS()
+               AEVAL(GETLIST, {|O|O:DISPLAY()})
+               GET:SETFOCUS()
+
+            OTHERWISE
+
+               GETBOXKEY(GET, CH, .F., GETLIST)
+
+            END CASE
+
+         ENDDO
+
+         IF  .NOT. GETPOSTVAL(GET)
+
+            GET:EXITSTATE := 0
+
+         ENDIF
+
+      ENDDO
+
+      IF LEN(GETLIST) > 0
+
+         IF GET:EXITSTATE() = 1 .AND. GETLIST[1]:NAME() = GET:NAME() .AND. ;
+               GETLIST[1]:CARGO[1] = GET:CARGO[1]
+
+            GET:EXITSTATE := 4
+
+         ELSEIF GET:EXITSTATE() = 2 .AND. GETLIST[LEN(GETLIST)]:NAME() = ;
+               GET:NAME() .AND. GETLIST[LEN(GETLIST)]:CARGO[1] = GET:CARGO[;
+               1]
+
+            GET:EXITSTATE := 3
+
+         ENDIF
+
+      ELSEIF GET:EXITSTATE() = 1
+
+         GET:EXITSTATE := 4
+
+      ENDIF
+
+      GET:KILLFOCUS()
+
+   ENDIF
+
+   SETCURSOR(NCUR)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETBOXKEY
+   Params: GET, KEY, LOG, GETLST
+   Return: Nil
+  Example: GETBOXKEY(GET, KEY, LOG, GETLST)
+  ..........................................................................
+*/
+
+STATIC FUNCTION GETBOXKEY(GET, KEY, LOG, GETLST)
+
+   LOCAL CKEY, BKEYBLOCK, I, J
+
+   IF GETLST <> NIL
+
+      FOR I := 1 TO LEN(GETLST)
+
+         IF VALTYPE(GETLST[I]:CARGO()) = "A" .AND. LEN(GETLST[I]:CARGO()) ;
+               > 4 .AND. VALTYPE(GETLST[I]:CARGO[4]) = "C" .AND. GETLST[I];
+               :CARGO[4] = "BUT" .AND. GETLST[I]:CARGO[5] = KEY
+
+            GET:KILLFOCUS()
+            GET:EXITSTATE := 7
+            GETLST[I]:SETFOCUS()
+            GETLST[I]:EXITSTATE := 6
+
+            FOR J := 1 TO LEN(GETLST[I]:CARGO[2])
+
+               GETLST[I]:CARGO[2, J] := .F.
+
+            NEXT
+
+            GETLST[I]:CARGO[2, GETLST[I]:CARGO[1]] := .T.
+
+            IF VALTYPE(GET:CARGO()) = "A" .AND. LEN(GET:CARGO()) > 4 .AND. ;
+                  VALTYPE(GET:CARGO[4]) = "C" .AND. GET:CARGO[4] = "BUT" ;
+                  .AND. GET:CARGO[1] = GETLST[I]:CARGO[1]
+
+            ELSE
+
+               _CLICKBUTT(GETLST[I])
+
+            ENDIF
+
+            RETURN NIL
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+   IF KEY == 19 .OR. KEY == 5 .OR. KEY == 271
+
+      GET:EXITSTATE := 1
+
+   ELSEIF KEY == 4 .OR. KEY == 24 .OR. KEY == 9
+
+      GET:EXITSTATE := 2
+
+   ELSEIF KEY == 13 .AND. .NOT. LOG
+
+      GET:EXITSTATE := 5
+
+   ELSEIF KEY == 13 .AND. LOG
+
+      GET:EXITSTATE := 6
+
+   ELSEIF KEY == 27
+
+      IF SET(28)
+
+         GET:UNDO()
+         GET:EXITSTATE := 7
+
+      ENDIF
+
+   ELSEIF KEY == -9
+
+      GET:EXITSTATE := 6
+
+   ELSEIF KEY == 29
+
+      GET:EXITSTATE := 3
+
+   ELSEIF KEY == 23
+
+      GET:EXITSTATE := 4
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _GETAPPLYK
+   Params: OGET, NKEY
+   Return: Nil
+  Example: _GETAPPLYK(OGET, NKEY)
+  ..........................................................................
+*/
+
+FUNCTION _GETAPPLYK(OGET, NKEY)
+
+   LOCAL CKEY, I, J, CURS, BKEYBLOCK
+
+   IF  .NOT. (BKEYBLOCK := SETKEY(NKEY)) == NIL
+
+      GETDOSETKE(BKEYBLOCK, OGET)
+      RETURN 
+
+   ENDIF
+
+   IF VALTYPE(OGET:CARGO()) = "A" .AND. LEN(OGET:CARGO()) > 0
+
+      FOR I := 1 TO LEN(OGET:CARGO())
+
+         IF VALTYPE(OGET:CARGO()[I]:CARGO()) = "A" .AND. LEN(OGET:CARGO()[;
+               I]:CARGO()) > 4 .AND. VALTYPE(OGET:CARGO()[I]:CARGO[4]) = ;
+               "C" .AND. OGET:CARGO()[I]:CARGO[4] = "BUT" .AND. OGET:CARGO(;
+               )[I]:CARGO[5] = NKEY
+
+            OGET:EXITSTATE := 6
+
+            IF NKEY = 27
+
+               OGET:EXITSTATE := 7
+
+            ELSEIF  .NOT. GETPOSTVAL(OGET)
+
+               OGET:EXITSTATE := 0
+
+            ELSE
+
+               OGET:EXITSTATE := 7
+
+            ENDIF
+
+            IF OGET:EXITSTATE() = 7
+
+               OGET:KILLFOCUS()
+               OGET:CARGO()[I]:SETFOCUS()
+               OGET:CARGO()[I]:EXITSTATE := 6
+
+               FOR J := 1 TO LEN(OGET:CARGO()[I]:CARGO[2])
+
+                  OGET:CARGO()[I]:CARGO[2, J] := .F.
+
+               NEXT
+
+               OGET:CARGO()[I]:CARGO[2, OGET:CARGO()[I]:CARGO[1]] := .T.
+               CURS := SETCURSOR()
+               SETCURSOR(0)
+               _CLICKBUTT(OGET:CARGO()[I])
+               SETCURSOR(CURS)
+               RETURN NIL
+
+            ENDIF
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+   DO CASE
+
+   CASE NKEY == 5
+
+      OGET:EXITSTATE := 1
+
+   CASE NKEY == 271
+
+      OGET:EXITSTATE := 1
+
+   CASE NKEY == 24
+
+      OGET:EXITSTATE := 2
+
+   CASE NKEY == 9
+
+      OGET:EXITSTATE := 2
+
+   CASE NKEY == 13
+
+      OGET:EXITSTATE := 5
+
+   CASE NKEY == 27
+
+      IF SET(28)
+
+         OGET:UNDO()
+         OGET:EXITSTATE := 7
+
+      ENDIF
+
+   CASE NKEY == 18
+
+      OGET:EXITSTATE := 6
+
+   CASE NKEY == 3
+
+      OGET:EXITSTATE := 6
+
+   CASE NKEY == 29
+
+      OGET:EXITSTATE := 3
+
+   CASE NKEY == 23
+
+      OGET:EXITSTATE := 6
+
+   CASE NKEY == 22
+
+      SET(29,  .NOT. SET(29))
+      SHOWSCOREB()
+
+   CASE NKEY == 21
+
+      OGET:UNDO()
+
+   CASE NKEY == 1
+
+      OGET:HOME()
+
+   CASE NKEY == 6
+
+      OGET:END()
+
+   CASE NKEY == 4
+
+      OGET:RIGHT()
+
+   CASE NKEY == 19
+
+      OGET:LEFT()
+
+   CASE NKEY == 2
+
+      OGET:WORDRIGHT()
+
+   CASE NKEY == 26
+
+      OGET:WORDLEFT()
+
+   CASE NKEY == 8
+
+      OGET:BACKSPACE()
+
+   CASE NKEY == 7
+
+      OGET:DELETE()
+
+   CASE NKEY == 20
+
+      OGET:DELWORDRIG()
+
+   CASE NKEY == 25
+
+      OGET:DELEND()
+
+   CASE NKEY == 127
+
+      OGET:DELWORDLEF()
+
+   OTHERWISE
+
+      IF NKEY >= 32 .AND. NKEY <= 255
+
+         CKEY := CHR(NKEY)
+
+         IF OGET:TYPE() == "N" .AND. (CKEY == "." .OR. CKEY == ",")
+
+            OGET:TODECPOS()
+
+         ENDIF
+
+         IF SET(29)
+
+            OGET:INSERT(CKEY)
+
+         ELSE
+
+            OGET:OVERSTRIKE(CKEY)
+
+         ENDIF
+
+         IF OGET:TYPEOUT()
+
+            IF SET(26)
+
+               QQOUT(CHR(7))
+
+            ENDIF
+
+            IF  .NOT. SET(27)
+
+               OGET:EXITSTATE := 5
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+   END CASE
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SHOWSCOREB
+   Params: None.
+   Return: Undefined
+  Example: SHOWSCOREB()
+  ..........................................................................
+*/
+
+STATIC PROCEDURE SHOWSCOREB()
+
+   LOCAL NROW, NCOL
+
+   IF SET(32)
+
+      NROW := ROW()
+      NCOL := COL()
+      SETPOS(SCORE_ROW, SCORE_COL)
+      DISPOUT(IF(SET(29), "Ins", "   "))
+      SETPOS(NROW, NCOL)
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: INITEXTEND
+   Params: None.
+   Return: Undefined
+  Example: INITEXTEND()
+  ..........................................................................
+*/
+
+PROCEDURE INITEXTEND()
+
+   FRAMES()
+   INITCOLORS()
+   INITWIN()
+   INITMENU()
+   SETCURSOR(0)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ERROR
+   Params: X, Y, OPT, BUT, ACT, ZERO, OUTPUT
+   Return: Variable
+  Example: ERROR(X, Y, OPT, BUT, ACT, ZERO, OUTPUT)
+  ..........................................................................
+*/
+
+FUNCTION ERROR(X, Y, OPT, BUT, ACT, ZERO, OUTPUT)
+
+   PRIVATE VOZVRAT, A1, A2, A3
+   MEMVAR->A1 := MEMVAR->COLORS[13]
+   MEMVAR->A2 := MEMVAR->COLORS[14]
+   MEMVAR->A3 := MEMVAR->COLORS[15]
+   MEMVAR->COLORS[13] := "w+/r"
+   MEMVAR->COLORS[14] := "w+/r"
+   MEMVAR->COLORS[15] := "gr+/r"
+   MEMVAR->VOZVRAT := DIALOG(X, Y, OPT, BUT, ACT, ZERO, OUTPUT)
+   MEMVAR->COLORS[13] := A1
+   MEMVAR->COLORS[14] := A2
+   MEMVAR->COLORS[15] := A3
+
+RETURN VOZVRAT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TIMEWAIT
+   Params: T
+   Return: Variable
+  Example: TIMEWAIT(T)
+  ..........................................................................
+*/
+
+FUNCTION TIMEWAIT(T)
+
+   IF T <> NIL
+
+      MEMVAR->COLORS[42] := MEMVAR->TIMES := T
+
+   ENDIF
+
+
+RETURN TIMES
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MENU
+   Params: MAS
+   Return: Undefined
+  Example: MENU(MAS)
+  ..........................................................................
+*/
+
+PROCEDURE MENU(MAS)
+
+   PRIVATE LEVEL := 1, ID := 1, NO := 1, MAXSYS := 0, PROPUSK := .T., ;
+         ENTER := .F., EXITMENU := .F., TERM := MEMVAR->COLORS[41], KEY, ;
+         TEST, I, IDW, C, BASEFREE, SYSOPT[1, 9], WCOMM
+   READINST(1, 0, MAS)
+
+   IF MEMVAR->COLORS[39] > 0
+
+      SETCOLOR(MEMVAR->COLORS[37])
+      MEMVAR->WCOMM := WIN(MEMVAR->COLORS[40], MEMVAR->COLORS[38], MEMVAR->;
+            COLORS[40], MEMVAR->COLORS[38] + MEMVAR->COLORS[39] - 1)
+
+   ENDIF
+
+   MENUDRAW(1)
+   HANDLEEVEN(CMINITMENU)
+   MEMVAR->BASEFREE := FREEOPT(1)
+
+   IF BASEFREE > 0
+
+      MEMVAR->NO := BASEFREE
+      MEMVAR->SYSOPT[1, 5] := NO
+      OPTSELECT(1, NO, 1)
+
+   ENDIF
+
+   DO WHILE EXITMENU = .F.
+
+      MEMVAR->C := INKEYTRAP(TIMES)
+
+      IF C = 0
+
+         MEMVAR->KEY := CMNOACTIVE
+
+      ELSEIF C = 301 .OR. C = 27 .AND. LEVEL = 1
+
+         MEMVAR->KEY := CMEXITMENU
+
+      ELSE
+
+         MEMVAR->KEY := C
+
+      ENDIF
+
+      IF BASEFREE > 0 .AND. DISPETCHER() = .F.
+
+         HOTKEY()
+
+      ENDIF
+
+      HANDLEEVEN(KEY)
+      MEMVAR->BASEFREE := FREEOPT(1)
+
+      IF BASEFREE = 0
+
+         COMMENT()
+
+      ENDIF
+
+   ENDDO
+
+   IF MEMVAR->COLORS[39] > 0
+
+      WINCLOSE(WCOMM)
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WINCLOSEAL
+   Params: None.
+   Return: Logical
+  Example: WINCLOSEAL()
+  ..........................................................................
+*/
+
+FUNCTION WINCLOSEAL()
+
+   DO WHILE WCLOSE() > 0
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DIALOG
+   Params: X, Y, OPT, BUT, ACT, ZERO, OUTPUT
+   Return: Variable
+  Example: DIALOG(X, Y, OPT, BUT, ACT, ZERO, OUTPUT)
+  ..........................................................................
+*/
+
+FUNCTION DIALOG(X, Y, OPT, BUT, ACT, ZERO, OUTPUT)
+
+   PRIVATE I, J, K, B, LN, ST, BIGSTR, SUMX, BIGS, BIGY, Z, R, W, K2
+   PRIVATE MCOLOR, MCURSOR
+   MEMVAR->MCOLOR := SETCOLOR()
+   MEMVAR->MCURSOR := SETCURSOR()
+   MEMVAR->K := MEMVAR->K2 := LEN(OPT)
+   MEMVAR->B := LEN(BUT)
+
+   IF OUTPUT = NIL
+
+      OUTPUT := .T.
+
+   ENDIF
+
+   MEMVAR->BIGSTR := MEMVAR->SUMX := 0
+
+   FOR I := 1 TO K
+
+      MEMVAR->ST := SUBSTR(OPT[I], 1, 1)
+      MEMVAR->LN := LEN(OPT[I])
+
+      IF ST = "@" .OR. ST = "!"
+
+         --MEMVAR->LN
+
+         IF ST = "@"
+
+            MEMVAR->K2 := K - 1
+
+         ENDIF
+
+      ENDIF
+
+      IF LN > BIGSTR
+
+         MEMVAR->BIGSTR := LN
+
+      ENDIF
+
+   NEXT
+
+   MEMVAR->BIGSTR := BIGSTR + 4
+
+   FOR I := 1 TO B
+
+      MEMVAR->SUMX := SUMX + LEN(BUT[I]) + 1
+
+      IF I <> B
+
+         MEMVAR->SUMX := SUMX + MEMVAR->COLORS[9]
+
+      ENDIF
+
+   NEXT
+
+   MEMVAR->SUMX := SUMX + 4
+
+   IF BIGSTR > SUMX
+
+      MEMVAR->BIGS := BIGSTR
+
+   ELSE
+
+      MEMVAR->BIGS := SUMX
+
+   ENDIF
+
+   IF X = NIL
+
+      IF BIGS > 79
+
+         RETURN -1
+
+      ELSE
+
+         X := 40 - INT(BIGS / 2)
+
+      ENDIF
+
+   ELSEIF X + BIGS > 79 .AND. BIGS < 80
+
+      X := 40 - INT(BIGS / 2)
+
+   ELSE
+
+      RETURN -1
+
+   ENDIF
+
+   MEMVAR->BIGY := 5 + K2
+
+   IF Y = NIL
+
+      IF BIGY > 24
+
+         RETURN -1
+
+      ELSE
+
+         Y := 12 - INT(BIGY / 2)
+
+      ENDIF
+
+   ELSEIF Y + BIGY > 24
+
+      IF BIGY < 25
+
+         Y := 12 - INT(BIGY / 2)
+
+      ELSE
+
+         RETURN -1
+
+      ENDIF
+
+   ENDIF
+
+   DISPBEGIN()
+   SETCURSOR(0)
+   SETCOLOR(MEMVAR->COLORS[14])
+   MEMVAR->W := WIN(Y, X, Y + BIGY - 1, X + BIGS - 1, "d", "t")
+   SETCOLOR(MEMVAR->COLORS[13])
+   MEMVAR->Z := 1
+
+   FOR I := 1 TO K
+
+      MEMVAR->ST := SUBSTR(OPT[I], 1, 1)
+
+      IF ST = "@"
+
+         SETCOLOR(MEMVAR->COLORS[14])
+         CENTR(NIL, 0, " " + SUBSTR(OPT[I], 2) + " ")
+         SETCOLOR(MEMVAR->COLORS[13])
+
+      ELSEIF ST = "!"
+
+         SETCOLOR(MEMVAR->COLORS[15])
+
+         IF OUTPUT = .F.
+
+            DEVPOS(Z, 2)
+            DEVOUT(SUBSTR(OPT[I], 2))
+
+         ELSE
+
+            CENTR(NIL, Z, SUBSTR(OPT[I], 2))
+
+         ENDIF
+
+         SETCOLOR(MEMVAR->COLORS[13])
+         ++MEMVAR->Z
+
+      ELSE
+
+         IF OUTPUT = .F.
+
+            DEVPOS(Z, 2)
+            DEVOUT(OPT[I])
+
+         ELSE
+
+            CENTR(NIL, Z, OPT[I])
+
+         ENDIF
+
+         ++MEMVAR->Z
+
+      ENDIF
+
+   NEXT
+
+   SETCOLOR(MEMVAR->COLORS[14])
+   DEVPOS(Z, 0)
+   DEVOUT("«")
+   DEVPOS(Z, 1)
+   DEVOUT(REPLICATE("ƒ", BIGS - 2))
+   DEVPOS(Z, BIGS - 1)
+   DEVOUT("∂")
+   DISPEND()
+   MEMVAR->R := BUTTONS(NIL, Z + 1, BUT, ACT, ZERO)
+   SETCOLOR(MCOLOR)
+   WINCLOSE()
+   SETCURSOR(MCURSOR)
+
+RETURN R
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CURMENUCLO
+   Params: ALLMENU
+   Return: Undefined
+  Example: CURMENUCLO(ALLMENU)
+  ..........................................................................
+*/
+
+PROCEDURE CURMENUCLO(ALLMENU)
+
+   IF LEVEL = 1
+
+      RETURN 
+
+   ENDIF
+
+   IF ALLMENU = NIL
+
+      ALLMENU := .F.
+
+   ENDIF
+
+   DISPBEGIN()
+
+   IF ALLMENU = .F.
+
+      MENUCLOSE(ID)
+      MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+      MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+      --MEMVAR->LEVEL
+
+      IF LEVEL = 1
+
+         MEMVAR->ENTER := .F.
+
+      ENDIF
+
+   ELSE
+
+      DO WHILE LEVEL > 1
+
+         MENUCLOSE(ID)
+         MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+         MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+         --MEMVAR->LEVEL
+
+      ENDDO
+
+      MEMVAR->ENTER := .F.
+
+   ENDIF
+
+   OPTSELECT(ID, NO, 1)
+   DISPEND()
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STANDART
+   Params: KEY
+   Return: Undefined
+  Example: STANDART(KEY)
+  ..........................................................................
+*/
+
+PROCEDURE STANDART(KEY)
+
+   IF KEY = CMNOCOMMAN
+
+      RETURN 
+
+   ELSEIF KEY = CMEXITMENU
+
+      MEMVAR->EXITMENU := .T.
+
+   ELSEIF KEY = CMINITMENU
+
+      RETURN 
+
+   ELSEIF KEY = CMNOACTIVE
+
+      RETURN 
+
+   ELSEIF KEY = CMMOVEWIND
+
+      WINMOVE()
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: COMMENT
+   Params: ST, COLOR
+   Return: Variable
+  Example: COMMENT(ST, COLOR)
+  ..........................................................................
+*/
+
+FUNCTION COMMENT(ST, COLOR)
+
+   PRIVATE W, C, VOZVRAT
+
+   IF MEMVAR->COLORS[39] = 0
+
+      RETURN 
+
+   ELSE
+
+      IF ST = NIL
+
+         ST := SPACE(MEMVAR->COLORS[39])
+
+      ELSEIF ST = "@"
+
+         ST := SPACE(MEMVAR->COLORS[39])
+
+      ENDIF
+
+      MEMVAR->W := WSELECT()
+      MEMVAR->C := SETCOLOR()
+      WSELECT(WCOMM)
+
+      IF COLOR = NIL
+
+         SETCOLOR(MEMVAR->COLORS[37])
+
+      ELSE
+
+         SETCOLOR(COLOR)
+
+      ENDIF
+
+      DISPBEGIN()
+      MEMVAR->VOZVRAT := CHARODD(SCREENSTR(0, 0))
+      DEVPOS(0, 0)
+      DEVOUT(PADRIGHT(ST, MEMVAR->COLORS[39]))
+      DISPEND()
+      WSELECT(W)
+      SETCOLOR(C)
+
+   ENDIF
+
+
+RETURN VOZVRAT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: LENCOMMENT
+   Params: LN
+   Return: Undefined
+  Example: LENCOMMENT(LN)
+  ..........................................................................
+*/
+
+PROCEDURE LENCOMMENT(LN)
+
+   IF LN = NIL
+
+      MEMVAR->COLORS[39] := 0
+
+   ELSE
+
+      MEMVAR->COLORS[39] := LN
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WBROWSER
+   Params: X, Y, MASST, OPT, ACT, ZERO, FLAG, H, USERF, WINDOW, SHAD
+   Return: Variable
+  Example: WBROWSER(X, Y, MASST, OPT, ACT, ZERO, FLAG, H, USERF, WINDOW, 
+                    SHAD)
+  ..........................................................................
+*/
+
+FUNCTION WBROWSER(X, Y, MASST, OPT, ACT, ZERO, FLAG, H, USERF, WINDOW, ;
+                   SHAD)
+
+   LOCAL LENDEL
+
+   PRIVATE I, Z, K, B, C, MAXLN, MAXOP, LENX, LENY, OPTY, MCOLOR, VOZVRAT, ;
+         S, SHADW
+   MEMVAR->MCOLOR := ( IF(SHAD = NIL, MEMVAR->SHADW := .F., MEMVAR->SHADW := ;
+         SHAD), SETCOLOR() )
+   MEMVAR->MAXLN := MEMVAR->MAXOP := 0
+   MEMVAR->K := MEMVAR->A := MEMVAR->B := 0
+   MEMVAR->OPTY := 0
+
+   IF MASST <> NIL
+
+      MEMVAR->MAXLN := BIGGEST(MASST, {"@", "!"}) + 4
+      MEMVAR->K := MEMVAR->A := LEN(MASST)
+
+      IF WHEAD(MASST, "@") = .F.
+
+         ++MEMVAR->A
+
+      ENDIF
+
+   ENDIF
+
+   IF OPT <> NIL
+
+      MEMVAR->B := LEN(OPT)
+
+      FOR I := 1 TO B
+
+         OPT[I] := " " + OPT[I] + " "
+
+      NEXT
+
+      MEMVAR->MAXOP := BIGGEST(OPT) + 2
+
+      IF H = NIL
+
+         MEMVAR->OPTY := 5
+
+         IF B > 5
+
+            MEMVAR->OPTY := OPTY + 10
+
+         ENDIF
+
+      ELSE
+
+         MEMVAR->OPTY := H
+
+      ENDIF
+
+   ENDIF
+
+   MEMVAR->LENX := MAX(MAXOP, MAXLN)
+   MEMVAR->MAXOP := LENX - 2
+   MEMVAR->LENY := OPTY + A + 2
+
+   IF X = NIL
+
+      X := 40 - INT(LENX / 2)
+
+   ENDIF
+
+   IF X + LENX > 80
+
+      TONE(125, 3)
+      RETURN -1
+
+   ENDIF
+
+   IF Y = NIL
+
+      Y := 12 - INT(LENY / 2)
+
+   ENDIF
+
+   IF Y + LENY > 25
+
+      TONE(125, 3)
+      RETURN -1
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[23])
+   MEMVAR->W := WIN(Y, X, Y + LENY - 1, X + LENX - 1, "d", IF(SHADW, "t", ;
+         NIL))
+   WINDOW := W
+   SETCOLOR(MEMVAR->COLORS[24])
+   MEMVAR->Z := 0
+
+   IF MASST <> NIL
+
+      FOR I := 1 TO K
+
+         MEMVAR->C := SUBSTR(MASST[I], 1, 1)
+
+         IF C = "@"
+
+            SETCOLOR(MEMVAR->COLORS[23])
+            CENTR(NIL, 0, " " + SUBSTR(MASST[I], 2) + " ")
+            SETCOLOR(MEMVAR->COLORS[24])
+
+         ELSEIF C = "!"
+
+            ++MEMVAR->Z
+            SETCOLOR(MEMVAR->COLORS[22])
+            CENTR(NIL, Z, SUBSTR(MASST[I], 2))
+            SETCOLOR(MEMVAR->COLORS[24])
+
+         ELSE
+
+            ++MEMVAR->Z
+            CENTR(NIL, Z, MASST[I])
+
+         ENDIF
+
+      NEXT
+
+      IF Z > 0
+
+         SETCOLOR(MEMVAR->COLORS[23])
+         ++MEMVAR->Z
+         DEVPOS(Z, 0)
+         DEVOUT("«")
+         DEVPOS(Z, 1)
+         DEVOUT(REPLICATE("ƒ", LENX - 2))
+         DEVPOS(Z, MAXCOL())
+         DEVOUT("∂")
+
+      ENDIF
+
+   ENDIF
+
+   ++MEMVAR->Z
+
+   IF OPT <> NIL
+
+      MEMVAR->VOZVRAT := BROWSER(1, Z, MAXOP, OPTY, OPT, ACT, ZERO, NIL, ;
+            USERF)
+
+   ENDIF
+
+   IF OPT <> NIL
+
+      MEMVAR->B := LEN(OPT)
+
+      FOR I := 1 TO B
+
+         LENDEL := LEN(OPT[I]) - 2
+         OPT[I] := SUBSTR(OPT[I], 2, LENDEL)
+
+      NEXT
+
+   ENDIF
+
+   SETCOLOR(MCOLOR)
+   WINCLOSE()
+
+RETURN VOZVRAT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WIN
+   Params: Y1, X1, Y2, X2, RAMKA, WINTYPE
+   Return: Variable
+  Example: WIN(Y1, X1, Y2, X2, RAMKA, WINTYPE)
+  ..........................................................................
+*/
+
+FUNCTION WIN(Y1, X1, Y2, X2, RAMKA, WINTYPE)
+
+   PRIVATE W := 1, L := .T.
+   WSETSHADOW(-1)
+
+   IF WINTYPE <> NIL
+
+      IF AT("n", WINTYPE) <> 0
+
+         MEMVAR->L := .F.
+
+      ELSEIF AT("t", WINTYPE) <> 0
+
+         WSETSHADOW(MEMVAR->COLORS[28])
+
+      ENDIF
+
+   ENDIF
+
+   DISPBEGIN()
+   MEMVAR->W := WOPEN(Y1, X1, Y2, X2, L)
+
+   IF RAMKA <> NIL
+
+      IF RAMKA = "s"
+
+         RAMKA := "Single"
+
+      ELSEIF RAMKA = "d"
+
+         RAMKA := "Double"
+
+      ENDIF
+
+      DISPBOX(0, 0, Y2 - Y1, X2 - X1, (&RAMKA))
+
+   ENDIF
+
+   DISPEND()
+
+RETURN W
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WINCLOSE
+   Params: W
+   Return: Variable
+  Example: WINCLOSE(W)
+  ..........................................................................
+*/
+
+FUNCTION WINCLOSE(W)
+
+   PRIVATE K, MC, MAIN, WS
+
+   IF W = NIL
+
+      MEMVAR->MC := SETCOLOR()
+      MEMVAR->WS := WSELECT()
+
+      IF WS > 0
+
+         WCLOSE()
+
+      ENDIF
+
+      SETCOLOR(MC)
+      RETURN WS
+
+   ENDIF
+
+   MEMVAR->MC := SETCOLOR()
+
+   IF W > 0
+
+      MEMVAR->MAIN := WSELECT()
+      MEMVAR->K := WSELECT(W)
+      WCLOSE()
+      WSELECT(MAIN)
+
+   ENDIF
+
+   SETCOLOR(MC)
+
+RETURN MAIN
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STATUSOPT
+   Params: NAMEOPT, NAMEOPTOLD, L
+   Return: Undefined
+  Example: STATUSOPT(NAMEOPT, NAMEOPTOLD, L)
+  ..........................................................................
+*/
+
+PROCEDURE STATUSOPT(NAMEOPT, NAMEOPTOLD, L)
+
+   LOCAL OLDW, NEWW, SAVV, COM
+
+   PRIVATE OPT, W, K, N, M
+
+   IF NAMEOPT = "@s" .OR. NAMEOPT = "@d"
+
+      RETURN 
+
+   ENDIF
+
+   IF NAMEOPTOLD = "@s" .OR. NAMEOPTOLD = "@d"
+
+      NAMEOPTOLD := NIL
+
+   ENDIF
+
+   MEMVAR->OPT := GETSYSOPT(NAMEOPT, NAMEOPTOLD)
+
+   IF OPT = NIL
+
+      RETURN 
+
+   ENDIF
+
+   IF MEMVAR->SYSOPT[MEMVAR->OPT[1], 9, MEMVAR->OPT[2], 2] = .T. .AND. L = ;
+         .T.
+
+      RETURN 
+
+   ENDIF
+
+   IF MEMVAR->SYSOPT[MEMVAR->OPT[1], 9, MEMVAR->OPT[2], 2] = .F. .AND. L = ;
+         .F.
+
+      RETURN 
+
+   ENDIF
+
+   IF L = .T.
+
+      MEMVAR->SYSOPT[MEMVAR->OPT[1], 9, MEMVAR->OPT[2], 2] := .T.
+
+   ELSE
+
+      MEMVAR->SYSOPT[MEMVAR->OPT[1], 9, MEMVAR->OPT[2], 2] := .F.
+
+   ENDIF
+
+   IF MEMVAR->COLORS[39] > 0
+
+      COM := COMMENT(" ")
+
+   ENDIF
+
+   IF MEMVAR->SYSOPT[MEMVAR->OPT[1], 8] <> NIL
+
+      MEMVAR->W := WSELECT()
+
+      IF W = MEMVAR->SYSOPT[MEMVAR->OPT[1], 8]
+
+         IF MEMVAR->SYSOPT[MEMVAR->OPT[1], 5] = MEMVAR->OPT[2]
+
+            MEMVAR->K := FREEOPT(MEMVAR->OPT[1])
+
+            IF K <> 0
+
+               OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 2)
+               OPTSELECT(MEMVAR->OPT[1], K, 1)
+               MEMVAR->SYSOPT[MEMVAR->OPT[1], 5] := MEMVAR->NO := K
+
+            ELSE
+
+               OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 2)
+
+               IF LEVEL > 1
+
+                  MEMVAR->ID := MEMVAR->SYSOPT[MEMVAR->OPT[1], 7]
+                  MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+                  MEMVAR->PROPUSK := .F.
+
+               ENDIF
+
+            ENDIF
+
+         ELSEIF L = .T.
+
+            OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 0)
+
+         ELSE
+
+            OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 2)
+
+         ENDIF
+
+      ELSE
+
+         DISPBEGIN()
+
+         IF MEMVAR->SYSOPT[MEMVAR->OPT[1], 5] = MEMVAR->OPT[2]
+
+            DO WHILE ID <> MEMVAR->OPT[1]
+
+               MENUCLOSE(ID)
+               MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+               MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+               --MEMVAR->LEVEL
+
+            ENDDO
+
+            IF LEVEL = 1
+
+               MEMVAR->ENTER := .F.
+
+            ENDIF
+
+            OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 2)
+            MEMVAR->K := FREEOPT(MEMVAR->OPT[1])
+
+            IF K <> 0
+
+               OPTSELECT(MEMVAR->OPT[1], K, 1)
+               MEMVAR->SYSOPT[MEMVAR->OPT[1], 5] := MEMVAR->NO := K
+
+            ELSEIF LEVEL > 1
+
+               MEMVAR->ID := MEMVAR->SYSOPT[MEMVAR->OPT[1], 7]
+               MEMVAR->NO := MEMVAR->SYSOPT[MEMVAR->OPT[1], 5]
+               MEMVAR->PROPUSK := .F.
+
+            ENDIF
+
+         ELSE
+
+            WSELECT(MEMVAR->SYSOPT[MEMVAR->OPT[1], 8])
+
+            IF L = .T.
+
+               OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 0)
+
+            ELSE
+
+               OPTSELECT(MEMVAR->OPT[1], MEMVAR->OPT[2], 2)
+
+            ENDIF
+
+            MEMVAR->N := MEMVAR->SYSOPT[MEMVAR->OPT[1], 5]
+            MEMVAR->M := MEMVAR->SYSOPT[MEMVAR->OPT[1], 9, N, 6]
+            WSELECT(MEMVAR->SYSOPT[M, 8])
+
+            DO WHILE M <> ID
+
+               MEMVAR->M := MEMVAR->SYSOPT[M, 9, MEMVAR->SYSOPT[M, 5], 6]
+               WSELECT(MEMVAR->SYSOPT[M, 8])
+
+            ENDDO
+
+         ENDIF
+
+         DISPEND()
+
+      ENDIF
+
+   ENDIF
+
+   COMMENT(COM)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CENTR
+   Params: X, Y, ST, COL
+   Return: Undefined
+  Example: CENTR(X, Y, ST, COL)
+  ..........................................................................
+*/
+
+PROCEDURE CENTR(X, Y, ST, COL)
+
+   LOCAL OLDC := SETCOLOR()
+
+   PRIVATE A := MEMVAR->B := 0
+
+   IF COL <> NIL
+
+      SETCOLOR(COL)
+
+   ENDIF
+
+   IF X <> NIL
+
+      IF X > 80
+
+         X := 80
+
+      ENDIF
+
+   ELSE
+
+      X := MAXCOL() + 1
+
+   ENDIF
+
+   IF Y <> NIL
+
+      IF Y > 24
+
+         Y := INT((MAXROW() + 1) / 2)
+
+      ENDIF
+
+   ELSE
+
+      Y := INT((MAXROW() + 1) / 2)
+
+   ENDIF
+
+   MEMVAR->A := INT(X / 2)
+   MEMVAR->B := LEN(ST)
+
+   IF B < 80
+
+      MEMVAR->B := INT(B / 2)
+      DEVPOS(Y, A - B)
+      DEVOUT(ST)
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STATUSLINE
+   Params: Y1, MASKEY, NTERM, NLEN
+   Return: Logical
+  Example: STATUSLINE(Y1, MASKEY, NTERM, NLEN)
+  ..........................................................................
+*/
+
+FUNCTION STATUSLINE(Y1, MASKEY, NTERM, NLEN)
+
+   LOCAL X := 2
+   LOCAL I, M1, M2, ST, Y, OLDC := SETCOLOR()
+   LOCAL TERMSTATUS := 2
+
+   IF(NLEN = NIL, NLEN := MAXCOL(), "")
+   IF(NTERM <> NIL, TERMSTATUS := NTERM, "")
+   IF(Y1 = NIL, Y := MAXROW(), "")
+
+   IF VALTYPE(Y1) = "A"
+
+      MASKEY := ACLONE(Y1)
+      Y := MAXROW()
+
+   ELSE
+
+      Y := Y1
+
+   ENDIF
+
+   FOR I := 1 TO LEN(MASKEY)
+
+      M1 := AT("~", MASKEY[I])
+      M2 := RAT("~", MASKEY[I])
+
+      IF M1 > 0
+
+         IF M1 <> 1
+
+            SETCOLOR(MEMVAR->COLORS[54])
+            ST := SUBSTR(MASKEY[I], 1, M1 - 1)
+            DEVPOS(Y, X)
+            DEVOUT(ST)
+            X := X + LEN(ST)
+
+         ENDIF
+
+         SETCOLOR(MEMVAR->COLORS[53])
+         IF(M2 = M1, M2 := LEN(MASKEY[I]) + 1, "")
+         ST := SUBSTR(MASKEY[I], M1 + 1, M2 - M1 - 1)
+         DEVPOS(Y, X)
+         DEVOUT(ST)
+         X := X + LEN(ST)
+
+         IF LEN(SUBSTR(MASKEY[I], M2 + 1)) > 0
+
+            SETCOLOR(MEMVAR->COLORS[54])
+            ST := SUBSTR(MASKEY[I], M2 + 1)
+            DEVPOS(Y, X)
+            DEVOUT(ST)
+            X := X + LEN(ST)
+
+         ENDIF
+
+      ELSE
+
+         SETCOLOR(MEMVAR->COLORS[54])
+         ST := MASKEY[I]
+         DEVPOS(Y, X)
+         DEVOUT(ST)
+         X := X + LEN(ST)
+
+      ENDIF
+
+      DEVPOS(Y, X)
+      DEVOUT(SPACE(TERMSTATUS))
+      X := X + TERMSTATUS
+
+   NEXT
+
+   IF NLEN - X > 0
+
+      DEVPOS(Y, X)
+      DEVOUT(SPACE(NLEN - X))
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MENU_POPUP
+   Params: AOPT, TITLE
+   Return: Number
+  Example: MENU_POPUP(AOPT, TITLE)
+  ..........................................................................
+*/
+
+FUNCTION MENU_POPUP(AOPT, TITLE)
+
+   LOCAL MAXSIZEWIN := 20
+   LOCAL WIN1, RAZMER, OLDC := SETCOLOR()
+   LOCAL KEY, KEY1, ATS
+
+   PRIVATE ZERO := ARRAY(0), BIG, ZCOLOR := ARRAY(0), ACOLOR := ARRAY(0)
+   PRIVATE ARR := ARRAY(0), I, LZERO := ARRAY(0)
+
+   IF AOPT == NIL .OR. LEN(AOPT) == 0 .OR. LEN(AOPT) > MAXSIZEWIN
+
+      RETURN 0
+
+   ENDIF
+
+   FOR I := 1 TO LEN(AOPT)
+
+      AADD(ARR, AOPT[I, 1])
+      AADD(LZERO, AOPT[I, 2])
+
+   NEXT
+
+   RAZMER := LEN(ARR)
+   MEMVAR->BIG := BIGGEST(ARR)
+   MEMVAR->COL1 := 40 - INT(BIG / 2 + 1)
+   MEMVAR->COL2 := 40 - INT(BIG / 2 + 1) + BIG + 1
+   MEMVAR->ROW1 := 12 - INT(RAZMER / 2) - 1
+   MEMVAR->ROW2 := 12 - INT(RAZMER / 2) + RAZMER
+   SETCOLOR(MEMVAR->COLORS[66])
+   WIN1 := WIN(ROW1, COL1, ROW2, COL2, "s", "t")
+
+   FOR I := ( IF(TITLE <> NIL, CENTR(NIL, 0, TITLE, MEMVAR->COLORS[67]), "");
+         , 1 ) TO LEN(ARR)
+
+      IF ALLTRIM(MEMVAR->ARR[I]) == "@s"
+
+         MEMVAR->ARR[I] := REPLICATE("ƒ", BIG)
+         AADD(ZERO, .F.)
+         SAYS(I, 0, "√", MEMVAR->COLORS[66])
+         SAYS(I, BIG + 1, "¥", MEMVAR->COLORS[66])
+
+      ELSEIF MEMVAR->LZERO[I]
+
+         AADD(ZERO, .T.)
+         ATS := AT("~", MEMVAR->ARR[I])
+
+         IF ATS > 0
+
+            MEMVAR->ARR[I] := ( AADD(ACOLOR, {I, ATS + 1, 0}), IF(ATS == 1, ;
+                  SUBSTR(MEMVAR->ARR[I], 2), SUBSTR(MEMVAR->ARR[I], 1, ATS - ;
+                  1) + SUBSTR(MEMVAR->ARR[I], ATS + 1)) )
+            ATS := AT("~", MEMVAR->ARR[I])
+            MEMVAR->ACOLOR[LEN(ACOLOR), 3] := ATS - 1
+            MEMVAR->ARR[I] := IF(ATS == LEN(MEMVAR->ARR[I]), SUBSTR(MEMVAR->;
+                  ARR[I], 1, LEN(MEMVAR->ARR[I]) - 1), SUBSTR(MEMVAR->ARR[I],;
+                   1, ATS - 1) + SUBSTR(MEMVAR->ARR[I], ATS + 1))
+
+         ENDIF
+
+      ELSE
+
+         AADD(ZERO, .F.)
+         AADD(ZCOLOR, I)
+         ATS := AT("~", MEMVAR->ARR[I])
+
+         IF ATS > 0
+
+            MEMVAR->ARR[I] := IF(ATS == 1, SUBSTR(MEMVAR->ARR[I], 2), SUBSTR(;
+                  MEMVAR->ARR[I], 1, ATS - 1) + SUBSTR(MEMVAR->ARR[I], ATS + ;
+                  1))
+            ATS := AT("~", MEMVAR->ARR[I])
+            MEMVAR->ARR[I] := IF(ATS == LEN(MEMVAR->ARR[I]), SUBSTR(MEMVAR->;
+                  ARR[I], 1, LEN(MEMVAR->ARR[I]) - 1), SUBSTR(MEMVAR->ARR[I],;
+                   1, ATS - 1) + SUBSTR(MEMVAR->ARR[I], ATS + 1))
+
+         ENDIF
+
+      ENDIF
+
+   NEXT
+
+   SETCOLOR(MEMVAR->COLORS[64] + "," + MEMVAR->COLORS[65] + ",,," + MEMVAR->;
+         COLORS[66])
+   __KEYBOARD(CHR(19))
+   KEY := ACHOICE(1, 1, ROW2 - ROW1 - 1, COL2 - COL1 - 1, ARR, ZERO, ;
+         "FPopup")
+   __KEYBOARD("")
+   WINCLOSE(WIN1)
+   SETCOLOR(OLDC)
+
+RETURN KEY
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: COLORWIN2
+   Params: A1, A2, A3, A4, A5, A6
+   Return: Logical
+  Example: COLORWIN2(A1, A2, A3, A4, A5, A6)
+  ..........................................................................
+*/
+
+FUNCTION COLORWIN2(A1, A2, A3, A4, A5, A6)
+
+   DSETWINDOW(.T.)
+   COLORWIN(A1, A2, A3, A4, A5, A6)
+   DSETWINDOW(.F.)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ZERO_STR
+   Params: PR_1, PR_2, PR_3
+   Return: Variable
+  Example: ZERO_STR(PR_1, PR_2, PR_3)
+  ..........................................................................
+*/
+
+FUNCTION ZERO_STR(PR_1, PR_2, PR_3)
+
+   PRIVATE PR_0
+
+   IF PCOUNT() = 3
+
+      MEMVAR->PR_0 := STR(PR_1, PR_2, PR_3)
+
+   ELSEIF PCOUNT() = 2
+
+      MEMVAR->PR_0 := STR(PR_1, PR_2)
+
+   ELSE
+
+      MEMVAR->PR_0 := STR(PR_1)
+
+   ENDIF
+
+   IF "-" $ PR_0
+
+      RETURN "-" + REPLICATE("0", LEN(PR_0) - LEN(LTRIM(PR_0))) + SUBSTR(;
+            PR_0, AT("-", PR_0) + 1)
+
+   ELSE
+
+      RETURN REPLICATE("0", LEN(PR_0) - LEN(LTRIM(PR_0))) + LTRIM(PR_0)
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STRFIND
+   Params: NY, NX, LN, MASKA, USERF
+   Return: Undefined
+  Example: STRFIND(NY, NX, LN, MASKA, USERF)
+  ..........................................................................
+*/
+
+FUNCTION STRFIND(NY, NX, LN, MASKA, USERF)
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL COM := {"~Esc-~¢ÎÂÆ§", "~Enter-~Ø•‡•©‚® ≠† ≠†©§•≠≠„Ó ß†Ø®·Ï", ;
+         "≥ åÔ£™®© ØÆ®·™"}
+   LOCAL WIN_FIND, WIN_COM, SAVE_FIND, X := NX - 1
+   LOCAL RET, MAIN_ST, ST, KEY, FL_EXIT := .T.
+
+   WIN_COM := WSTATUSLIN(COM)
+   WIN_FIND := WIN(NY, X, NY, X + LN + 1, NIL, "n")
+   SAVE_FIND := SAVESCREEN(0, 0, 0, 79)
+   SETCOLOR(MEMVAR->COLORS[71])
+   SAYS(0, 0, CHR(16))
+   SAYS(0, 1, CHR(17))
+   MAIN_ST := ""
+   ST := " "
+
+   DO WHILE .T.
+
+      SETPOS(90, 90)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, ST, ST := _1)}, "st", MASKA, ;
+            NIL, NIL):DISPLAY())
+      SETKEY(8, {|P,L,V|CLGET(P, L, V)})
+      SET(28, "ON")
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETKEY(8, NIL)
+      KEY := LASTKEY()
+
+      IF KEY = 27
+
+         FL_EXIT := .F.
+         EXIT
+
+      ELSEIF KEY = 13
+
+         FL_EXIT := .T.
+         EXIT
+
+      ELSEIF KEY = 8
+
+         IF LEN(MAIN_ST) = 0
+
+            TONE(125, 1)
+
+         ELSE
+
+            STRSCREEN(SUBSTR(SAVE_FIND, LEN(MAIN_ST) * 2 + 1, 2), NY, NX + ;
+                  LEN(MAIN_ST))
+            DEVPOS(0, LEN(MAIN_ST))
+            DEVOUT(CHR(17))
+            MAIN_ST := SUBSTR(MAIN_ST, 1, LEN(MAIN_ST) - 1)
+            &( USERF )(MAIN_ST, WIN_COM, WIN_FIND)
+
+         ENDIF
+
+      ELSEIF LEN(MAIN_ST) = LN
+
+         TONE(125, 3)
+
+      ELSE
+
+         MAIN_ST := MAIN_ST + ST
+         DEVPOS(0, LEN(MAIN_ST))
+         DEVOUTPICT(ST, MASKA)
+         SAYS(0, LEN(MAIN_ST) + 1, CHR(17))
+         &( USERF )(MAIN_ST, WIN_COM, WIN_FIND)
+
+      ENDIF
+
+   ENDDO
+
+   WINCLOSE(WIN_FIND)
+   WINCLOSE(WIN_COM)
+   SETCOLOR(OLDC)
+
+RETURN FL_EXIT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETWIN
+   Params: X, Y, OPT, GETM, BUT
+   Return: Variable
+  Example: GETWIN(X, Y, OPT, GETM, BUT)
+  ..........................................................................
+*/
+
+FUNCTION GETWIN(X, Y, OPT, GETM, BUT)
+
+   LOCAL BIGALL := MEMVAR->BIG := MEMVAR->LOCALKOL := MEMVAR->BG := MEMVAR->;
+         BGCOM := MEMVAR->BGGET := MEMVAR->BGALL := MEMVAR->X0BUT := MEMVAR->;
+         FORMAT := 0
+   LOCAL BIGBUT := MEMVAR->CHAK := MEMVAR->KOLALL := 0, NBUT, J, X0 ;
+         := 1
+   LOCAL CENX, CENY, I, WIN1, OLDC := SETCOLOR()
+   LOCAL Y0, CURS := SETCURSOR()
+   LOCAL KEY, KK, QQ, QQPICT, AA11, AA12, AA13, AA21, AA22, AA23, ;
+         AA31, AA32, AA33, AA41, AA42, AA43, AA51, AA52, AA53, AA61, AA62, ;
+         AA63, AA71, AA72, AA73, GETLIST := {}
+
+   IF OPT = NIL .AND. GETM = NIL .AND. BUT = NIL
+
+      RETURN -1
+
+   ENDIF
+
+   IF OPT <> NIL
+
+      BIGALL := MEMVAR->BIG := BIGGEST(OPT, {"@", "!"}) + 2
+      MEMVAR->LOCALKOL := LENCOM(OPT)
+
+   ENDIF
+
+   IF GETM <> NIL
+
+      FOR I := 1 TO LEN(GETM) STEP 4
+
+         IF LEN(GETM[I]) > BG
+
+            MEMVAR->BG := LEN(GETM[I])
+
+         ENDIF
+
+         ++MEMVAR->CHAK
+
+      NEXT
+
+      MEMVAR->BGCOM := BG
+      MEMVAR->BG := ( IF(BG > 0, MEMVAR->BGCOM := MEMVAR->BGCOM + 2, ""), 0 )
+
+      FOR I := 1 TO LEN(GETM) STEP 4
+
+         IF GETM[I + 3] > BG
+
+            MEMVAR->BG := GETM[I + 3]
+
+         ENDIF
+
+      NEXT
+
+      MEMVAR->BGGET := BG + 3
+      MEMVAR->BGALL := BGCOM + BGGET
+      IF(BIG < BGALL, BIGALL := BGALL, "")
+
+   ENDIF
+
+   IF BUT <> NIL
+
+      FOR I := 1 TO LEN(BUT) STEP 3
+
+         BIGBUT := BIGBUT + (LEN(BUT[I]) + LEN(BUT[I + 2]) + 3)
+         BIGBUT := BIGBUT + MEMVAR->COLORS[9]
+
+      NEXT
+
+      BIGBUT := BIGBUT - MEMVAR->COLORS[9]
+      BIGBUT := BIGBUT + 5
+
+   ENDIF
+
+   IF(BIGBUT > BIGALL, BIGALL := BIGBUT, "")
+
+   IF BIGALL > 78
+
+      RETURN -1
+
+   ENDIF
+
+   MEMVAR->KOLALL := LOCALKOL + CHAK + IF(BUT <> NIL, 3, 0) + IF(GETM <> ;
+         NIL, 2, 0)
+
+   IF BUT <> NIL .AND. GETM = NIL
+
+      MEMVAR->KOLALL := MEMVAR->KOLALL + 2
+
+   ENDIF
+
+   IF KOLALL > 22
+
+      RETURN -1
+
+   ENDIF
+
+   MEMVAR->FORMAT := BGCOM
+
+   IF BGALL < BIGALL
+
+      X0 := ROUND((BIGALL - BGALL) / 2, 0)
+
+   ENDIF
+
+   MEMVAR->X0BUT := 2
+
+   IF BIGBUT < BIGALL
+
+      MEMVAR->X0BUT := ROUND((BIGALL - BIGBUT + 5) / 2, 0)
+
+   ENDIF
+
+   CENY := CY(0, 24, KOLALL)
+   CENX := CX(0, 79, BIGALL)
+   SETCOLOR(MEMVAR->COLORS[59])
+   WIN1 := WIN(CENY, CENX, CENY + KOLALL - 1, CENX + BIGALL - 1, "d", "t")
+   IF(OPT <> NIL, TXTOPT(OPT), "")
+   SETCOLOR(MEMVAR->COLORS[63] + "," + MEMVAR->COLORS[60] + ",,," + MEMVAR->;
+         COLORS[61])
+   Y0 := LOCALKOL + 1
+
+   IF GETM <> NIL .OR. BUT <> NIL
+
+      DO WHILE .T.
+
+         IF GETM <> NIL
+
+            FOR I := 1 TO LEN(GETM) STEP 4
+
+               IF BUT = NIL
+
+                  QQ := GETM[I + 1]
+                  QQPICT := GETM[I + 2]
+                  DEVPOS(Y0, X0)
+                  DEVOUT(PADR(GETM[I], FORMAT - 2) + IF(LEN(ALLTRIM(GETM[I];
+                        )) = 0, " ", ":"))
+                  SETPOSBS()
+                  AADD(GETLIST, __GET(NIL, QQ, QQPICT, NIL, NIL):DISPLAY())
+
+               ELSE
+
+                  KK := PADR(GETM[I], FORMAT - 2) + IF(LEN(ALLTRIM(GETM[I]);
+                        ) = 0, "  ", ": ")
+                  DEVPOS(Y0, X0)
+                  DEVOUT(KK)
+                  QQ := GETM[I + 1]
+                  QQPICT := GETM[I + 2]
+                  SETPOS(Y0, X0 + LEN(KK))
+                  AADD(GETLIST, __GET(NIL, QQ, QQPICT, NIL, NIL):DISPLAY())
+                  ATAIL(GETLIST):COLORDISP(X0 + LEN(KK))
+                  ATAIL(GETLIST):READER := {|GET|_GETREADER(GET)}
+                  ATAIL(GETLIST):CARGO := GETLIST
+
+               ENDIF
+
+               ++Y0
+
+            NEXT
+
+         ENDIF
+
+         ++Y0
+
+         IF BUT <> NIL
+
+            NBUT := BT_CREAT(LEN(BUT) / 3)
+            MEMVAR->JMAX := LEN(NBUT)
+
+            IF JMAX > 0
+
+               AA11 := BUT[1]
+               AA12 := BUT[2]
+               AA13 := BUT[3]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA11) + 2, 1, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA11, AA13, NIL, NIL, AA12);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA13, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 1, L), _ARRAY_(NBUT, 1)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA11 + AA13 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA11);
+                      + LEN(AA13) + 3)
+
+            ENDIF
+
+            IF JMAX > 1
+
+               AA21 := BUT[4]
+               AA22 := BUT[5]
+               AA23 := BUT[6]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA21) + 2, 2, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA21, AA23, NIL, NIL, AA22);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA23, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 2, L), _ARRAY_(NBUT, 2)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA21 + AA23 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA21);
+                      + LEN(AA23) + 3)
+
+            ENDIF
+
+            IF JMAX > 2
+
+               AA31 := BUT[7]
+               AA32 := BUT[8]
+               AA33 := BUT[9]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA31) + 2, 3, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA31, AA33, NIL, NIL, AA32);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA33, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 3, L), _ARRAY_(NBUT, 3)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA31 + AA33 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA31);
+                      + LEN(AA33) + 3)
+
+            ENDIF
+
+            IF JMAX > 3
+
+               AA41 := BUT[10]
+               AA42 := BUT[11]
+               AA43 := BUT[12]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA41) + 2, 4, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA41, AA43, NIL, NIL, AA42);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA43, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 4, L), _ARRAY_(NBUT, 4)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA41 + AA43 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA41);
+                      + LEN(AA43) + 3)
+
+            ENDIF
+
+            IF JMAX > 4
+
+               AA51 := BUT[13]
+               AA52 := BUT[14]
+               AA53 := BUT[15]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA51) + 2, 5, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA51, AA53, NIL, NIL, AA52);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA53, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 5, L), _ARRAY_(NBUT, 5)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA51 + AA53 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA51);
+                      + LEN(AA53) + 3)
+
+            ENDIF
+
+            IF JMAX > 5
+
+               AA61 := BUT[16]
+               AA62 := BUT[17]
+               AA63 := BUT[18]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA61) + 2, 6, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA61, AA63, NIL, NIL, AA62);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA63, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 6, L), _ARRAY_(NBUT, 6)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA61 + AA63 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA61);
+                      + LEN(AA63) + 3)
+
+            ENDIF
+
+            IF JMAX > 6
+
+               AA71 := BUT[19]
+               AA72 := BUT[20]
+               AA73 := BUT[21]
+               AADD(GETLIST, _BUTTON(Y0, X0BUT + LEN(AA71) + 2, 7, NBUT, ;
+                     "nBut", MEMVAR->COLORS[62], AA71, AA73, NIL, NIL, AA72);
+                     )
+               ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, AA73, IF(VALTYPE(L);
+                      == "L", _ARRAY_(NBUT, 7, L), _ARRAY_(NBUT, 7)))}
+               ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " " + ;
+                     AA71 + AA73 + " ")}
+               ATAIL(GETLIST):DISPLAY()
+               MEMVAR->X0BUT := MEMVAR->X0BUT + (MEMVAR->COLORS[9] + LEN(AA71);
+                      + LEN(AA73) + 3)
+
+            ENDIF
+
+         ENDIF
+
+         SETCURSOR(0)
+         SET(28, "ON")
+
+         IF GETM <> NIL
+
+            SETCURSOR(1)
+
+         ENDIF
+
+         READMODAL(GETLIST)
+         GETLIST := {}
+         SET(27, "OFF")
+         SET(28, "OFF")
+         KEY := LASTKEY()
+
+         IF KEY = 27
+
+            WINCLOSE(WIN1)
+            SETCOLOR(OLDC)
+            SETCURSOR(CURS)
+            RETURN 0
+
+         ELSE
+
+            WINCLOSE(WIN1)
+            SETCOLOR(OLDC)
+            SETCURSOR(CURS)
+
+            IF BUT <> NIL
+
+               RETURN RB_SET(NBUT)
+
+            ELSE
+
+               RETURN 1
+
+            ENDIF
+
+         ENDIF
+
+      ENDDO
+
+   ELSE
+
+      KEY := INKEYTRAP(0)
+      WINCLOSE(WIN1)
+      SETCOLOR(OLDC)
+      SETCURSOR(CURS)
+      RETURN KEY
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BT_CREAT
+   Params: NALL
+   Return: Undefined
+  Example: BT_CREAT(NALL)
+  ..........................................................................
+*/
+
+FUNCTION BT_CREAT(NALL)
+
+   LOCAL ARR := ARRAY(NALL)
+
+   AFILL(ARR, .F.)
+
+RETURN ARR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _CHECKBOXE
+   Params: NROW, NCOL, CVAR, BVALID, BWHEN, BINPUT, CCOLOR
+   Return: Undefined
+  Example: _CHECKBOXE(NROW, NCOL, CVAR, BVALID, BWHEN, BINPUT, CCOLOR)
+  ..........................................................................
+*/
+
+FUNCTION _CHECKBOXE(NROW, NCOL, CVAR, BVALID, BWHEN, BINPUT, CCOLOR)
+
+   LOCAL OGET := GETNEW()
+
+   OGET:ROW := NROW
+   OGET:COL := NCOL
+
+   IF CCOLOR <> NIL
+
+      OGET:COLORSPEC := CCOLOR
+
+   ENDIF
+
+   OGET:NAME := CVAR
+   OGET:PREBLOCK := IF(BWHEN == NIL, {||.T.}, BWHEN)
+   OGET:POSTBLOCK := IF(BVALID == NIL, {||.T.}, BVALID)
+   OGET:CARGO := IF(BINPUT == NIL, {||.T.}, BINPUT)
+
+RETURN OGET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _GETSEPARC
+   Params: LSTAT
+   Return: String
+  Example: _GETSEPARC(LSTAT)
+  ..........................................................................
+*/
+
+FUNCTION _GETSEPARC(LSTAT)
+
+
+RETURN IF(LSTAT, "[˚]", "[ ]")
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _GETREADER
+   Params: OGET
+   Return: Undefined
+  Example: _GETREADER(OGET)
+  ..........................................................................
+*/
+
+PROCEDURE _GETREADER(OGET)
+
+   IF GETPREVALI(OGET)
+
+      OGET:SETFOCUS()
+
+      DO WHILE OGET:EXITSTATE() == 0
+
+         IF OGET:TYPEOUT()
+
+            OGET:EXITSTATE := 5
+
+         ENDIF
+
+         DO WHILE OGET:EXITSTATE() == 0
+
+            _GETAPPLYK(OGET, INKEY(0))
+
+         ENDDO
+
+         IF  .NOT. GETPOSTVAL(OGET)
+
+            OGET:EXITSTATE := 0
+
+         ENDIF
+
+      ENDDO
+
+      IF LEN(GETLIST) > 0
+
+         IF OGET:EXITSTATE() = 1 .AND. MEMVAR->GETLIST[1]:NAME() = ;
+               OGET:NAME()
+
+            OGET:EXITSTATE := 4
+
+         ELSEIF OGET:EXITSTATE() = 2 .AND. MEMVAR->GETLIST[LEN(GETLIST)];
+               :NAME() = OGET:NAME()
+
+            OGET:EXITSTATE := 3
+
+         ENDIF
+
+      ELSEIF OGET:EXITSTATE() = 1 .AND. OGET:CARGO[1]:NAME() = OGET:NAME()
+
+         OGET:EXITSTATE := 4
+
+      ELSEIF OGET:EXITSTATE() = 2 .AND. OGET:CARGO()[LEN(OGET:CARGO())];
+            :NAME() = OGET:NAME()
+
+         OGET:EXITSTATE := 3
+
+      ENDIF
+
+      OGET:KILLFOCUS()
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _BUTTON
+   Params: NROW, NCOL, NNUM, AVAR, CVAR, CCOLOR, HOTKEY, NAMOPT, BVALID, 
+           BWHEN, NBUT
+   Return: 
+  Example: _BUTTON(NROW, NCOL, NNUM, AVAR, CVAR, CCOLOR, HOTKEY, NAMOPT, 
+                   BVALID, BWHEN, NBUT)
+  ..........................................................................
+*/
+
+FUNCTION _BUTTON(NROW, NCOL, NNUM, AVAR, CVAR, CCOLOR, HOTKEY, NAMOPT, ;
+                  BVALID, BWHEN, NBUT)
+
+   LOCAL OGET := GETNEW()
+
+   OGET:ROW := NROW
+   OGET:COL := NCOL
+
+   IF CCOLOR <> NIL
+
+      OGET:COLORSPEC := CCOLOR
+
+   ENDIF
+
+   OGET:NAME := CVAR
+   OGET:PREBLOCK := IF(BWHEN == NIL, {||AKK(.T., AVAR, NNUM, OGET:CARGO[2, ;
+         OGET:CARGO[1]])}, {||BWHENAKK(OGET, BWHEN, AVAR, NNUM)})
+   OGET:POSTBLOCK := IF(BVALID == NIL, {||AKK(.F., AVAR, NNUM, OGET:CARGO[;
+         2, OGET:CARGO[1]])}, {||BVALIDAKK(OGET, BVALID, AVAR, NNUM, ;
+         OGET:CARGO[2, OGET:CARGO[1]])})
+   OGET:CARGO := {NNUM, AVAR, .F., "BUT", NBUT, HOTKEY, NAMOPT}
+   SHADOW(OGET)
+
+RETURN OGET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _ARRAY_
+   Params: ARR, INDEX, NEW
+   Return: Undefined
+  Example: _ARRAY_(ARR, INDEX, NEW)
+  ..........................................................................
+*/
+
+FUNCTION _ARRAY_(ARR, INDEX, NEW)
+
+   LOCAL EXT := ARR[INDEX]
+
+   ARR[INDEX] := IF(NEW == NIL, ARR[INDEX], NEW)
+
+RETURN EXT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BT_SET
+   Params: ARR, NNUM
+   Return: Undefined
+  Example: BT_SET(ARR, NNUM)
+  ..........................................................................
+*/
+
+FUNCTION BT_SET(ARR, NNUM)
+
+   IF NNUM <> NIL
+
+      AFILL(ARR, .F.)
+      ARR[NNUM] := .T.
+
+   ENDIF
+
+
+RETURN ASCAN(ARR, .T.)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MESS
+   Params: X, Y, MASST, RAMKA, OUTPUT
+   Return: Variable
+  Example: MESS(X, Y, MASST, RAMKA, OUTPUT)
+  ..........................................................................
+*/
+
+FUNCTION MESS(X, Y, MASST, RAMKA, OUTPUT)
+
+   PRIVATE I, J, JJ, BIGSTR, VOZVRAT, MAIN, N, RTYPE, X1, X2, Y1, Y2, MAX, ;
+         C, K
+   PRIVATE CENTERX := 40, CENTERY := 12, MCOLOR
+   MEMVAR->MAIN := SETCOLOR()
+
+   IF OUTPUT = NIL
+
+      OUTPUT := .T.
+
+   ENDIF
+
+   MEMVAR->BIGSTR := 0
+   MEMVAR->MAX := MEMVAR->K := LEN(MASST)
+
+   FOR I := 1 TO MAX
+
+      MEMVAR->N := LEN(MASST[I])
+      MEMVAR->C := SUBSTR(MASST[I], 1, 1)
+
+      IF C = "@" .OR. C = "!"
+
+         --MEMVAR->N
+
+         IF C = "@"
+
+            MEMVAR->K := MAX - 1
+
+         ENDIF
+
+      ENDIF
+
+      IF N > BIGSTR
+
+         MEMVAR->BIGSTR := N
+
+      ENDIF
+
+      IF N > 76
+
+         RETURN -1
+
+      ENDIF
+
+   NEXT
+
+   MEMVAR->I := K
+   MEMVAR->RTYPE := "d"
+   MEMVAR->BIGSTR := BIGSTR + 2
+
+   IF RAMKA <> NIL .AND. RAMKA = .F.
+
+      MEMVAR->RTYPE := "s"
+
+   ENDIF
+
+   MEMVAR->N := INT(I / 2)
+
+   IF Y <> NIL
+
+      IF Y < 23 - I - 1 .AND. Y > -1
+
+         MEMVAR->Y1 := Y
+         MEMVAR->Y2 := Y1 + I + 2
+
+      ELSE
+
+         MEMVAR->Y1 := 12 - N - 1
+         MEMVAR->Y2 := Y1 + I + 1
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->Y1 := 12 - N - 1
+      MEMVAR->Y2 := Y1 + I + 1
+
+   ENDIF
+
+   MEMVAR->N := INT(BIGSTR / 2)
+
+   IF X <> NIL
+
+      IF X < 78 - BIGSTR .AND. X > -1
+
+         MEMVAR->X1 := X
+         MEMVAR->X2 := X1 + BIGSTR + 2
+
+      ELSE
+
+         MEMVAR->X1 := 40 - N - 1
+         MEMVAR->X2 := X1 + BIGSTR + 1
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->X1 := 40 - N - 1
+      MEMVAR->X2 := X1 + BIGSTR + 1
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[3])
+   MEMVAR->VOZVRAT := WIN(Y1, X1, Y2, X2, RTYPE, "smt")
+   DISPBEGIN()
+   SETCOLOR(MEMVAR->COLORS[4])
+   MEMVAR->C := SUBSTR(MASST[1], 1, 1)
+   MEMVAR->JJ := 1
+
+   IF C = "@"
+
+      SETCOLOR(MEMVAR->COLORS[3])
+      CENTR(NIL, 0, " " + SUBSTR(MASST[1], 2) + " ")
+      MEMVAR->JJ := 2
+
+   ENDIF
+
+   MEMVAR->N := 1
+   SETCOLOR(MEMVAR->COLORS[4])
+
+   FOR J := JJ TO MAX
+
+      IF SUBSTR(MASST[J], 1, 1) = "!"
+
+         SETCOLOR(MEMVAR->COLORS[2])
+
+         IF OUTPUT = .T.
+
+            CENTR(NIL, N, SUBSTR(MASST[J], 2))
+
+         ELSE
+
+            DEVPOS(N, 2)
+            DEVOUT(SUBSTR(MASST[J], 2))
+
+         ENDIF
+
+         SETCOLOR(MEMVAR->COLORS[4])
+
+      ELSEIF OUTPUT = .T.
+
+         CENTR(NIL, N, MASST[J])
+
+      ELSE
+
+         DEVPOS(N, 2)
+         DEVOUT(MASST[J])
+
+      ENDIF
+
+      ++MEMVAR->N
+
+   NEXT
+
+   DISPEND()
+   SETCOLOR(MAIN)
+
+RETURN VOZVRAT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FILEVIEW
+   Params: Y1, X1, Y2, X2, FVIEWF, HEAD, CODEBLOCK, COMMENTL
+   Return: Logical
+  Example: FILEVIEW(Y1, X1, Y2, X2, FVIEWF, HEAD, CODEBLOCK, COMMENTL)
+  ..........................................................................
+*/
+
+FUNCTION FILEVIEW(Y1, X1, Y2, X2, FVIEWF, HEAD, CODEBLOCK, COMMENTL)
+
+   LOCAL READEOLN, EOLN_ := "  ", EOLN_END := CHR(13) + CHR(10)
+   LOCAL KK
+
+   PRIVATE KOL, LN, RET, WIN1, FDESKTOP, WCOML, OLDC := SETCOLOR(), MAX := ;
+         22
+   PRIVATE EOLNS := ARRAY(MAX, 2), X, KEY, LENFILE, FVIEWHEADE, FVIEWFILE ;
+         := FVIEWF
+   PRIVATE CODEBL := CODEBLOCK, SHADOW, RAMKA, GOLOVA, FVIEWKEY, DOUB := 2
+   PRIVATE LOCALX1 := X1, LOCALY1 := Y1, LOCALX2 := X2, LOCALY2 := Y2
+
+   IF X2 - X1 - 1 < 3 .OR. Y2 - Y1 - 1 < 3
+
+      RETURN .F.
+
+   ENDIF
+
+   MEMVAR->FVIEWHEADE := FOPEN(FVIEWFILE, 2)
+
+   IF FVIEWHEADE = -1
+
+      ERROR(NIL, NIL, {"éË®°™† Æ‚™‡Î‚®Ô ‰†©´†", UPPER(FVIEWFILE) + " !"}, {;
+            " ÇÎÂÆ§ "})
+      RETURN .F.
+
+   ELSE
+
+      FSEEK(FVIEWHEADE, -2, 2)
+      READEOLN := FREAD(FVIEWHEADE, @EOLN_, 2)
+
+      IF READEOLN = 2
+
+         IF SUBSTR(EOLN_, 1, 1) == CHR(13) .AND. SUBSTR(EOLN_, 2, 1) == ;
+               CHR(10)
+
+         ELSE
+
+            KK := FWRITE(FVIEWHEADE, EOLN_END, 2)
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+   KK := FCLOSE(FVIEWHEADE)
+   MEMVAR->LENFILE := FILESIZE(FVIEWFILE)
+   MEMVAR->X := 0
+
+   IF COMMENTL <> NIL
+
+      SETCOLOR(MEMVAR->COLORS[54])
+      MEMVAR->WCOML := WIN(24, 0, 24, 79)
+      STATUSLINE(COMMENTL)
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[55])
+   ++Y1
+   --Y2
+   ++X1
+   --X2
+   MEMVAR->LN := X2 - X1 + 1
+   MEMVAR->KOL := Y2 - Y1 + 1
+   OBRHEAD(X1 - 1, Y1 - 1, X2 + 1, Y2 + 1, HEAD, FVIEWFILE)
+   SETCOLOR(MEMVAR->COLORS[56])
+   MEMVAR->FDESKTOP := WIN(Y1, X1, Y2, X2)
+   MEMVAR->INTERLINK := 0
+   TVIEW(FVIEWFILE, Y1, X1, Y2, X2, MEMVAR->COLORS[57], @INTERLINK)
+   WINCLOSE(FDESKTOP)
+
+   IF COMMENTL <> NIL
+
+      WINCLOSE(WCOML)
+
+   ENDIF
+
+   WINCLOSE(WIN1)
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FILENAMES
+   Params: CFNAME
+   Return: Undefined
+  Example: FILENAMES(CFNAME)
+  ..........................................................................
+*/
+
+FUNCTION FILENAMES(CFNAME)
+
+   LOCAL RET := ""
+
+   IF RAT("\", CFNAME) > 0
+
+      IF(RAT("\", CFNAME) + 1 > LEN(CFNAME), RET := "", RET := SUBSTR(;
+            CFNAME, RAT("\", CFNAME) + 1))
+
+   ELSE
+
+      RET := CFNAME
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCANCODE
+   Params: NSCAN
+   Return: Undefined
+  Example: SCANCODE(NSCAN)
+  ..........................................................................
+*/
+
+FUNCTION SCANCODE(NSCAN)
+
+   LOCAL RET := 0
+   LOCAL SCAN
+
+   IF(NSCAN = NIL, SCAN := INTERLINK, SCAN := NSCAN)
+
+   IF SCAN = 59
+
+      RET := 28
+
+   ELSEIF SCAN = 60
+
+      RET := -1
+
+   ELSEIF SCAN = 61
+
+      RET := -2
+
+   ELSEIF SCAN = 62
+
+      RET := -3
+
+   ELSEIF SCAN = 63
+
+      RET := -4
+
+   ELSEIF SCAN = 64
+
+      RET := -5
+
+   ELSEIF SCAN = 65
+
+      RET := -6
+
+   ELSEIF SCAN = 66
+
+      RET := -7
+
+   ELSEIF SCAN = 67
+
+      RET := -8
+
+   ELSEIF SCAN = 68
+
+      RET := -9
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRINTYES
+   Params: SEC_WAIT, FL
+   Return: Logical
+  Example: PRINTYES(SEC_WAIT, FL)
+  ..........................................................................
+*/
+
+FUNCTION PRINTYES(SEC_WAIT, FL)
+
+   LOCAL MES, NSTART, REPLAY_F := .T.
+
+   IF(SEC_WAIT == NIL, SEC_WAIT := 0, "")
+   IF(FL = NIL, FL := .F., "")
+
+   IF FL
+
+      MES := DIALOG(NIL, NIL, {"@ Ç≠®¨†≠®• !", ;
+            "èÆ¢‚Æ‡®‚Ï Ø•Á†‚Ï §Æ™„¨•≠‚† ?"}, {" é‚¨•≠† ", " è•Á†‚Ï "})
+
+      IF MES = 0 .OR. MES = 1
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   DO WHILE REPLAY_F
+
+      REPLAY_F := .F.
+      NSTART := SECONDS()
+
+      DO WHILE  .NOT. ISPRINTER() .AND. SECONDS() - NSTART < SEC_WAIT
+
+      ENDDO
+
+      IF  .NOT. ISPRINTER()
+
+         MES := ERROR(NIL, NIL, {"@ éË®°™† Ø•Á†‚® !", "è‡®≠‚•‡ ≠• £Æ‚Æ¢"}, ;
+               {" èÆ¢‚Æ‡®‚Ï ", " é‚¨•≠®‚Ï  "})
+
+         IF MES = 1
+
+            REPLAY_F := .T.
+
+         ELSE
+
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: INOTDEAD
+   Params: AMAS, DOP
+   Return: Array
+  Example: INOTDEAD(AMAS, DOP)
+  ..........................................................................
+*/
+
+FUNCTION INOTDEAD(AMAS, DOP)
+
+   LOCAL CURS := SETCURSOR()
+   LOCAL ASCALE := "∞±≤€≤±∞"
+   LOCAL LN := 7
+   LOCAL ACONST := {7, 13, 19, 25}
+   LOCAL COLS := {"b/n", "gr+/b"}
+   LOCAL I, J, Y, X, NUMB
+
+   SETCURSOR(0)
+
+   IF VALTYPE(AMAS) == "N" .AND. VALTYPE(DOP) == "N"
+
+      Y := AMAS
+      X := DOP
+      DISPBEGIN()
+      SAYS(Y, X, REPLICATE("∞", ACONST[4]), COLS[1])
+      SAYS(Y, X, ASCALE, COLS[2])
+      DISPEND()
+      SETCURSOR(CURS)
+      RETURN {Y, X, 8, .F.}
+
+   ENDIF
+
+   Y := AMAS[1]
+   X := AMAS[2]
+   NUMB := AMAS[3]
+   DISPBEGIN()
+
+   IF NUMB <= ACONST[4]
+
+      SAYS(Y, X + NUMB - LN - 1, "∞", COLS[1])
+      SAYS(Y, X + NUMB - LN, ASCALE, COLS[2])
+      NUMB := NUMB + 1
+
+   ELSE
+
+      SAYS(Y, X, ASCALE, COLS[2])
+      SAYS(Y, X + ACONST[3] - 1, REPLICATE("∞", LN), COLS[1])
+      NUMB := 8
+
+   ENDIF
+
+   DISPEND()
+   SETCURSOR(CURS)
+
+RETURN {Y, X, NUMB}
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SPLIT
+   Params: ST, LN
+   Return: Undefined
+  Example: SPLIT(ST, LN)
+  ..........................................................................
+*/
+
+FUNCTION SPLIT(ST, LN)
+
+   LOCAL MASSTR := ARRAY(0)
+   LOCAL POINT, NEWST, J, I, FL, MAXKOLST := 5
+
+   J := 0
+   FL := .F.
+   ST := ALLTRIM(ST)
+
+   DO WHILE (++J) <= MAXKOLST .AND. .NOT. EMPTY(ST)
+
+      IF LEN(ST) >= LN
+
+         FOR I := LN - 1 TO 1 STEP -1
+
+            IF SUBSTR(ST, I, 1) == " "
+
+               FL := .T.
+               EXIT
+
+            ENDIF
+
+         NEXT
+
+         IF  .NOT. FL
+
+            I := LN - 1
+
+         ENDIF
+
+      ELSE
+
+         I := LEN(ST)
+
+      ENDIF
+
+      AADD(MASSTR, SUBSTR(ST, 1, I))
+      ST := SUBSTR(ST, I + 1)
+
+   ENDDO
+
+
+RETURN MASSTR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SAYS
+   Params: NY, NX, CSTR, CCOL, CPIC
+   Return: Logical
+  Example: SAYS(NY, NX, CSTR, CCOL, CPIC)
+  ..........................................................................
+*/
+
+FUNCTION SAYS(NY, NX, CSTR, CCOL, CPIC)
+
+   IF CCOL == NIL
+
+      IF CPIC == NIL
+
+         DEVPOS(NY, NX)
+         DEVOUT(CSTR)
+
+      ELSE
+
+         DEVPOS(NY, NX)
+         DEVOUTPICT(CSTR, CPIC)
+
+      ENDIF
+
+   ELSEIF CPIC == NIL
+
+      DEVPOS(NY, NX)
+      DEVOUT(CSTR, CCOL)
+
+   ELSE
+
+      DEVPOS(NY, NX)
+      DEVOUTPICT(CSTR, CPIC, CCOL)
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RB_CREAT
+   Params: NALL, NNUM
+   Return: Undefined
+  Example: RB_CREAT(NALL, NNUM)
+  ..........................................................................
+*/
+
+FUNCTION RB_CREAT(NALL, NNUM)
+
+   LOCAL ARR := ARRAY(NALL)
+
+   AFILL(ARR, .F.)
+   ARR[NNUM] := .T.
+
+RETURN ARR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _RADIOBUTT
+   Params: NROW, NCOL, NNUM, AVAR, CVAR, BVALID, BWHEN, CCOLOR
+   Return: Undefined
+  Example: _RADIOBUTT(NROW, NCOL, NNUM, AVAR, CVAR, BVALID, BWHEN, CCOLOR)
+  ..........................................................................
+*/
+
+FUNCTION _RADIOBUTT(NROW, NCOL, NNUM, AVAR, CVAR, BVALID, BWHEN, CCOLOR)
+
+   LOCAL OGET := GETNEW()
+
+   OGET:ROW := NROW
+   OGET:COL := NCOL
+
+   IF CCOLOR <> NIL
+
+      OGET:COLORSPEC := CCOLOR
+
+   ENDIF
+
+   OGET:NAME := CVAR
+   OGET:PREBLOCK := IF(BWHEN == NIL, {||.T.}, BWHEN)
+   OGET:POSTBLOCK := IF(BVALID == NIL, {||.T.}, BVALID)
+   OGET:CARGO := {NNUM, AVAR}
+
+RETURN OGET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _GETSEPARR
+   Params: LSTAT
+   Return: String
+  Example: _GETSEPARR(LSTAT)
+  ..........................................................................
+*/
+
+FUNCTION _GETSEPARR(LSTAT)
+
+
+RETURN IF(LSTAT, "("+CHR(7)+")", "( )")
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CMONTH_L
+   Params: DATA
+   Return: Undefined
+  Example: CMONTH_L(DATA)
+  ..........................................................................
+*/
+
+FUNCTION CMONTH_L(DATA)
+
+   LOCAL MES := MONTH(DATA), CHR := ""
+
+   DO CASE
+
+   CASE MES == 1
+
+      CHR := "January"
+
+   CASE MES == 2
+
+      CHR := "February"
+
+   CASE MES == 3
+
+      CHR := "March"
+
+   CASE MES == 4
+
+      CHR := "April"
+
+   CASE MES == 5
+
+      CHR := "May"
+
+   CASE MES == 6
+
+      CHR := "June"
+
+   CASE MES == 7
+
+      CHR := "July"
+
+   CASE MES == 8
+
+      CHR := "August"
+
+   CASE MES == 9
+
+      CHR := "September"
+
+   CASE MES == 10
+
+      CHR := "October"
+
+   CASE MES == 11
+
+      CHR := "November"
+
+   CASE MES == 12
+
+      CHR := "December"
+
+   END CASE
+
+
+RETURN CHR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CMONTHUI
+   Params: DATA
+   Return: Undefined
+  Example: CMONTHUI(DATA)
+  ..........................................................................
+*/
+
+FUNCTION CMONTHUI(DATA)
+
+   LOCAL MES := MONTH(DATA), CHR := ""
+
+   DO CASE
+
+   CASE MES == 1
+
+      CHR := "ëiÁ≠Ô"
+
+   CASE MES == 2
+
+      CHR := "ãÓ‚Æ£Æ"
+
+   CASE MES == 3
+
+      CHR := "Å•‡•ß≠Ô"
+
+   CASE MES == 4
+
+      CHR := "ä¢i‚≠Ô"
+
+   CASE MES == 5
+
+      CHR := "í‡†¢≠Ô"
+
+   CASE MES == 6
+
+      CHR := "ó•‡¢≠Ô"
+
+   CASE MES == 7
+
+      CHR := "ã®Ø≠Ô"
+
+   CASE MES == 8
+
+      CHR := "ë•‡Ø≠Ô"
+
+   CASE MES == 9
+
+      CHR := "Ç•‡•·≠Ô"
+
+   CASE MES == 10
+
+      CHR := "ÜÆ¢‚≠Ô"
+
+   CASE MES == 11
+
+      CHR := "ã®·‚ÆØ†§†"
+
+   CASE MES == 12
+
+      CHR := "É‡„§≠Ô"
+
+   END CASE
+
+
+RETURN CHR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RB_SET
+   Params: ARR, NNUM
+   Return: Undefined
+  Example: RB_SET(ARR, NNUM)
+  ..........................................................................
+*/
+
+FUNCTION RB_SET(ARR, NNUM)
+
+   IF NNUM <> NIL
+
+      AFILL(ARR, .F.)
+      ARR[NNUM] := .T.
+
+   ENDIF
+
+
+RETURN ASCAN(ARR, .T.)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: LINER
+   Params: X, Y, LN, MAX
+   Return: Variable
+  Example: LINER(X, Y, LN, MAX)
+  ..........................................................................
+*/
+
+FUNCTION LINER(X, Y, LN, MAX)
+
+   PRIVATE XX, SC, XC, MAS, CUR, PERCENT, PC, CMAX
+   MEMVAR->XX := X
+
+   IF TYPE("xx") = "N"
+
+      IF LN < 4
+
+         RETURN NIL
+
+      ENDIF
+
+      MEMVAR->SC := SETCOLOR()
+      SETCOLOR(MEMVAR->COLORS[45])
+      DISPBEGIN()
+      DEVPOS(Y, X)
+      DEVOUT(REPLICATE(" ", LN))
+      MEMVAR->XC := CX(X, X + LN - 1, 2)
+      DEVPOS(Y, XC)
+      DEVOUT("0%")
+      DISPEND()
+      SETCOLOR(SC)
+      RETURN {X, Y, LN, MAX}
+
+   ELSE
+
+      MEMVAR->MAS := X
+      MEMVAR->CUR := Y
+      DISPBEGIN()
+
+      IF MEMVAR->CUR < MEMVAR->MAS[4]
+
+         MEMVAR->PERCENT := INT(MEMVAR->CUR * 100 / MEMVAR->MAS[4])
+         MEMVAR->PC := ALLTRIM(NTOC(PERCENT)) + "%"
+         MEMVAR->XC := CX(MEMVAR->MAS[1], MEMVAR->MAS[1] + MEMVAR->MAS[3] - 1, ;
+               LEN(PC))
+         DEVPOS(MEMVAR->MAS[2], XC)
+         DEVOUT(PC)
+         COLORWIN2(MEMVAR->MAS[2], MEMVAR->MAS[1], MEMVAR->MAS[2], MEMVAR->MAS[;
+               1] + MEMVAR->MAS[3] - 1, MEMVAR->COLORS[45])
+         MEMVAR->CMAX := INT(MEMVAR->CUR * MEMVAR->MAS[3] / MEMVAR->MAS[4])
+
+         IF CMAX > 0
+
+            COLORWIN2(MEMVAR->MAS[2], MEMVAR->MAS[1], MEMVAR->MAS[2], MEMVAR->;
+                  MAS[1] + CMAX - 1, MEMVAR->COLORS[46])
+
+         ENDIF
+
+      ELSE
+
+         MEMVAR->XC := CX(MEMVAR->MAS[1], MEMVAR->MAS[1] + MEMVAR->MAS[3] - 1, ;
+               4)
+         DEVPOS(MEMVAR->MAS[2], XC)
+         DEVOUT("100%")
+         COLORWIN2(MEMVAR->MAS[2], MEMVAR->MAS[1], MEMVAR->MAS[2], MEMVAR->MAS[;
+               1] + MEMVAR->MAS[3] - 1, MEMVAR->COLORS[46])
+         MEMVAR->PERCENT := 100
+
+      ENDIF
+
+      DISPEND()
+
+   ENDIF
+
+
+RETURN PERCENT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BUTTONS
+   Params: X, Y, OPT, ACT, ZERO, REGIM
+   Return: Variable
+  Example: BUTTONS(X, Y, OPT, ACT, ZERO, REGIM)
+  ..........................................................................
+*/
+
+FUNCTION BUTTONS(X, Y, OPT, ACT, ZERO, REGIM)
+
+   PRIVATE I, J, K, Z, FLAG, SUMX, ACTIVE, LN, SHADOW
+   PRIVATE MAINCOL, MAINY
+   MEMVAR->MAINCOL := SETCOLOR()
+   MEMVAR->SHADOW := TEXTBACKGR(MEMVAR->COLORS[8])
+
+   IF REGIM = NIL
+
+      REGIM := 0
+
+   ENDIF
+
+   MEMVAR->K := LEN(OPT)
+   MEMVAR->SUMX := 0
+
+   FOR I := 1 TO K
+
+      MEMVAR->SUMX := SUMX + LEN(OPT[I]) + 1
+
+      IF I <> K
+
+         MEMVAR->SUMX := SUMX + MEMVAR->COLORS[9]
+
+      ENDIF
+
+   NEXT
+
+   IF X = NIL
+
+      IF SUMX > MAXCOL() + 1
+
+         RETURN -1
+
+      ELSE
+
+         X := INT((MAXCOL() + 1) / 2) - INT(SUMX / 2)
+
+      ENDIF
+
+   ELSEIF SUMX + X > MAXCOL() + 1
+
+      RETURN -1
+
+   ENDIF
+
+   IF Y = NIL
+
+      IF MAXROW() + 1 < 2
+
+         RETURN -1
+
+      ELSE
+
+         Y := (MAXROW() + 1) / 2 - 1
+
+      ENDIF
+
+   ELSEIF Y + 2 > MAXROW() + 1
+
+      RETURN -1
+
+   ENDIF
+
+   DISPBEGIN()
+   PRIVATE MSYS[K, 4]
+   MEMVAR->MAINY := Y
+   MEMVAR->Z := 0
+   MEMVAR->FLAG := .F.
+
+   IF ZERO <> NIL
+
+      MEMVAR->LN := LEN(ZERO)
+
+   ELSE
+
+      MEMVAR->LN := 0
+
+   ENDIF
+
+   FOR I := 1 TO K
+
+      IF LN <> 0
+
+         FOR J := 1 TO LN
+
+            IF I = ZERO[J]
+
+               MEMVAR->FLAG := .T.
+               EXIT
+
+            ENDIF
+
+         NEXT
+
+         IF FLAG = .F.
+
+            ++MEMVAR->Z
+            SETCOLOR(MEMVAR->COLORS[6])
+            MEMVAR->MSYS[Z, 1] := X
+            MEMVAR->MSYS[Z, 2] := LEN(OPT[I])
+            MEMVAR->MSYS[Z, 3] := I
+            MEMVAR->MSYS[Z, 4] := OPT[I]
+
+         ELSE
+
+            MEMVAR->FLAG := .F.
+            SETCOLOR(MEMVAR->COLORS[10])
+
+         ENDIF
+
+      ELSE
+
+         ++MEMVAR->Z
+         SETCOLOR(MEMVAR->COLORS[6])
+         MEMVAR->MSYS[Z, 1] := X
+         MEMVAR->MSYS[Z, 2] := LEN(OPT[I])
+         MEMVAR->MSYS[Z, 3] := I
+         MEMVAR->MSYS[Z, 4] := OPT[I]
+
+      ENDIF
+
+      DEVPOS(Y, X)
+      DEVOUT(OPT[I])
+      SETCOLOR(SHADOW)
+      QQOUT("‹")
+      DEVPOS(Y + 1, X + 1)
+      DEVOUT(REPLICATE("ﬂ", LEN(OPT[I])))
+      X := X + MEMVAR->COLORS[9] + LEN(OPT[I]) + 1
+
+   NEXT
+
+   IF ACT <> NIL .AND. ACT > 0 .AND. ACT < K + 1
+
+      FOR J := 1 TO Z
+
+         IF MEMVAR->MSYS[J, 3] = ACT
+
+            MEMVAR->FLAG := .T.
+            EXIT
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+   IF FLAG = .F.
+
+      MEMVAR->ACTIVE := 1
+
+   ELSE
+
+      MEMVAR->ACTIVE := J
+
+   ENDIF
+
+   COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[ACTIVE, 1] +;
+          MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[5])
+   DISPEND()
+
+   IF REGIM = 0
+
+      MOVETOUSER()
+
+   ELSEIF REGIM = 1
+
+      RETURN {MSYS, MAINY, SHADOW, MAINCOL, ACTIVE, Z}
+
+   ELSEIF REGIM = 2
+
+      DISPBEGIN()
+      COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[ACTIVE, ;
+            1] + MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[6])
+      DISPEND()
+      RETURN {MSYS, MAINY, SHADOW, MAINCOL, ACTIVE, Z}
+
+   ENDIF
+
+   SETCOLOR(MAINCOL)
+
+   IF ACTIVE = 0
+
+      RETURN 0
+
+   ENDIF
+
+
+RETURN MEMVAR->MSYS[ACTIVE, 3]
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MENU_POP
+   Params: AOPT, TITLE
+   Return: Number
+  Example: MENU_POP(AOPT, TITLE)
+  ..........................................................................
+*/
+
+FUNCTION MENU_POP(AOPT, TITLE)
+
+   LOCAL WIN1, RAZMER, OLDCOLOR, KEY, ARR := ARRAY(0)
+   LOCAL I, COL1, COL2, ROW1, ROW2, C1, R1, NKEY
+
+   IF AOPT == NIL .OR. LEN(AOPT) == 0
+
+      RETURN 0
+
+   ENDIF
+
+   FOR I := 1 TO LEN(AOPT)
+
+      AADD(ARR, AOPT[I, 1])
+
+   NEXT
+
+   RAZMER := IF(LEN(ARR) > 10, 10, LEN(ARR))
+   COL1 := 40 - INT(LEN(ARR[1]) / 2 + 1)
+   COL2 := 40 - INT(LEN(ARR[1]) / 2 + 1) + LEN(ARR[1]) + 1
+   ROW1 := 12 - INT(RAZMER / 2)
+   ROW2 := 12 - INT(RAZMER / 2) + RAZMER
+   C1 := COL2 - COL1
+   R1 := ROW2 - ROW1
+   OLDCOLOR := SETCOLOR()
+   SETCOLOR(MEMVAR->COLORS[66])
+   WIN1 := WIN(ROW1 - 2, COL1 - 1, ROW2 + 2, COL2 + 1, "d", "t")
+   IF(TITLE <> NIL, CENTR(NIL, 0, TITLE, MEMVAR->COLORS[67]), "")
+   SETCOLOR(MEMVAR->COLORS[64] + "," + MEMVAR->COLORS[65] + ",,," + MEMVAR->;
+         COLORS[66])
+
+   DO WHILE .T.
+
+      KEY := ACHOICE(1, 1, R1 + 2, C1, ARR)
+      NKEY := LASTKEY()
+
+      IF NKEY = 19 .OR. NKEY = 4
+
+         LOOP
+
+      ELSE
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF NKEY = 27
+
+      KEY := 0
+
+   ENDIF
+
+   SETCOLOR(OLDCOLOR)
+   WINCLOSE(WIN1)
+
+RETURN KEY
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CMONTHU
+   Params: DATA
+   Return: Undefined
+  Example: CMONTHU(DATA)
+  ..........................................................................
+*/
+
+FUNCTION CMONTHU(DATA)
+
+   LOCAL MES := MONTH(DATA), CHR := ""
+
+   DO CASE
+
+   CASE MES == 1
+
+      CHR := "ëiÁ•≠Ï"
+
+   CASE MES == 2
+
+      CHR := "ãÓ‚®©"
+
+   CASE MES == 3
+
+      CHR := "Å•‡•ß•≠Ï"
+
+   CASE MES == 4
+
+      CHR := "ä¢i‚•≠Ï"
+
+   CASE MES == 5
+
+      CHR := "í‡†¢•≠Ï"
+
+   CASE MES == 6
+
+      CHR := "ó•‡¢•≠Ï"
+
+   CASE MES == 7
+
+      CHR := "ã®Ø•≠Ï"
+
+   CASE MES == 8
+
+      CHR := "ë•‡Ø•≠Ï"
+
+   CASE MES == 9
+
+      CHR := "Ç•‡•·•≠Ï"
+
+   CASE MES == 10
+
+      CHR := "ÜÆ¢‚•≠Ï"
+
+   CASE MES == 11
+
+      CHR := "ã®·‚ÆØ†§"
+
+   CASE MES == 12
+
+      CHR := "É‡„§•≠Ï"
+
+   END CASE
+
+
+RETURN CHR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WSTATUSLIN
+   Params: Y1, MASKEY, NTERM, NLEN
+   Return: Undefined
+  Example: WSTATUSLIN(Y1, MASKEY, NTERM, NLEN)
+  ..........................................................................
+*/
+
+FUNCTION WSTATUSLIN(Y1, MASKEY, NTERM, NLEN)
+
+   LOCAL WIN, Y := 24, MASKEY2 := ARRAY(0), OLDC := SETCOLOR()
+
+   IF(Y1 = NIL, Y := 24, "")
+
+   IF VALTYPE(Y1) = "A"
+
+      Y := 24
+      MASKEY2 := ACLONE(Y1)
+
+   ELSE
+
+      MASKEY2 := ACLONE(MASKEY)
+      Y := Y1
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[54])
+   WIN := WIN(Y, 0, Y, 79)
+   STATUSLINE(MASKEY2, NTERM, NLEN)
+   SETCOLOR(OLDC)
+
+RETURN WIN
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BROWSER2
+   Params: X, Y, LN, H, OPTION, USERF, LDOWN, AACTIVE
+   Return: Variable
+  Example: BROWSER2(X, Y, LN, H, OPTION, USERF, LDOWN, AACTIVE)
+  ..........................................................................
+*/
+
+FUNCTION BROWSER2(X, Y, LN, H, OPTION, USERF, LDOWN, AACTIVE)
+
+   PRIVATE I, J, LNO := LEN(OPTION), C, KEY, ACT, INWIN, OPT := ARRAY(0, 0);
+         , FLAG, OLDS, R, HH, OLDCOLOR := SETCOLOR()
+   IF(LDOWN = NIL, LDOWN := .T., "")
+
+   IF LN = NIL
+
+      LN := BIGGEST(OPTION)
+      LN := LN + 3
+
+   ENDIF
+
+   IF AACTIVE = NIL
+
+      FOR I := 1 TO LNO
+
+         AADD(OPT, {PADR("  " + OPTION[I] + " ", LN), .F.})
+
+      NEXT
+
+   ELSE
+
+      FOR I := 1 TO LNO
+
+         IF AACTIVE[I]
+
+            AADD(OPT, {PADR("˚ " + OPTION[I] + " ", LN), .T.})
+
+         ELSE
+
+            AADD(OPT, {PADR("  " + OPTION[I] + " ", LN), .F.})
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[48])
+
+   FOR I := 1 TO H
+
+      IF I > LNO
+
+         MEMVAR->C := SPACE(LN)
+
+      ELSE
+
+         MEMVAR->C := MEMVAR->OPT[I, 1]
+
+      ENDIF
+
+      IF LEN(ALLTRIM(C)) = 0 .OR. .NOT. MEMVAR->OPT[I, 2]
+
+         DEVPOS(Y + I - 1, X)
+         DEVOUT(C)
+
+      ELSE
+
+         MEMVAR->OPT[I, 1] := "˚ " + SUBSTR(MEMVAR->OPT[I, 1], 3)
+         DEVPOS(Y + I - 1, X)
+         DEVOUT(C, MEMVAR->COLORS[50])
+
+      ENDIF
+
+   NEXT
+
+   SETCOLOR(MEMVAR->COLORS[51])
+   DEVPOS(Y, X + LN)
+   DEVOUT(CHR(30))
+
+   FOR I := 1 TO H - 2
+
+      DEVPOS(Y + I, X + LN)
+      DEVOUT("≤")
+
+   NEXT
+
+   DEVPOS(Y + I, X + LN)
+   DEVOUT(CHR(31))
+   MEMVAR->ACT := ( IF(MEMVAR->OPT[1, 2], COLORWIN2(Y, X, Y, X + LN - 1, ;
+         MEMVAR->COLORS[52]), COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[;
+         49])), 1 )
+   MEMVAR->INWIN := 1
+   SETCOLOR(MEMVAR->COLORS[51])
+   MEMVAR->OLDS := SCALE(Y + 1, Y + H - 2, LNO, 1)
+   DEVPOS(OLDS, X + LN)
+   DEVOUT("˛")
+   MEMVAR->FLAG := .T.
+   MEMVAR->OLDINWIN := INWIN
+
+   DO WHILE FLAG
+
+      MEMVAR->KEY := INKEYTRAP(0)
+
+      IF USERF <> NIL
+
+         &( USERF )(ACT, INWIN, OPT, 0)
+
+      ENDIF
+
+      IF KEY = 24 .AND. ACT < LNO
+
+         IF INWIN = H
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + H - 1, X, Y + H - 1, X + LN - 1, MEMVAR->;
+                     COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + H - 1, X, Y + H - 1, X + LN - 1, MEMVAR->;
+                     COLORS[48])
+
+            ENDIF
+
+            SCROLL(Y, X, Y + H - 1, X + LN - 1, 1)
+            ++MEMVAR->ACT
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               SETCOLOR(MEMVAR->COLORS[52])
+
+            ELSE
+
+               SETCOLOR(MEMVAR->COLORS[49])
+
+            ENDIF
+
+            DEVPOS(Y + H - 1, X)
+            DEVOUT(MEMVAR->OPT[ACT, 1])
+
+         ELSE
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[48])
+
+            ENDIF
+
+            ++MEMVAR->ACT
+            ++MEMVAR->INWIN
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 5 .AND. ACT > 1
+
+         IF INWIN = 1
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[48])
+
+            ENDIF
+
+            SCROLL(Y, X, Y + H - 1, X + LN - 1, -1)
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               SETCOLOR(MEMVAR->COLORS[52])
+
+            ELSE
+
+               SETCOLOR(MEMVAR->COLORS[49])
+
+            ENDIF
+
+            --MEMVAR->ACT
+            DEVPOS(Y, X)
+            DEVOUT(MEMVAR->OPT[ACT, 1])
+
+         ELSE
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[48])
+
+            ENDIF
+
+            --MEMVAR->ACT
+            --MEMVAR->INWIN
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 1
+
+         IF ACT > H
+
+            MEMVAR->ACT := 1
+            MEMVAR->INWIN := 1
+            SETCOLOR(MEMVAR->COLORS[48])
+
+            FOR I := 1 TO H
+
+               IF I > LNO
+
+                  MEMVAR->C := SPACE(LN)
+                  DEVPOS(Y + I - 1, X)
+                  DEVOUT(C)
+
+               ELSEIF MEMVAR->OPT[I, 2]
+
+                  SETCOLOR(MEMVAR->COLORS[50])
+                  MEMVAR->C := MEMVAR->OPT[I, 1]
+                  DEVPOS(Y + I - 1, X)
+                  DEVOUT(C)
+                  SETCOLOR(MEMVAR->COLORS[48])
+
+               ELSE
+
+                  MEMVAR->C := MEMVAR->OPT[I, 1]
+                  DEVPOS(Y + I - 1, X)
+                  DEVOUT(C)
+
+               ENDIF
+
+            NEXT
+
+            IF MEMVAR->OPT[1, 2]
+
+               COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ELSE
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[48])
+
+            ENDIF
+
+            MEMVAR->ACT := 1
+            MEMVAR->INWIN := 1
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y, X, Y, X + LN - 1, MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 6
+
+         IF LNO > H
+
+            MEMVAR->ACT := LNO
+            MEMVAR->INWIN := H
+            SETCOLOR(MEMVAR->COLORS[48])
+            MEMVAR->J := 1
+
+            FOR I := LNO - H + 1 TO LNO
+
+               MEMVAR->C := MEMVAR->OPT[I, 1]
+
+               IF MEMVAR->OPT[I, 2]
+
+                  SETCOLOR(MEMVAR->COLORS[50])
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+                  SETCOLOR(MEMVAR->COLORS[48])
+
+               ELSE
+
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+
+               ENDIF
+
+               ++MEMVAR->J
+
+            NEXT
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + H - 1, X, Y + H - 1, X + LN - 1, MEMVAR->;
+                     COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + H - 1, X, Y + H - 1, X + LN - 1, MEMVAR->;
+                     COLORS[49])
+
+            ENDIF
+
+         ELSE
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[48])
+
+            ENDIF
+
+            MEMVAR->ACT := LNO
+            MEMVAR->INWIN := LNO
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 18
+
+         IF ACT < H + 1
+
+            SETCOLOR(MEMVAR->COLORS[48])
+
+            FOR I := 1 TO H
+
+               IF I > LNO
+
+                  MEMVAR->C := SPACE(LN)
+
+               ELSE
+
+                  MEMVAR->C := MEMVAR->OPT[I, 1]
+
+               ENDIF
+
+               IF I <= LNO .AND. MEMVAR->OPT[I, 2]
+
+                  SETCOLOR(MEMVAR->COLORS[50])
+                  DEVPOS(Y + I - 1, X)
+                  DEVOUT(C)
+                  SETCOLOR(MEMVAR->COLORS[48])
+
+               ELSE
+
+                  DEVPOS(Y + I - 1, X)
+                  DEVOUT(C)
+
+               ENDIF
+
+            NEXT
+
+            MEMVAR->ACT := 1
+            MEMVAR->INWIN := 1
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ELSEIF INWIN = H
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[48])
+
+            ENDIF
+
+            MEMVAR->ACT := ACT - INWIN + 1
+            MEMVAR->INWIN := 1
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ELSE
+
+            MEMVAR->ACT := ACT - H + 1
+
+            IF ACT < H
+
+               MEMVAR->INWIN := ACT
+
+            ENDIF
+
+            SETCOLOR(MEMVAR->COLORS[48])
+            MEMVAR->J := 1
+
+            FOR I := ACT - INWIN + 1 TO ACT - INWIN + 5
+
+               MEMVAR->C := MEMVAR->OPT[I, 1]
+
+               IF MEMVAR->OPT[I, 2]
+
+                  SETCOLOR(MEMVAR->COLORS[50])
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+                  SETCOLOR(MEMVAR->COLORS[48])
+
+               ELSE
+
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+
+               ENDIF
+
+               ++MEMVAR->J
+
+            NEXT
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 3
+
+         IF ACT > LNO - H .OR. ACT + H - 1 + H - INWIN > LNO
+
+            MEMVAR->ACT := LNO
+
+            IF H > LNO
+
+               MEMVAR->HH := LNO
+
+            ELSE
+
+               MEMVAR->HH := H
+
+            ENDIF
+
+            MEMVAR->INWIN := HH
+            SETCOLOR(MEMVAR->COLORS[48])
+            MEMVAR->J := 1
+
+            FOR I := LNO - HH + 1 TO LNO
+
+               MEMVAR->C := MEMVAR->OPT[I, 1]
+
+               IF MEMVAR->OPT[I, 2]
+
+                  SETCOLOR(MEMVAR->COLORS[50])
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+                  SETCOLOR(MEMVAR->COLORS[48])
+
+               ELSE
+
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+
+               ENDIF
+
+               ++MEMVAR->J
+
+            NEXT
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + HH - 1, X, Y + HH - 1, X + LN - 1, MEMVAR->;
+                     COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + HH - 1, X, Y + HH - 1, X + LN - 1, MEMVAR->;
+                     COLORS[49])
+
+            ENDIF
+
+         ELSEIF INWIN = 1
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[50])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[48])
+
+            ENDIF
+
+            MEMVAR->ACT := ACT + H - 1
+            MEMVAR->INWIN := H
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ELSE
+
+            MEMVAR->ACT := ACT + H - 1
+
+            IF ACT < H
+
+               MEMVAR->INWIN := ACT
+
+            ENDIF
+
+            SETCOLOR(MEMVAR->COLORS[48])
+            MEMVAR->J := 1
+
+            FOR I := ACT - INWIN + 1 TO ACT - INWIN + 5
+
+               MEMVAR->C := MEMVAR->OPT[I, 1]
+
+               IF MEMVAR->OPT[I, 2]
+
+                  SETCOLOR(MEMVAR->COLORS[50])
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+                  SETCOLOR(MEMVAR->COLORS[48])
+
+               ELSE
+
+                  DEVPOS(Y + J - 1, X)
+                  DEVOUT(C)
+
+               ENDIF
+
+               ++MEMVAR->J
+
+            NEXT
+
+            IF MEMVAR->OPT[ACT, 2]
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[52])
+
+            ELSE
+
+               COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, ;
+                     MEMVAR->COLORS[49])
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 22 .OR. KEY = 32
+
+         IF MEMVAR->OPT[ACT, 2]
+
+            DEVPOS(Y + INWIN - 1, X)
+            DEVOUT("  ")
+            MEMVAR->OPT[ACT, 1] := "  " + SUBSTR(MEMVAR->OPT[ACT, 1], 3)
+            COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, MEMVAR->;
+                  COLORS[49])
+            MEMVAR->OPT[ACT, 2] := .F.
+
+         ELSE
+
+            DEVPOS(Y + INWIN - 1, X)
+            DEVOUT("˚ ")
+            MEMVAR->OPT[ACT, 1] := "˚ " + SUBSTR(MEMVAR->OPT[ACT, 1], 3)
+            COLORWIN2(Y + INWIN - 1, X, Y + INWIN - 1, X + LN - 1, MEMVAR->;
+                  COLORS[52])
+            MEMVAR->OPT[ACT, 2] := .T.
+
+         ENDIF
+
+         IF ACT < LNO .AND. LDOWN
+
+            __KEYBOARD(CHR(24))
+
+         ENDIF
+
+      ENDIF
+
+      SETCOLOR(MEMVAR->COLORS[51])
+      DEVPOS(OLDS, X + LN)
+      DEVOUT("≤")
+      MEMVAR->OLDS := SCALE(Y + 1, Y + H - 2, LNO, ACT)
+      DEVPOS(OLDS, X + LN)
+      DEVOUT("˛")
+
+      IF KEY = 27
+
+         MEMVAR->R := 0
+
+         IF USERF <> NIL
+
+            MEMVAR->R := &( USERF )(ACT, INWIN, OPT, 1)
+
+         ENDIF
+
+         IF R = NIL
+
+            MEMVAR->R := 0
+
+         ENDIF
+
+         IF R = 2 .OR. R = 0
+
+            SETCOLOR(OLDCOLOR)
+
+            IF R = 2
+
+               RETURN {OPT, ACT}
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+      ELSEIF KEY = 13
+
+         MEMVAR->R := 2
+
+         IF USERF <> NIL
+
+            MEMVAR->R := &( USERF )(ACT, INWIN, OPT, 1)
+
+         ENDIF
+
+         IF R = NIL
+
+            MEMVAR->R := 2
+
+         ENDIF
+
+         IF R = 2 .OR. R = 0
+
+            SETCOLOR(OLDCOLOR)
+
+            IF R = 2
+
+               RETURN {OPT, ACT}
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+      ELSE
+
+         MEMVAR->R := 1
+
+         IF USERF <> NIL
+
+            MEMVAR->R := &( USERF )(ACT, INWIN, OPT, 1)
+
+         ENDIF
+
+         IF R = NIL
+
+            MEMVAR->R := 1
+
+         ENDIF
+
+         IF R = 2 .OR. R = 0
+
+            SETCOLOR(OLDCOLOR)
+
+            IF R = 2
+
+               RETURN {OPT, ACT}
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+   ENDDO
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _CLICKBUTT
+   Params: OGET
+   Return: Logical
+  Example: _CLICKBUTT(OGET)
+  ..........................................................................
+*/
+
+FUNCTION _CLICKBUTT(OGET)
+
+   LOCAL LN := 0, LNBUT := 0
+   LOCAL OLDC := SETCOLOR(), CLICKCOL := "w+/g"
+   LOCAL CSHADOW := _TEXTBACKG("n")
+   LOCAL NAMOPT, BUT := 0, WORD := 0
+   LOCAL CBUT, CWORD
+
+   IF OGET:CARGO[6] <> NIL
+
+      NAMOPT := " " + OGET:CARGO[6] + " " + OGET:CARGO[7] + " "
+      BUT := LEN(" " + OGET:CARGO[6] + " ")
+      WORD := LEN(OGET:CARGO[7] + " ")
+      CBUT := " " + OGET:CARGO[6] + " "
+      CWORD := OGET:CARGO[7] + " "
+
+   ELSE
+
+      NAMOPT := " " + OGET:CARGO[7] + " "
+      WORD := LEN(" " + OGET:CARGO[7] + " ")
+      BUT := 1
+      CBUT := " "
+      CWORD := OGET:CARGO[7] + " "
+
+   ENDIF
+
+   DEVPOS(OGET:ROW() + 1, OGET:COL() + 1 - BUT)
+   DEVOUT(REPLICATE(" ", BUT + WORD))
+   DEVPOS(OGET:ROW(), OGET:COL() + WORD)
+   DEVOUT(" ")
+   DEVPOS(OGET:ROW(), OGET:COL() - BUT)
+   DEVOUT(SPACE(BUT))
+   SETCOLOR("gr+/g")
+   DEVPOS(OGET:ROW(), OGET:COL() + 1 - BUT)
+   DEVOUT(CBUT)
+   SETCOLOR(CLICKCOL)
+   DEVPOS(OGET:ROW(), OGET:COL() + 1)
+   DEVOUT(CWORD)
+   INKEY(0.1)
+   SETCOLOR("gr+/g")
+   DEVPOS(OGET:ROW(), OGET:COL() - BUT)
+   DEVOUT(CBUT)
+   SETCOLOR(SUBSTR(OGET:COLORSPEC(), AT(",", OGET:COLORSPEC()) + 1))
+   DEVPOS(OGET:ROW(), OGET:COL())
+   DEVOUT(CWORD)
+   SETCOLOR(CSHADOW)
+   QQOUT("‹")
+   DEVPOS(OGET:ROW() + 1, OGET:COL() + 1 - BUT)
+   DEVOUT(REPLICATE("ﬂ", BUT + WORD))
+   INKEY(0.1)
+   SETCOLOR(OLDC)
+   OGET:CARGO[3] := .T.
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: AKK
+   Params: FL, ARR, INDEX, OCARGO
+   Return: Logical
+  Example: AKK(FL, ARR, INDEX, OCARGO)
+  ..........................................................................
+*/
+
+FUNCTION AKK(FL, ARR, INDEX, OCARGO)
+
+   STATIC _NCUR
+
+   IF FL
+
+      _NCUR := SETCURSOR(0)
+      _ARRAY_(ARR, INDEX, .T.)
+
+   ELSE
+
+      SETCURSOR(_NCUR)
+
+      IF  .NOT. OCARGO
+
+         _ARRAY_(ARR, INDEX, .F.)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BWHENAKK
+   Params: OGET, BWHEN, ARR, INDEX
+   Return: Logical
+  Example: BWHENAKK(OGET, BWHEN, ARR, INDEX)
+  ..........................................................................
+*/
+
+FUNCTION BWHENAKK(OGET, BWHEN, ARR, INDEX)
+
+   IF EVAL(BWHEN)
+
+      AKK(.T., ARR, INDEX)
+      RETURN .T.
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BVALIDAKK
+   Params: OGET, BVALID, ARR, INDEX, OCARGO
+   Return: Logical
+  Example: BVALIDAKK(OGET, BVALID, ARR, INDEX, OCARGO)
+  ..........................................................................
+*/
+
+FUNCTION BVALIDAKK(OGET, BVALID, ARR, INDEX, OCARGO)
+
+   IF EVAL(BVALID)
+
+      IF  .NOT. OCARGO
+
+         AKK(.F., ARR, INDEX)
+
+      ENDIF
+
+      RETURN .T.
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SHADOW
+   Params: OGET
+   Return: Logical
+  Example: SHADOW(OGET)
+  ..........................................................................
+*/
+
+FUNCTION SHADOW(OGET)
+
+   LOCAL LN := 0, OLDC := SETCOLOR(), LNBUT := 0
+   LOCAL CSHADOW := _TEXTBACKG("n")
+   LOCAL NAMOPT, BUT := 0, WORD := 0
+   LOCAL CBUT, CWORD
+
+   IF OGET:CARGO[6] <> NIL
+
+      NAMOPT := " " + OGET:CARGO[6] + " " + OGET:CARGO[7] + " "
+      BUT := LEN(" " + OGET:CARGO[6] + " ")
+      WORD := LEN(OGET:CARGO[7] + " ")
+      CBUT := " " + OGET:CARGO[6] + " "
+      CWORD := OGET:CARGO[7] + " "
+
+   ELSE
+
+      NAMOPT := " " + OGET:CARGO[7] + " "
+      WORD := LEN(" " + OGET:CARGO[7] + " ")
+      BUT := 1
+      CBUT := " "
+      CWORD := OGET:CARGO[7] + " "
+
+   ENDIF
+
+   SETCOLOR("gr+/g")
+   SETPOS(OGET:ROW(), OGET:COL() - BUT)
+   QQOUT(CBUT)
+   SETCOLOR(OGET:COLORSPEC())
+   QQOUT(CWORD)
+   SETCOLOR(CSHADOW)
+   SETPOS(OGET:ROW(), OGET:COL() + WORD)
+   QQOUT("‹")
+   SETPOS(OGET:ROW() + 1, OGET:COL() + 1 - BUT)
+   QQOUT(REPLICATE("ﬂ", BUT + WORD))
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: _TEXTBACKG
+   Params: SYMBOL
+   Return: Variable
+  Example: _TEXTBACKG(SYMBOL)
+  ..........................................................................
+*/
+
+FUNCTION _TEXTBACKG(SYMBOL)
+
+   PRIVATE COL, C
+   MEMVAR->COL := SETCOLOR()
+   MEMVAR->C := SUBSTR(COL, AT(",", COL) + 1)
+   MEMVAR->COL := SUBSTR(COL, 1, AT(",", COL) - 1)
+   MEMVAR->COL := SUBSTR(COL, AT("/", COL) + 1)
+   MEMVAR->COL := SYMBOL + "/" + COL + "," + C
+
+RETURN COL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FRAMES
+   Params: None.
+   Return: Undefined
+  Example: FRAMES()
+  ..........................................................................
+*/
+
+PROCEDURE FRAMES()
+
+   PUBLIC INTERLINK := 0
+   PUBLIC SINGLE, FULLSINGLE, DOUBLE, FULLDOUBLE
+   MEMVAR->FULLSINGLE := "⁄ƒø≥Ÿƒ¿≥ "
+   MEMVAR->SINGLE := "⁄ƒø≥Ÿƒ¿≥"
+   MEMVAR->FULLDOUBLE := "…Õª∫ºÕ»∫ "
+   MEMVAR->DOUBLE := "…Õª∫ºÕ»∫"
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: INITWIN
+   Params: None.
+   Return: Undefined
+  Example: INITWIN()
+  ..........................................................................
+*/
+
+PROCEDURE INITWIN()
+
+   DSETWINDOW(.F.)
+   WSETSHADOW(-1)
+   WMODE(.F., .T., .T., .T.)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: INITMENU
+   Params: None.
+   Return: Undefined
+  Example: INITMENU()
+  ..........................................................................
+*/
+
+PROCEDURE INITMENU()
+
+   PUBLIC CMNOKEY := 0, CMEXITMENU := 501, CMINITMENU := 502, CMNOCOMMAN ;
+         := 1000, CMNOACTIVE := 503, CMMOVEWIND :=  -24, TIMES := MEMVAR->;
+         COLORS[42]
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WINMOVE
+   Params: None.
+   Return: Variable
+  Example: WINMOVE()
+  ..........................................................................
+*/
+
+FUNCTION WINMOVE()
+
+   PRIVATE MX, MY, C, X1, Y1, W, COLORIT, OLDWINDOW
+   MEMVAR->W := SELECT()
+   MEMVAR->MX := MAXROW()
+   MEMVAR->MY := MAXCOL()
+   MEMVAR->X1 := WCOL()
+   MEMVAR->Y1 := WROW()
+   MEMVAR->OLDWINDOW := SAVESCREEN(0, 0, MX, MY)
+   MEMVAR->COLORIT := TEXTBACKGR(MEMVAR->COLORS[1])
+   DISPBEGIN()
+   COLORWIN2(0, 0, 0, NIL, COLORIT)
+   COLORWIN2(MX, 0, MX, NIL, COLORIT)
+   COLORWIN2(0, 0, MX, 0, COLORIT)
+   COLORWIN2(0, MY, MX, MY, COLORIT)
+   DISPEND()
+   MEMVAR->C := INKEY(0)
+
+   DO WHILE C <> 13
+
+      IF C = 19
+
+         IF WLASTCOL() > 0
+
+            WMOVE(WROW(), WCOL() - 1)
+
+         ENDIF
+
+      ELSEIF C = 4
+
+         IF WCOL() < MEMVAR->COLORS[27]
+
+            WMOVE(WROW(), WCOL() + 1)
+
+         ENDIF
+
+      ELSEIF C = 5
+
+         IF WLASTROW() > 0
+
+            WMOVE(WROW() - 1, WCOL())
+
+         ENDIF
+
+      ELSEIF C = 24
+
+         IF WROW() < MEMVAR->COLORS[26]
+
+            WMOVE(WROW() + 1, WCOL())
+
+         ENDIF
+
+      ELSEIF C = 18
+
+         WMOVE(0, WCOL())
+
+      ELSEIF C = 3
+
+         WMOVE(MEMVAR->COLORS[26] - MX, WCOL())
+
+      ELSEIF C = 1
+
+         WMOVE(WROW(), 0)
+
+      ELSEIF C = 6
+
+         WMOVE(WROW(), MEMVAR->COLORS[27] - MY)
+
+      ELSEIF C = 32
+
+         WCENTER(.T.)
+
+      ELSEIF C = 27
+
+         WMOVE(Y1, X1)
+
+      ENDIF
+
+      MEMVAR->C := INKEY(0)
+
+   ENDDO
+
+   DISPBEGIN()
+   RESTSCREEN(0, 0, MAXROW(), MAXCOL(), OLDWINDOW)
+   DISPEND()
+
+RETURN W
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TEXTBACKGR
+   Params: SYMBOL
+   Return: Undefined
+  Example: TEXTBACKGR(SYMBOL)
+  ..........................................................................
+*/
+
+FUNCTION TEXTBACKGR(SYMBOL)
+
+   LOCAL COL := SETCOLOR()
+   LOCAL C := SUBSTR(COL, AT(",", COL) + 1)
+
+   COL := SUBSTR(COL, 1, AT(",", COL) - 1)
+   COL := SUBSTR(COL, AT("/", COL) + 1)
+   COL := SYMBOL + "/" + COL + "," + C
+
+RETURN COL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MOVETOUSER
+   Params: MAS, ESCKEY
+   Return: Array
+  Example: MOVETOUSER(MAS, ESCKEY)
+  ..........................................................................
+*/
+
+FUNCTION MOVETOUSER(MAS, ESCKEY)
+
+   PRIVATE KEY
+
+   IF MAS <> NIL
+
+      PRIVATE MSYS := MAS[1], MAINY := MAS[2], SHADOW := MAS[3], MAINCOL ;
+            := MAS[4], ACTIVE := MAS[5], Z := MAS[6]
+      DISPBEGIN()
+      COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[ACTIVE, ;
+            1] + MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[5])
+      DISPEND()
+
+   ENDIF
+
+   MEMVAR->KEY := INKEYTRAP(TIMES)
+
+   IF KEY = CMNOKEY
+
+      MEMVAR->KEY := CMNOACTIVE
+
+   ENDIF
+
+   IF ESCKEY = NIL
+
+      ESCKEY := 27
+
+   ENDIF
+
+   HANDLEEVEN(KEY)
+
+   DO WHILE KEY <> 13 .AND. KEY <> 27 .AND. KEY <> ESCKEY
+
+      IF KEY = 4 .OR. KEY = 19 .OR. KEY = 1 .OR. KEY = 6
+
+         IF Z > 1
+
+            DISPBEGIN()
+            COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[;
+                  ACTIVE, 1] + MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[6];
+                  )
+            DISPEND()
+
+         ENDIF
+
+         IF KEY = 4
+
+            IF ACTIVE = Z
+
+               MEMVAR->ACTIVE := 1
+
+            ELSE
+
+               ++MEMVAR->ACTIVE
+
+            ENDIF
+
+         ELSEIF KEY = 19
+
+            IF ACTIVE = 1
+
+               MEMVAR->ACTIVE := Z
+
+            ELSE
+
+               --MEMVAR->ACTIVE
+
+            ENDIF
+
+         ELSEIF KEY = 1
+
+            MEMVAR->ACTIVE := 1
+
+         ELSEIF KEY = 6
+
+            MEMVAR->ACTIVE := Z
+
+         ENDIF
+
+         DISPBEGIN()
+         COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[;
+               ACTIVE, 1] + MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[5])
+         DISPEND()
+
+      ENDIF
+
+      MEMVAR->KEY := INKEYTRAP(TIMES)
+
+      IF KEY = CMNOKEY
+
+         MEMVAR->KEY := CMNOACTIVE
+
+      ENDIF
+
+      HANDLEEVEN(KEY)
+
+   ENDDO
+
+   DISPBEGIN()
+   COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[ACTIVE, 1] +;
+          MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[6])
+   DISPEND()
+
+   IF KEY = 13
+
+      CLICKBUTTO()
+      DISPBEGIN()
+      COLORWIN2(MAINY, MEMVAR->MSYS[ACTIVE, 1], MAINY, MEMVAR->MSYS[ACTIVE, ;
+            1] + MEMVAR->MSYS[ACTIVE, 2] - 1, MEMVAR->COLORS[6])
+      DISPEND()
+
+   ELSE
+
+      IF MAS <> NIL
+
+         RETURN {MSYS, MAINY, SHADOW, MAINCOL, ACTIVE, Z}
+
+      ENDIF
+
+      MEMVAR->ACTIVE := 0
+
+   ENDIF
+
+
+RETURN {MSYS, MAINY, SHADOW, MAINCOL, ACTIVE, Z}
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLICKBUTTO
+   Params: None.
+   Return: Undefined
+  Example: CLICKBUTTO()
+  ..........................................................................
+*/
+
+PROCEDURE CLICKBUTTO()
+
+   DISPBEGIN()
+   SETCOLOR(MAINCOL)
+   DEVPOS(MAINY + 1, MEMVAR->MSYS[ACTIVE, 1] + 1)
+   DEVOUT(REPLICATE(" ", MEMVAR->MSYS[ACTIVE, 2]))
+   DEVPOS(MAINY, MEMVAR->MSYS[ACTIVE, 1])
+   DEVOUT(" ")
+   SETCOLOR(MEMVAR->COLORS[7])
+   DEVPOS(MAINY, MEMVAR->MSYS[ACTIVE, 1] + 1)
+   DEVOUT(MEMVAR->MSYS[ACTIVE, 4])
+   DISPEND()
+
+   IF MEMVAR->COLORS[11] <> NIL
+
+      INKEYTRAP(MEMVAR->COLORS[11])
+
+   ENDIF
+
+   DISPBEGIN()
+   SETCOLOR(MEMVAR->COLORS[5])
+   DEVPOS(MAINY, MEMVAR->MSYS[ACTIVE, 1])
+   DEVOUT(MEMVAR->MSYS[ACTIVE, 4])
+   SETCOLOR(SHADOW)
+   QQOUT("‹")
+   DEVPOS(MAINY + 1, MEMVAR->MSYS[ACTIVE, 1] + 1)
+   DEVOUT(REPLICATE("ﬂ", MEMVAR->MSYS[ACTIVE, 2]))
+   DISPEND()
+   INKEYTRAP(0.1)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLICKBUT
+   Params: MAS, REGIM
+   Return: Undefined
+  Example: CLICKBUT(MAS, REGIM)
+  ..........................................................................
+*/
+
+PROCEDURE CLICKBUT(MAS, REGIM)
+
+   MEMVAR->MAINY := MAS[2]
+   MEMVAR->SHADOW := MAS[3]
+   MEMVAR->MAINCOL := MAS[4]
+   MEMVAR->MSYS := MAS[1]
+   SETCOLOR(MAINCOL)
+   DISPBEGIN()
+   DEVPOS(MAINY + 1, MEMVAR->MSYS[1, 1] + 1)
+   DEVOUT(REPLICATE(" ", MEMVAR->MSYS[1, 2]))
+   DEVPOS(MAINY, MEMVAR->MSYS[1, 1])
+   DEVOUT(" ")
+   SETCOLOR(MEMVAR->COLORS[7])
+   DEVPOS(MAINY, MEMVAR->MSYS[1, 1] + 1)
+   DEVOUT(MEMVAR->MSYS[1, 4])
+   DISPEND()
+
+   IF MEMVAR->COLORS[11] <> NIL
+
+      INKEYTRAP(MEMVAR->COLORS[11])
+
+   ENDIF
+
+   DISPBEGIN()
+
+   IF REGIM = NIL
+
+      REGIM := 0
+
+   ENDIF
+
+   IF REGIM = 0
+
+      SETCOLOR(MEMVAR->COLORS[5])
+
+   ELSE
+
+      SETCOLOR(MEMVAR->COLORS[6])
+
+   ENDIF
+
+   DEVPOS(MAINY, MEMVAR->MSYS[1, 1])
+   DEVOUT(MEMVAR->MSYS[1, 4])
+   SETCOLOR(SHADOW)
+   QQOUT("‹")
+   DEVPOS(MAINY + 1, MEMVAR->MSYS[1, 1] + 1)
+   DEVOUT(REPLICATE("ﬂ", MEMVAR->MSYS[1, 2]))
+   DISPEND()
+   INKEYTRAP(0.1)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STRTOMAS
+   Params: ST, TERM, FLAG
+   Return: Variable
+  Example: STRTOMAS(ST, TERM, FLAG)
+  ..........................................................................
+*/
+
+FUNCTION STRTOMAS(ST, TERM, FLAG)
+
+   PRIVATE I, K, C, MAXKOL, LENKOL
+   MEMVAR->MAXKOL := 1
+   MEMVAR->C := ST
+   MEMVAR->LENKOL := LEN(TERM)
+
+   IF TERM = NIL
+
+      TERM := CHR(13)+CHR(10)
+
+   ENDIF
+
+   MEMVAR->K := AT(TERM, C)
+
+   DO WHILE K <> 0
+
+      ++MEMVAR->MAXKOL
+      MEMVAR->C := SUBSTR(C, K + LENKOL)
+      MEMVAR->K := AT(TERM, C)
+
+   ENDDO
+
+   IF FLAG <> NIL
+
+      IF FLAG = .F.
+
+         RETURN MAXKOL
+
+      ENDIF
+
+   ELSE
+
+      RETURN MAXKOL
+
+   ENDIF
+
+   MEMVAR->I := 1
+   PRIVATE MASTEMP[MAXKOL]
+
+   IF MAXKOL > 1
+
+      MEMVAR->K := AT(TERM, ST)
+
+      FOR I := 1 TO MAXKOL - 1
+
+         MEMVAR->MASTEMP[I] := SUBSTR(ST, 1, K - 1)
+         ST := SUBSTR(ST, K + LENKOL)
+         MEMVAR->K := AT(TERM, ST)
+
+      NEXT
+
+   ENDIF
+
+   MEMVAR->MASTEMP[I] := ST
+
+RETURN MASTEMP
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CX2
+   Params: YY, MIN, MAX, ST, COL
+   Return: Undefined
+  Example: CX2(YY, MIN, MAX, ST, COL)
+  ..........................................................................
+*/
+
+PROCEDURE CX2(YY, MIN, MAX, ST, COL)
+
+   IF COL = NIL
+
+      DEVPOS(YY, CX(MIN, MAX, LEN(ST)))
+      DEVOUT(ST)
+
+   ELSE
+
+      DEVPOS(YY, CX(MIN, MAX, LEN(ST)))
+      DEVOUT(ST, COL)
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CX
+   Params: MIN, MAX, LENS
+   Return: Variable
+  Example: CX(MIN, MAX, LENS)
+  ..........................................................................
+*/
+
+FUNCTION CX(MIN, MAX, LENS)
+
+   PRIVATE A, B
+
+   IF MIN = NIL
+
+      MIN := 0
+
+   ENDIF
+
+   IF MAX = NIL
+
+      MAX := MAXCOL()
+
+   ENDIF
+
+   IF LENS = NIL
+
+      LENS := 0
+
+   ENDIF
+
+   IF MAX - MIN + 1 < LENS
+
+      RETURN -1
+
+   ELSE
+
+      MEMVAR->A := INT((MAX - MIN + 1) / 2)
+      MEMVAR->B := INT(LENS / 2)
+
+   ENDIF
+
+
+RETURN MIN + (A - B)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CY
+   Params: MIN, MAX, LENS
+   Return: Variable
+  Example: CY(MIN, MAX, LENS)
+  ..........................................................................
+*/
+
+FUNCTION CY(MIN, MAX, LENS)
+
+   PRIVATE A, B
+
+   IF MIN = NIL
+
+      MIN := 0
+
+   ENDIF
+
+   IF MAX = NIL
+
+      MAX := MAXROW()
+
+   ENDIF
+
+   IF LENS = NIL
+
+      LENS := 0
+
+   ENDIF
+
+   IF MAX - MIN + 1 < LENS
+
+      RETURN -1
+
+   ELSE
+
+      MEMVAR->A := INT((MAX - MIN + 1) / 2)
+      MEMVAR->B := INT(LENS / 2)
+
+   ENDIF
+
+
+RETURN MIN + (A - B)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLS
+   Params: SHABLON, COLORIT
+   Return: Undefined
+  Example: CLS(SHABLON, COLORIT)
+  ..........................................................................
+*/
+
+PROCEDURE CLS(SHABLON, COLORIT)
+
+   PRIVATE LN, I, MCOLOR, TYPES, ST, X, Y, MCOL, MROW
+   PRIVATE KOLSHABLON := 6
+   PRIVATE MASSHABLON[KOLSHABLON]
+   MEMVAR->MASSHABLON[1] := SPACE(80)
+   MEMVAR->MASSHABLON[2] := ;
+         "≤≤≤≤≤≤≤±±±±±±≤≤≤≤≤≤≤±±±±±±≤≤≤≤≤≤≤±±±±±±≤≤≤≤≤≤≤±±±±±±≤≤≤≤≤≤≤±±±±±±≤≤≤≤≤≤≤±±±±±±"
+   MEMVAR->MASSHABLON[3] := ;
+         "∞∞∞∞∞∞∞∞∞∞±±±±±±±±±≤≤≤≤≤≤≤≤≤≤±±±±±±±±±±∞∞∞∞∞∞∞∞∞∞±±±±±±±±±≤≤≤≤≤≤≤≤≤≤±±±±±±±±±±∞∞∞∞∞∞∞∞∞∞±±±±±±±±±≤≤≤≤≤≤≤≤≤≤±±±±±±±±±±"
+   MEMVAR->MASSHABLON[4] := ;
+         "≤≤≤≤≤≤≤±±±±±≤≤≤≤≤≤≤±±±±±≤≤≤≤≤≤≤±±±±±≤≤≤≤≤≤≤±±±±±≤≤≤≤≤≤≤±±±±±≤≤≤≤≤≤≤±±±±±≤≤≤≤≤≤≤±±±±±"
+   MEMVAR->MASSHABLON[5] := ;
+         " ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞ ∞±≤€≤±∞"
+   MEMVAR->MASSHABLON[6] := ;
+         " ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€ ∞±≤€"
+   MEMVAR->MCOLOR := SETCOLOR()
+   MEMVAR->X := COL()
+   MEMVAR->Y := ROW()
+   MEMVAR->ST := SUBSTR(MCOLOR, 1, AT(",", MCOLOR) - 1)
+
+   IF COLORIT = NIL
+
+      COLORIT := ST
+
+   ENDIF
+
+   SETCOLOR(COLORIT)
+
+   IF SHABLON = NIL
+
+      SHABLON := MEMVAR->MASSHABLON[1]
+
+   ELSE
+
+      MEMVAR->TYPES := SHABLON
+
+      IF TYPE("types") = "N"
+
+         MEMVAR->NOM := SHABLON
+
+         IF ISRANGE(NOM, 1, KOLSHABLON) = .F.
+
+            SHABLON := MEMVAR->MASSHABLON[1]
+
+         ELSE
+
+            SHABLON := MEMVAR->MASSHABLON[NOM]
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+   MEMVAR->ST := ""
+   MEMVAR->MCOL := MAXCOL()
+   MEMVAR->MROW := MAXROW()
+   MEMVAR->MSYMBOL := (MCOL + 1) * (MROW + 1)
+   MEMVAR->LN := MEMVAR->I := LEN(SHABLON)
+
+   DO WHILE I < MSYMBOL
+
+      MEMVAR->ST := SHABLON + ST
+      MEMVAR->I := I + LN
+
+   ENDDO
+
+   MEMVAR->ST := ST + SHABLON
+   SHABLON := SUBSTR(ST, 1, MSYMBOL - 1)
+   MEMVAR->ST := SUBSTR(ST, MSYMBOL)
+   SETPOS(0, 0)
+   DISPBEGIN()
+   QQOUT(SHABLON)
+   DEVPOS(ROW(), COL())
+   DEVOUT(ST)
+   DISPEND()
+   SETPOS(Y, X)
+   SETCOLOR(MCOLOR)
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ISRANGE
+   Params: N, MIN, MAX
+   Return: Logical
+  Example: ISRANGE(N, MIN, MAX)
+  ..........................................................................
+*/
+
+FUNCTION ISRANGE(N, MIN, MAX)
+
+   IF N = NIL
+
+      RETURN .F.
+
+   ELSE
+
+      IF MIN = NIL
+
+         MIN := 1
+
+      ENDIF
+
+      IF MAX = NIL
+
+         MAX := 100
+
+      ENDIF
+
+      IF N < MIN
+
+         RETURN .F.
+
+      ELSEIF N > MAX
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STR2MAS
+   Params: ST
+   Return: Variable
+  Example: STR2MAS(ST)
+  ..........................................................................
+*/
+
+FUNCTION STR2MAS(ST)
+
+   PRIVATE I, LN
+
+   IF ST = NIL
+
+      RETURN -1
+
+   ELSE
+
+      MEMVAR->LN := LEN(ST)
+      PRIVATE MAS[LN]
+
+      FOR I := 1 TO LN
+
+         MEMVAR->MAS[I] := SUBSTR(ST, 1, 1)
+         ST := SUBSTR(ST, 2)
+
+      NEXT
+
+   ENDIF
+
+
+RETURN MAS
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BIGGEST
+   Params: MASST, ZERO
+   Return: Variable
+  Example: BIGGEST(MASST, ZERO)
+  ..........................................................................
+*/
+
+FUNCTION BIGGEST(MASST, ZERO)
+
+   PRIVATE BIG, I, K, LN, LNZ, J, S
+   MEMVAR->BIG := 0
+   MEMVAR->LNZ := 0
+   MEMVAR->FLAGHEAD := .F.
+
+   IF ZERO <> NIL
+
+      MEMVAR->LNZ := LEN(ZERO)
+
+   ENDIF
+
+   IF MASST <> NIL
+
+      MEMVAR->K := LEN(MASST)
+
+      FOR I := 1 TO K
+
+         MEMVAR->LN := LEN(MASST[I])
+
+         IF LNZ <> 0
+
+            MEMVAR->S := SUBSTR(MASST[I], 1, 1)
+
+            FOR J := 1 TO LNZ
+
+               IF S = ZERO[J]
+
+                  --MEMVAR->LN
+                  EXIT
+
+               ENDIF
+
+            NEXT
+
+         ENDIF
+
+         IF BIG < LN
+
+            MEMVAR->BIG := LN
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN BIG
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WHEAD
+   Params: MASST, HEAD
+   Return: Variable
+  Example: WHEAD(MASST, HEAD)
+  ..........................................................................
+*/
+
+FUNCTION WHEAD(MASST, HEAD)
+
+   PRIVATE I, K, C, VOZVRAT
+   MEMVAR->VOZVRAT := .F.
+
+   IF MASST <> NIL
+
+      MEMVAR->K := LEN(MASST)
+
+      FOR I := 1 TO K
+
+         MEMVAR->C := SUBSTR(MASST[I], 1, 1)
+
+         IF C = HEAD
+
+            MEMVAR->VOZVRAT := .T.
+            EXIT
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN VOZVRAT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCALE
+   Params: MIN, MAX, KOL, CURRACT
+   Return: Variable
+  Example: SCALE(MIN, MAX, KOL, CURRACT)
+  ..........................................................................
+*/
+
+FUNCTION SCALE(MIN, MAX, KOL, CURRACT)
+
+   PRIVATE RR, R1
+
+   IF CURRACT = 1
+
+      RETURN MIN
+
+   ELSEIF CURRACT = KOL
+
+      RETURN MAX
+
+   ENDIF
+
+   MEMVAR->R1 := ROUND((CURRACT - 1) * (MAX - MIN + 1) / (KOL - 1), 0)
+
+   IF R1 > 0
+
+      --MEMVAR->R1
+
+   ENDIF
+
+   MEMVAR->RR := MIN + R1
+
+RETURN RR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BUTLEN
+   Params: N
+   Return: Undefined
+  Example: BUTLEN(N)
+  ..........................................................................
+*/
+
+FUNCTION BUTLEN(N)
+
+   LOCAL N_OLD := MEMVAR->COLORS[9]
+
+   IF N <> NIL
+
+      MEMVAR->COLORS[9] := N
+
+   ENDIF
+
+
+RETURN N_OLD
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: BROWSER
+   Params: X, Y, S, H, OPT, ACT, ZERO, REGIM, USERF
+   Return: Variable
+  Example: BROWSER(X, Y, S, H, OPT, ACT, ZERO, REGIM, USERF)
+  ..........................................................................
+*/
+
+FUNCTION BROWSER(X, Y, S, H, OPT, ACT, ZERO, REGIM, USERF)
+
+   PRIVATE XX, Y1, Y2, I, J, LN, LNZ, K, YY, MCOLOR, ACTIVE, A, REGIMRED, ;
+         OLDCURR, USERFF
+   MEMVAR->USERFF := USERF
+   MEMVAR->MCOLOR := SETCOLOR()
+   MEMVAR->K := LEN(OPT)
+   MEMVAR->LNZ := 0
+
+   IF ZERO <> NIL
+
+      MEMVAR->LNZ := LEN(ZERO)
+
+   ENDIF
+
+   IF REGIM = NIL
+
+      REGIM := 1
+
+   ENDIF
+
+   IF S = NIL
+
+      S := BIGGEST(OPT)
+
+   ELSEIF S > MAXCOL() + 1
+
+      S := BIGGEST(OPT)
+
+   ENDIF
+
+   IF REGIM = 1
+
+      ++S
+
+   ENDIF
+
+   IF S > MAXCOL() + 1
+
+      SETCOLOR(MCOLOR)
+      RETURN 0
+
+   ENDIF
+
+   IF H = NIL
+
+      H := 4
+
+   ELSEIF H > MAXROW() + 1 .OR. H < 4
+
+      H := 4
+
+   ENDIF
+
+   IF H > MAXROW() + 1
+
+      SETCOLOR(MCOLOR)
+      RETURN 0
+
+   ENDIF
+
+   IF X = NIL
+
+      X := CX(NIL, NIL, S)
+
+   ELSEIF X < 1 .OR. X + S - 1 > MAXCOL()
+
+      X := CX(NIL, NIL, S)
+
+   ENDIF
+
+   IF X < 1 .OR. X + S - 1 > MAXCOL()
+
+      SETCOLOR(MCOLOR)
+      RETURN 0
+
+   ENDIF
+
+   IF Y = NIL
+
+      Y := CY(NIL, NIL, H)
+
+   ELSEIF Y < 1 .OR. Y + H - 1 > MAXROW()
+
+      Y := CY(NIL, NIL, H)
+
+   ENDIF
+
+   IF Y < 1 .OR. Y + H - 1 > MAXROW()
+
+      SETCOLOR(MCOLOR)
+      RETURN 0
+
+   ENDIF
+
+   PRIVATE ZERO2[K]
+   AFILL(ZERO2, .T.)
+
+   IF ACT = NIL
+
+      ACT := 1
+
+   ENDIF
+
+   IF LNZ <> 0
+
+      FOR I := 1 TO K
+
+         FOR J := 1 TO LNZ
+
+            IF I = ZERO[J]
+
+               MEMVAR->ZERO2[I] := .F.
+
+               IF I = ACT
+
+                  ++ACT
+
+               ENDIF
+
+               EXIT
+
+            ENDIF
+
+         NEXT
+
+      NEXT
+
+   ENDIF
+
+   IF ACT > K
+
+      ACT := 1
+      MEMVAR->ZERO2[1] := .T.
+
+   ENDIF
+
+   IF REGIM = 1
+
+      --S
+      MEMVAR->XX := X + S
+      MEMVAR->Y1 := MEMVAR->Y2 := Y + 1
+      MEMVAR->Y2 := Y + H - 1 - 1
+      SETCOLOR(MEMVAR->COLORS[17])
+      DEVPOS(Y, XX)
+      DEVOUT(CHR(30))
+
+      FOR I := 1 TO H - 2
+
+         DEVPOS(Y + I, XX)
+         DEVOUT("≤")
+
+      NEXT
+
+      DEVPOS(Y2 + 1, XX)
+      DEVOUT(CHR(31))
+
+      IF K > 1
+
+         SETCOLOR(MEMVAR->COLORS[21])
+         DEVPOS(SCALE(Y1, Y2, K, ACT), XX)
+         DEVOUT("˛")
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[18])
+   SCROLL(Y, X, Y + H - 1, X + S - 1)
+   MEMVAR->A := ( SETPOS(Y, X), MEMVAR->COLORS[18] + "," + MEMVAR->COLORS[19] ;
+         + ",,," + MEMVAR->COLORS[20] )
+   SETCOLOR(A)
+   MEMVAR->REGIMRED := REGIM
+   MEMVAR->OLDCURR := ACT
+   MEMVAR->ACTIVE := ACHOICE(Y, X, Y + H - 1, X + S - 1, OPT, ZERO2, ;
+         "RedBrowser", ACT)
+   SETCOLOR(MCOLOR)
+
+RETURN ACTIVE
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: HOTSEL
+   Params: ST
+   Return: Undefined
+  Example: HOTSEL(ST)
+  ..........................................................................
+*/
+
+PROCEDURE HOTSEL(ST)
+
+   PRIVATE A, LN, S
+
+   IF ST = NIL
+
+      ST := ""
+
+   ENDIF
+
+   IF ST = "@s" .OR. ST = "@d"
+
+      MEMVAR->MASOPT[I, 4] := ""
+      MEMVAR->MASOPT[I, 5] := 0
+      MEMVAR->MASOPT[I, 1] := ST
+      MEMVAR->MASOPT[I, 2] := .F.
+      RETURN 
+
+   ENDIF
+
+   MEMVAR->LN := LEN(ST)
+
+   IF LN = 0
+
+      MEMVAR->A := 0
+
+   ELSE
+
+      MEMVAR->A := AT("~", ST)
+
+   ENDIF
+
+   IF A = 0 .OR. LN = A
+
+      MEMVAR->MASOPT[I, 4] := ""
+      MEMVAR->MASOPT[I, 5] := 0
+      MEMVAR->S := ST
+
+   ELSE
+
+      MEMVAR->MASOPT[I, 4] := RUSUPPER(SUBSTR(ST, A + 1, 1))
+      MEMVAR->MASOPT[I, 5] := A - 1
+      MEMVAR->S := CHARREM("~", ST)
+
+   ENDIF
+
+   MEMVAR->MASOPT[I, 1] := S
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RUSUPPER
+   Params: C
+   Return: Undefined
+  Example: RUSUPPER(C)
+  ..........................................................................
+*/
+
+FUNCTION RUSUPPER(C)
+
+   LOCAL ST
+
+   IF LEN(C) > 0
+
+      IF ASC(C) < 125
+
+         C := UPPER(C)
+
+      ELSE
+
+         ST := SUBSTR(C, 1, 1)
+
+         IF ST = "©" .OR. ST = "â"
+
+            ST := "â"
+
+         ELSEIF ST = "Ê" .OR. ST = "ñ"
+
+            ST := "ñ"
+
+         ELSEIF ST = "„" .OR. ST = "ì"
+
+            ST := "ì"
+
+         ELSEIF ST = "™" .OR. ST = "ä"
+
+            ST := "ä"
+
+         ELSEIF ST = "•" .OR. ST = "Ö"
+
+            ST := "Ö"
+
+         ELSEIF ST = "≠" .OR. ST = "ç"
+
+            ST := "ç"
+
+         ELSEIF ST = "£" .OR. ST = "É"
+
+            ST := "É"
+
+         ELSEIF ST = "Ë" .OR. ST = "ò"
+
+            ST := "ò"
+
+         ELSEIF ST = "È" .OR. ST = "ô"
+
+            ST := "ô"
+
+         ELSEIF ST = "ß" .OR. ST = "á"
+
+            ST := "á"
+
+         ELSEIF ST = "Â" .OR. ST = "ï"
+
+            ST := "ï"
+
+         ELSEIF ST = "Í" .OR. ST = "ö"
+
+            ST := "ö"
+
+         ELSEIF ST = "‰" .OR. ST = "î"
+
+            ST := "î"
+
+         ELSEIF ST = "Î" .OR. ST = "õ"
+
+            ST := "õ"
+
+         ELSEIF ST = "¢" .OR. ST = "Ç"
+
+            ST := "Ç"
+
+         ELSEIF ST = "†" .OR. ST = "Ä"
+
+            ST := "Ä"
+
+         ELSEIF ST = "Ø" .OR. ST = "è"
+
+            ST := "è"
+
+         ELSEIF ST = "‡" .OR. ST = "ê"
+
+            ST := "ê"
+
+         ELSEIF ST = "Æ" .OR. ST = "é"
+
+            ST := "é"
+
+         ELSEIF ST = "´" .OR. ST = "ã"
+
+            ST := "ã"
+
+         ELSEIF ST = "§" .OR. ST = "Ñ"
+
+            ST := "Ñ"
+
+         ELSEIF ST = "¶" .OR. ST = "Ü"
+
+            ST := "Ü"
+
+         ELSEIF ST = "Ì" .OR. ST = "ù"
+
+            ST := "ù"
+
+         ELSEIF ST = "Ô" .OR. ST = "ü"
+
+            ST := "ü"
+
+         ELSEIF ST = "Á" .OR. ST = "ó"
+
+            ST := "ó"
+
+         ELSEIF ST = "·" .OR. ST = "ë"
+
+            ST := "ë"
+
+         ELSEIF ST = "¨" .OR. ST = "å"
+
+            ST := "å"
+
+         ELSEIF ST = "®" .OR. ST = "à"
+
+            ST := "à"
+
+         ELSEIF ST = "‚" .OR. ST = "í"
+
+            ST := "í"
+
+         ELSEIF ST = "Ï" .OR. ST = "ú"
+
+            ST := "ú"
+
+         ELSEIF ST = "°" .OR. ST = "Å"
+
+            ST := "Å"
+
+         ELSEIF ST = "Ó" .OR. ST = "û"
+
+            ST := "û"
+
+         ELSEIF ST = "Ò" .OR. ST = ""
+
+            ST := ""
+
+         ENDIF
+
+         C := IF(LEN(C) > 1, ST + SUBSTR(C, 2), ST)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN C
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: HLENTH
+   Params: MHIGH, NO
+   Return: Undefined
+  Example: HLENTH(MHIGH, NO)
+  ..........................................................................
+*/
+
+PROCEDURE HLENTH(MHIGH, NO)
+
+   PRIVATE I, BIG := 0, LN
+
+   IF MHIGH > 0
+
+      FOR I := 1 TO KOL
+
+         MEMVAR->LN := LEN(MEMVAR->MASOPT[I, 1])
+
+         IF LN > BIG
+
+            MEMVAR->BIG := LN
+
+         ENDIF
+
+      NEXT
+
+   ELSE
+
+      FOR I := 1 TO KOL
+
+         MEMVAR->BIG := BIG + LEN(MEMVAR->MASOPT[I, 1]) + TERM
+
+      NEXT
+
+      MEMVAR->BIG := BIG + TERM
+
+   ENDIF
+
+   MEMVAR->SYSOPT[NO, 3] := BIG
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READINST
+   Params: NO, MHIGH, MAS
+   Return: Undefined
+  Example: READINST(NO, MHIGH, MAS)
+  ..........................................................................
+*/
+
+PROCEDURE READINST(NO, MHIGH, MAS)
+
+   PRIVATE KOL, I, C, NOM, TEMP, ST, K
+   ++MEMVAR->MAXSYS
+   MEMVAR->SYSOPT[NO, 1] := MAS[1]
+   MEMVAR->SYSOPT[NO, 2] := MAS[2]
+   MEMVAR->SYSOPT[NO, 5] := 1
+   MEMVAR->SYSOPT[NO, 7] := MHIGH
+
+   IF MAS[3] = NIL
+
+      IF MHIGH = 0
+
+         MAS[3] := "z"
+
+      ELSE
+
+         MAS[3] := "st"
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->TEMP := AT("@g", MAS[3])
+
+      IF TEMP <> 0
+
+         MEMVAR->ST := SUBSTR(MAS[3], 1, TEMP - 1)
+
+      ELSE
+
+         MEMVAR->ST := MAS[3]
+
+      ENDIF
+
+      IF AT("s", ST) = 0 .AND. AT("d", ST) = 0
+
+         IF MHIGH = 0
+
+            MAS[3] := "z" + MAS[3]
+
+         ELSE
+
+            MAS[3] := "s" + MAS[3]
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+   MEMVAR->KOL := INT((LEN(MAS) - 3) / 4)
+   MEMVAR->SYSOPT[NO, 4] := MAS[3]
+   MEMVAR->SYSOPT[NO, 6] := KOL
+   PRIVATE MASOPT[KOL, 7]
+   MEMVAR->NOM := 1
+
+   FOR I := 1 TO KOL
+
+      IF MAS[3 + NOM + 1] = NIL
+
+         MAS[3 + NOM + 1] := .F.
+
+      ENDIF
+
+      IF MAS[3 + NOM + 2] = NIL
+
+         MAS[3 + NOM + 2] := ""
+
+      ENDIF
+
+      MEMVAR->MASOPT[I, 2] := MAS[3 + NOM + 1]
+      MEMVAR->MASOPT[I, 3] := MAS[3 + NOM + 2]
+      HOTSEL(MAS[3 + NOM])
+
+      IF MAS[3 + NOM + 3] = NIL
+
+         MAS[3 + NOM + 3] := 1000
+
+      ENDIF
+
+      MEMVAR->C := MAS[3 + NOM + 3]
+
+      IF TYPE("c") = "N"
+
+         MEMVAR->MASOPT[I, 6] := MAS[3 + NOM + 3]
+
+      ELSE
+
+         MEMVAR->MASOPT[I, 6] := MAXSYS + 1
+         AADD(SYSOPT, {NIL, NIL, NIL, NIL, NIL, NIL, NIL, NIL, NIL})
+         READINST(MAXSYS + 1, NO, C)
+
+      ENDIF
+
+      MEMVAR->NOM := NOM + 4
+
+   NEXT
+
+   HLENTH(MHIGH, NO)
+   MEMVAR->SYSOPT[NO, 9] := MASOPT
+
+   IF MHIGH = 0
+
+      MEMVAR->K := TERM
+      MEMVAR->TEMP := AT("@g", MEMVAR->SYSOPT[NO, 4])
+
+      IF TEMP <> 0
+
+         MEMVAR->ST := SUBSTR(MEMVAR->SYSOPT[NO, 4], 1, TEMP - 1)
+
+      ELSE
+
+         MEMVAR->ST := MEMVAR->SYSOPT[NO, 4]
+
+      ENDIF
+
+      IF AT("z", ST) = 0
+
+         ++MEMVAR->K
+
+      ENDIF
+
+      FOR I := 1 TO KOL
+
+         MEMVAR->SYSOPT[NO, 9, I, 7] := K
+         MEMVAR->K := K + LEN(MEMVAR->SYSOPT[NO, 9, I, 1]) + TERM
+
+      NEXT
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MENUDRAW
+   Params: IDM
+   Return: Variable
+  Example: MENUDRAW(IDM)
+  ..........................................................................
+*/
+
+FUNCTION MENUDRAW(IDM)
+
+   PRIVATE X1, Y1, X2, Y2, A1, A2, GOLOVA, R, C, I, Y, C1, C2, ST, ;
+         ISNOZEROOP := .F.
+   DISPBEGIN()
+   MEMVAR->X1 := MEMVAR->SYSOPT[IDM, 1]
+   MEMVAR->Y1 := MEMVAR->SYSOPT[IDM, 2]
+   MEMVAR->R := AT("@g", MEMVAR->SYSOPT[IDM, 4])
+
+   IF R <> 0
+
+      MEMVAR->GOLOVA := SUBSTR(MEMVAR->SYSOPT[IDM, 4], R + 2)
+      MEMVAR->ST := SUBSTR(MEMVAR->SYSOPT[IDM, 4], 1, R - 1)
+
+   ELSE
+
+      MEMVAR->ST := MEMVAR->SYSOPT[IDM, 4]
+
+   ENDIF
+
+   IF MEMVAR->SYSOPT[IDM, 7] <> 0
+
+      MEMVAR->X2 := X1 + MEMVAR->SYSOPT[IDM, 3] + 1
+      MEMVAR->Y2 := Y1 + MEMVAR->SYSOPT[IDM, 6] + 1
+
+   ELSEIF AT("z", ST) = 0
+
+      MEMVAR->Y2 := Y1 + 2
+      MEMVAR->Y := 1
+      MEMVAR->X2 := X1 + MEMVAR->SYSOPT[IDM, 3] + 1
+
+   ELSE
+
+      MEMVAR->Y2 := Y1
+      MEMVAR->Y := 0
+      MEMVAR->X2 := X1 + MEMVAR->SYSOPT[IDM, 3] - 1
+
+   ENDIF
+
+   IF AT("t", ST) <> 0
+
+      MEMVAR->A2 := "t"
+
+   ENDIF
+
+   IF AT("d", ST) <> 0
+
+      MEMVAR->A1 := "d"
+
+   ELSEIF MEMVAR->SYSOPT[IDM, 7] > 0
+
+      MEMVAR->A1 := "s"
+
+   ELSEIF AT("s", ST) <> 0
+
+      MEMVAR->A1 := "s"
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[36])
+   MEMVAR->SYSOPT[IDM, 8] := WIN(Y1, X1, Y2, X2, A1, A2)
+
+   IF MEMVAR->SYSOPT[IDM, 7] <> 0
+
+      MEMVAR->X2 := X2 - X1 - 1
+      MEMVAR->X1 := 1
+      MEMVAR->Y := 1
+
+   ENDIF
+
+   SETCOLOR(MEMVAR->COLORS[31])
+
+   FOR I := 1 TO MEMVAR->SYSOPT[IDM, 6]
+
+      IF MEMVAR->SYSOPT[IDM, 7] = 0
+
+         IF MEMVAR->SYSOPT[IDM, 9, I, 1] = "@s" .OR. MEMVAR->SYSOPT[IDM, 9, ;
+               I, 1] = "@d"
+
+            SETCOLOR(MEMVAR->COLORS[36])
+
+            IF MEMVAR->SYSOPT[IDM, 9, I, 1] = "@d"
+
+               DEVPOS(Y, MEMVAR->SYSOPT[IDM, 9, I, 7])
+               DEVOUT("∫")
+
+               IF A1 <> NIL
+
+                  IF A1 = "d"
+
+                     DEVPOS(Y - 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("À")
+                     DEVPOS(Y + 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT(" ")
+
+                  ELSE
+
+                     DEVPOS(Y - 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("“")
+                     DEVPOS(Y + 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("–")
+
+                  ENDIF
+
+               ENDIF
+
+            ELSE
+
+               DEVPOS(Y, MEMVAR->SYSOPT[IDM, 9, I, 7])
+               DEVOUT("≥")
+
+               IF A1 <> NIL
+
+                  IF A1 = "d"
+
+                     DEVPOS(Y - 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("—")
+                     DEVPOS(Y + 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("œ")
+
+                  ELSE
+
+                     DEVPOS(Y - 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("¬")
+                     DEVPOS(Y + 1, MEMVAR->SYSOPT[IDM, 9, I, 7])
+                     DEVOUT("¡")
+
+                  ENDIF
+
+               ENDIF
+
+            ENDIF
+
+         ELSE
+
+            IF MEMVAR->SYSOPT[IDM, 9, I, 2] = .T.
+
+               MEMVAR->ISNOZEROOP := .T.
+               MEMVAR->C1 := MEMVAR->COLORS[31]
+               MEMVAR->C2 := MEMVAR->COLORS[32]
+
+            ELSE
+
+               MEMVAR->C1 := MEMVAR->C2 := MEMVAR->COLORS[35]
+
+            ENDIF
+
+            SETCOLOR(C1)
+            DEVPOS(Y, MEMVAR->SYSOPT[IDM, 9, I, 7])
+            DEVOUT(MEMVAR->SYSOPT[IDM, 9, I, 1])
+
+            IF LEN(MEMVAR->SYSOPT[IDM, 9, I, 4]) > 0
+
+               DISPBEGIN()
+               COLORWIN2(Y, MEMVAR->SYSOPT[IDM, 9, I, 7] + MEMVAR->SYSOPT[;
+                     IDM, 9, I, 5], Y, MEMVAR->SYSOPT[IDM, 9, I, 7] + ;
+                     MEMVAR->SYSOPT[IDM, 9, I, 5], C2)
+               DISPEND()
+
+            ENDIF
+
+         ENDIF
+
+      ELSE
+
+         IF MEMVAR->SYSOPT[IDM, 9, I, 1] = "@s" .OR. MEMVAR->SYSOPT[IDM, 9, ;
+               I, 1] = "@d"
+
+            SETCOLOR(MEMVAR->COLORS[36])
+
+            IF MEMVAR->SYSOPT[IDM, 9, I, 1] = "@d"
+
+               DEVPOS(Y, X1)
+               DEVOUT(REPLICATE("Õ", X2 - X1 + 1))
+
+               IF A1 = "d"
+
+                  DEVPOS(Y, X1 - 1)
+                  DEVOUT("Ã")
+                  DEVPOS(Y, X2 + 1)
+                  DEVOUT("π")
+
+               ELSE
+
+                  DEVPOS(Y, X1 - 1)
+                  DEVOUT("∆")
+                  DEVPOS(Y, X2 + 1)
+                  DEVOUT("µ")
+
+               ENDIF
+
+            ELSE
+
+               DEVPOS(Y, X1)
+               DEVOUT(REPLICATE("ƒ", X2 - X1 + 1))
+
+               IF A1 = "d"
+
+                  DEVPOS(Y, X1 - 1)
+                  DEVOUT("«")
+                  DEVPOS(Y, X2 + 1)
+                  DEVOUT("∂")
+
+               ELSE
+
+                  DEVPOS(Y, X1 - 1)
+                  DEVOUT("√")
+                  DEVPOS(Y, X2 + 1)
+                  DEVOUT("¥")
+
+               ENDIF
+
+            ENDIF
+
+         ELSE
+
+            IF MEMVAR->SYSOPT[IDM, 9, I, 2] = .T.
+
+               MEMVAR->ISNOZEROOP := .T.
+               MEMVAR->C1 := MEMVAR->COLORS[31]
+               MEMVAR->C2 := MEMVAR->COLORS[32]
+
+            ELSE
+
+               MEMVAR->C1 := MEMVAR->C2 := MEMVAR->COLORS[35]
+
+            ENDIF
+
+            SETCOLOR(C1)
+            DEVPOS(Y, X1)
+            DEVOUT(PADRIGHT(MEMVAR->SYSOPT[IDM, 9, I, 1], X2 - X1 + 1))
+
+            IF LEN(MEMVAR->SYSOPT[IDM, 9, I, 4]) > 0
+
+               DISPBEGIN()
+               COLORWIN2(Y, X1 + MEMVAR->SYSOPT[IDM, 9, I, 5], Y, X1 + ;
+                     MEMVAR->SYSOPT[IDM, 9, I, 5], C2)
+               DISPEND()
+
+            ENDIF
+
+         ENDIF
+
+         ++MEMVAR->Y
+
+      ENDIF
+
+   NEXT
+
+   IF GOLOVA <> NIL .AND. A1 <> NIL
+
+      SETCOLOR(MEMVAR->COLORS[30])
+      CENTR(NIL, 0, GOLOVA)
+
+   ENDIF
+
+   DISPEND()
+
+RETURN ISNOZEROOP
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OPTSELECT
+   Params: IDM, NOM, FLAG
+   Return: Undefined
+  Example: OPTSELECT(IDM, NOM, FLAG)
+  ..........................................................................
+*/
+
+PROCEDURE OPTSELECT(IDM, NOM, FLAG)
+
+   PRIVATE C1, C2, X1, X2, Y0, ST, C, WW
+
+   IF FLAG = 0
+
+      MEMVAR->C1 := MEMVAR->COLORS[31]
+      MEMVAR->C2 := MEMVAR->COLORS[32]
+
+   ELSEIF FLAG = 1
+
+      MEMVAR->C1 := MEMVAR->COLORS[33]
+      MEMVAR->C2 := MEMVAR->COLORS[34]
+
+   ELSE
+
+      MEMVAR->C1 := MEMVAR->C2 := MEMVAR->COLORS[35]
+
+   ENDIF
+
+   IF IDM = 1
+
+      MEMVAR->X1 := MEMVAR->SYSOPT[IDM, 9, NOM, 7]
+      MEMVAR->X2 := X1 + LEN(MEMVAR->SYSOPT[IDM, 9, NOM, 1]) - 1
+      MEMVAR->C := AT("@g", MEMVAR->SYSOPT[IDM, 4])
+
+      IF C <> 0
+
+         MEMVAR->ST := SUBSTR(MEMVAR->SYSOPT[IDM, 4], 1, C - 1)
+
+      ELSE
+
+         MEMVAR->ST := MEMVAR->SYSOPT[IDM, 4]
+
+      ENDIF
+
+      IF AT("z", ST) = 0
+
+         MEMVAR->Y0 := 1
+
+      ELSE
+
+         MEMVAR->Y0 := 0
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->X1 := 1
+      MEMVAR->X2 := MEMVAR->SYSOPT[IDM, 3]
+      MEMVAR->Y0 := NOM
+
+   ENDIF
+
+   DISPBEGIN()
+   COLORWIN2(Y0, X1, Y0, X2, C1)
+
+   IF LEN(MEMVAR->SYSOPT[IDM, 9, NOM, 4]) <> 0
+
+      COLORWIN2(Y0, X1 + MEMVAR->SYSOPT[IDM, 9, NOM, 5], Y0, X1 + MEMVAR->;
+            SYSOPT[IDM, 9, NOM, 5], C2)
+
+   ENDIF
+
+   IF LEN(MEMVAR->SYSOPT[IDM, 9, NOM, 3]) <> 0 .AND. FLAG < 2 .AND. MEMVAR->;
+         COLORS[39] > 0
+
+      MEMVAR->WW := WSELECT()
+      WSELECT(WCOMM)
+      SETCOLOR(MEMVAR->COLORS[37])
+
+      IF MEMVAR->SYSOPT[IDM, 9, NOM, 3] = "@"
+
+         DEVPOS(0, 0)
+         DEVOUT(SPACE(MEMVAR->COLORS[39]))
+
+      ELSE
+
+         DEVPOS(0, 0)
+         DEVOUT(PADRIGHT(MEMVAR->SYSOPT[IDM, 9, NOM, 3], MEMVAR->COLORS[39]))
+
+      ENDIF
+
+      WSELECT(WW)
+
+   ENDIF
+
+   DISPEND()
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OPTSTEP
+   Params: VECTOR
+   Return: Variable
+  Example: OPTSTEP(VECTOR)
+  ..........................................................................
+*/
+
+FUNCTION OPTSTEP(VECTOR)
+
+   PRIVATE NOOLD, NONEW, FZ := .F.
+   MEMVAR->NONEW := MEMVAR->NOOLD := MEMVAR->SYSOPT[ID, 5]
+
+   IF VECTOR = "h"
+
+      MEMVAR->NONEW := 0
+      VECTOR := "+"
+
+   ELSEIF VECTOR = "e"
+
+      MEMVAR->NONEW := MEMVAR->SYSOPT[ID, 6] + 1
+      VECTOR := "-"
+
+   ENDIF
+
+   DO WHILE FZ <> .T.
+
+      IF VECTOR = "+"
+
+         ++MEMVAR->NONEW
+
+         IF NONEW > MEMVAR->SYSOPT[ID, 6]
+
+            MEMVAR->NONEW := 1
+
+         ENDIF
+
+      ELSE
+
+         --MEMVAR->NONEW
+
+         IF NONEW < 1
+
+            MEMVAR->NONEW := MEMVAR->SYSOPT[ID, 6]
+
+         ENDIF
+
+      ENDIF
+
+      MEMVAR->FZ := MEMVAR->SYSOPT[ID, 9, NONEW, 2]
+
+   ENDDO
+
+   IF NONEW <> NOOLD
+
+      OPTSELECT(ID, NOOLD, 0)
+      MEMVAR->SYSOPT[ID, 5] := NONEW
+      OPTSELECT(ID, NONEW, 1)
+
+   ENDIF
+
+
+RETURN NONEW
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MENUCLOSE
+   Params: IDM
+   Return: Undefined
+  Example: MENUCLOSE(IDM)
+  ..........................................................................
+*/
+
+PROCEDURE MENUCLOSE(IDM)
+
+   WINCLOSE(MEMVAR->SYSOPT[IDM, 8])
+   MEMVAR->SYSOPT[IDM, 8] := NIL
+
+   IF IDM > 1
+
+      WSELECT(MEMVAR->SYSOPT[MEMVAR->SYSOPT[IDM, 7], 8])
+
+   ENDIF
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FREEOPT
+   Params: IDM
+   Return: Variable
+  Example: FREEOPT(IDM)
+  ..........................................................................
+*/
+
+FUNCTION FREEOPT(IDM)
+
+   PRIVATE NOM
+   MEMVAR->NOM := MEMVAR->SYSOPT[IDM, 5]
+
+   IF MEMVAR->SYSOPT[IDM, 9, NOM, 2] = .T.
+
+      RETURN NOM
+
+   ELSE
+
+      FOR NOM := 1 TO MEMVAR->SYSOPT[IDM, 6]
+
+         IF MEMVAR->SYSOPT[IDM, 9, NOM, 2] = .T.
+
+            RETURN NOM
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DISPETCHER
+   Params: None.
+   Return: Variable
+  Example: DISPETCHER()
+  ..........................................................................
+*/
+
+FUNCTION DISPETCHER()
+
+   PRIVATE VOZVRAT := .F.
+
+   IF KEY = 24
+
+      IF LEVEL > 1 .AND. PROPUSK = .T.
+
+         MEMVAR->NO := OPTSTEP("+")
+         MEMVAR->VOZVRAT := .T.
+
+      ENDIF
+
+   ELSEIF KEY = 5
+
+      IF LEVEL > 1 .AND. PROPUSK = .T.
+
+         MEMVAR->NO := OPTSTEP("-")
+         MEMVAR->VOZVRAT := .T.
+
+      ENDIF
+
+   ELSEIF KEY = 1
+
+      IF PROPUSK = .T.
+
+         MEMVAR->NO := OPTSTEP("h")
+         MEMVAR->VOZVRAT := .T.
+
+      ENDIF
+
+   ELSEIF KEY = 6
+
+      IF PROPUSK = .T.
+
+         MEMVAR->NO := OPTSTEP("e")
+         MEMVAR->VOZVRAT := .T.
+
+      ENDIF
+
+   ELSEIF KEY = 19
+
+      MEMVAR->VOZVRAT := .T.
+
+      IF LEVEL > 1
+
+         MEMVAR->ENTER := .T.
+
+         DO WHILE LEVEL > 1
+
+            IF PROPUSK = .T.
+
+               MENUCLOSE(ID)
+               MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+
+            ELSE
+
+               MENUCLOSE(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+               MEMVAR->PROPUSK := .T.
+
+            ENDIF
+
+            --MEMVAR->LEVEL
+
+         ENDDO
+
+      ENDIF
+
+      MEMVAR->NO := OPTSTEP("-")
+
+      IF ENTER = .T. .AND. MEMVAR->SYSOPT[ID, 9, NO, 6] < 500
+
+         MEMVAR->TEST := MENUDRAW(MEMVAR->SYSOPT[ID, 9, NO, 6])
+
+         IF TEST = .F.
+
+            MEMVAR->PROPUSK := .F.
+            ++MEMVAR->LEVEL
+
+         ELSE
+
+            MEMVAR->ID := MEMVAR->SYSOPT[ID, 9, NO, 6]
+            MEMVAR->NO := MEMVAR->SYSOPT[ID, 5] := FREEOPT(ID)
+            OPTSELECT(ID, NO, 1)
+            ++MEMVAR->LEVEL
+
+         ENDIF
+
+      ENDIF
+
+   ELSEIF KEY = 4
+
+      MEMVAR->VOZVRAT := .T.
+
+      IF LEVEL > 1
+
+         MEMVAR->ENTER := .T.
+
+         DO WHILE LEVEL > 1
+
+            IF PROPUSK = .T.
+
+               MENUCLOSE(ID)
+               MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+
+            ELSE
+
+               MENUCLOSE(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+               MEMVAR->PROPUSK := .T.
+
+            ENDIF
+
+            --MEMVAR->LEVEL
+
+         ENDDO
+
+      ENDIF
+
+      MEMVAR->NO := OPTSTEP("+")
+
+      IF ENTER = .T. .AND. MEMVAR->SYSOPT[ID, 9, NO, 6] < 500
+
+         MEMVAR->TEST := MENUDRAW(MEMVAR->SYSOPT[ID, 9, NO, 6])
+
+         IF TEST = .F.
+
+            MEMVAR->PROPUSK := .F.
+            ++MEMVAR->LEVEL
+
+         ELSE
+
+            MEMVAR->ID := MEMVAR->SYSOPT[ID, 9, NO, 6]
+            MEMVAR->NO := MEMVAR->SYSOPT[ID, 5] := FREEOPT(ID)
+            OPTSELECT(ID, NO, 1)
+            ++MEMVAR->LEVEL
+
+         ENDIF
+
+      ENDIF
+
+   ELSEIF KEY = 27 .AND. LEVEL > 1
+
+      MEMVAR->VOZVRAT := .T.
+
+      IF PROPUSK = .F.
+
+         MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+         MEMVAR->IDW := MEMVAR->SYSOPT[ID, 9, NO, 6]
+         MENUCLOSE(IDW)
+         MEMVAR->PROPUSK := .T.
+         --MEMVAR->LEVEL
+
+      ELSE
+
+         MENUCLOSE(ID)
+         --MEMVAR->LEVEL
+         MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+         MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+         OPTSELECT(ID, NO, 1)
+
+      ENDIF
+
+      IF LEVEL = 1
+
+         MEMVAR->ENTER := .F.
+
+      ENDIF
+
+   ELSEIF KEY = 13
+
+      MEMVAR->VOZVRAT := .T.
+      MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+
+      IF PROPUSK = .T.
+
+         IF MEMVAR->SYSOPT[ID, 9, NO, 6] > 499
+
+            MEMVAR->KEY := MEMVAR->SYSOPT[ID, 9, NO, 6]
+
+         ELSE
+
+            MEMVAR->TEST := MENUDRAW(MEMVAR->SYSOPT[ID, 9, NO, 6])
+
+            IF TEST = .F.
+
+               MEMVAR->PROPUSK := .F.
+               ++MEMVAR->LEVEL
+
+            ELSE
+
+               MEMVAR->ID := MEMVAR->SYSOPT[ID, 9, NO, 6]
+               MEMVAR->NO := MEMVAR->SYSOPT[ID, 5] := FREEOPT(ID)
+               OPTSELECT(ID, NO, 1)
+               ++MEMVAR->LEVEL
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN VOZVRAT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: HOTKEY
+   Params: None.
+   Return: Undefined
+  Example: HOTKEY()
+  ..........................................................................
+*/
+
+PROCEDURE HOTKEY()
+
+   IF PROPUSK = .T.
+
+      FOR I := 1 TO MEMVAR->SYSOPT[ID, 6]
+
+         IF LEN(MEMVAR->SYSOPT[ID, 9, I, 4]) <> 0 .AND. (ASC(MEMVAR->SYSOPT[;
+               ID, 9, I, 4]) = KEY .OR. ASC(READRUS2EN(MEMVAR->SYSOPT[ID, 9,;
+                I, 4])) = KEY .OR. ASC(RUSLOWER(MEMVAR->SYSOPT[ID, 9, I, 4]);
+               ) = KEY) .AND. MEMVAR->SYSOPT[ID, 9, I, 2] = .T.
+
+            MEMVAR->NO := MEMVAR->SYSOPT[ID, 5]
+
+            IF NO <> I
+
+               OPTSELECT(ID, NO, 0)
+               OPTSELECT(ID, I, 1)
+               MEMVAR->SYSOPT[ID, 5] := MEMVAR->NO := I
+
+            ENDIF
+
+            IF PROPUSK = .T.
+
+               IF MEMVAR->SYSOPT[ID, 9, NO, 6] > 499
+
+                  MEMVAR->KEY := MEMVAR->SYSOPT[ID, 9, NO, 6]
+
+               ELSE
+
+                  MEMVAR->TEST := MENUDRAW(MEMVAR->SYSOPT[ID, 9, NO, 6])
+
+                  IF TEST = .F.
+
+                     MEMVAR->PROPUSK := .F.
+                     ++MEMVAR->LEVEL
+
+                  ELSE
+
+                     MEMVAR->ID := MEMVAR->SYSOPT[ID, 9, NO, 6]
+                     MEMVAR->NO := MEMVAR->SYSOPT[ID, 5] := FREEOPT(ID)
+                     OPTSELECT(ID, NO, 1)
+                     ++MEMVAR->LEVEL
+
+                  ENDIF
+
+               ENDIF
+
+            ENDIF
+
+            EXIT
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+   FOR I := 1 TO MEMVAR->SYSOPT[1, 6]
+
+      IF LEN(MEMVAR->SYSOPT[1, 9, I, 4]) <> 0 .AND. KEY = READALTKEY(MEMVAR->;
+            SYSOPT[1, 9, I, 4]) .AND. MEMVAR->SYSOPT[1, 9, I, 2] = .T.
+
+         IF LEVEL > 1
+
+            DO WHILE LEVEL > 1
+
+               IF PROPUSK = .T.
+
+                  MENUCLOSE(ID)
+                  MEMVAR->ID := MEMVAR->SYSOPT[ID, 7]
+
+               ELSE
+
+                  MENUCLOSE(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+                  MEMVAR->PROPUSK := .T.
+
+               ENDIF
+
+               --MEMVAR->LEVEL
+
+            ENDDO
+
+         ENDIF
+
+         OPTSELECT(1, MEMVAR->SYSOPT[1, 5], 0)
+         MEMVAR->SYSOPT[1, 5] := MEMVAR->NO := I
+         OPTSELECT(1, NO, 1)
+         MEMVAR->PROPUSK := .T.
+
+         IF PROPUSK = .T.
+
+            IF MEMVAR->SYSOPT[ID, 9, NO, 6] > 499
+
+               MEMVAR->KEY := MEMVAR->SYSOPT[ID, 9, NO, 6]
+
+            ELSE
+
+               MEMVAR->TEST := MENUDRAW(MEMVAR->SYSOPT[ID, 9, NO, 6])
+
+               IF TEST = .F.
+
+                  MEMVAR->PROPUSK := .F.
+                  ++MEMVAR->LEVEL
+
+               ELSE
+
+                  MEMVAR->ID := MEMVAR->SYSOPT[ID, 9, NO, 6]
+                  MEMVAR->NO := MEMVAR->SYSOPT[ID, 5] := FREEOPT(ID)
+                  OPTSELECT(ID, NO, 1)
+                  ++MEMVAR->LEVEL
+
+               ENDIF
+
+            ENDIF
+
+         ENDIF
+
+         EXIT
+
+      ENDIF
+
+   NEXT
+
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READRUS2EN
+   Params: CC
+   Return: Variable
+  Example: READRUS2EN(CC)
+  ..........................................................................
+*/
+
+FUNCTION READRUS2EN(CC)
+
+   LOCAL C := RUSLOWER(CC)
+
+   IF C = "q"
+
+      RETURN "©"
+
+   ELSEIF C = "©"
+
+      RETURN "q"
+
+   ELSEIF C = "w"
+
+      RETURN "Ê"
+
+   ELSEIF C = "Ê"
+
+      RETURN "w"
+
+   ELSEIF C = "e"
+
+      RETURN "„"
+
+   ELSEIF C = "„"
+
+      RETURN "e"
+
+   ELSEIF C = "r"
+
+      RETURN "™"
+
+   ELSEIF C = "™"
+
+      RETURN "r"
+
+   ELSEIF C = "t"
+
+      RETURN "•"
+
+   ELSEIF C = "•"
+
+      RETURN "t"
+
+   ELSEIF C = "y"
+
+      RETURN "≠"
+
+   ELSEIF C = "≠"
+
+      RETURN "y"
+
+   ELSEIF C = "u"
+
+      RETURN "£"
+
+   ELSEIF C = "£"
+
+      RETURN "u"
+
+   ELSEIF C = "i"
+
+      RETURN "Ë"
+
+   ELSEIF C = "Ë"
+
+      RETURN "i"
+
+   ELSEIF C = "o"
+
+      RETURN "È"
+
+   ELSEIF C = "È"
+
+      RETURN "o"
+
+   ELSEIF C = "p"
+
+      RETURN "ß"
+
+   ELSEIF C = "ß"
+
+      RETURN "p"
+
+   ELSEIF C = "["
+
+      RETURN "Â"
+
+   ELSEIF C = "Â"
+
+      RETURN "["
+
+   ELSEIF C = "]"
+
+      RETURN "Í"
+
+   ELSEIF C = "Í"
+
+      RETURN "]"
+
+   ELSEIF C = "a"
+
+      RETURN "‰"
+
+   ELSEIF C = "‰"
+
+      RETURN "a"
+
+   ELSEIF C = "s"
+
+      RETURN "Î"
+
+   ELSEIF C = "Î"
+
+      RETURN "s"
+
+   ELSEIF C = "d"
+
+      RETURN "¢"
+
+   ELSEIF C = "¢"
+
+      RETURN "d"
+
+   ELSEIF C = "f"
+
+      RETURN "†"
+
+   ELSEIF C = "†"
+
+      RETURN "f"
+
+   ELSEIF C = "g"
+
+      RETURN "Ø"
+
+   ELSEIF C = "Ø"
+
+      RETURN "g"
+
+   ELSEIF C = "h"
+
+      RETURN "‡"
+
+   ELSEIF C = "‡"
+
+      RETURN "h"
+
+   ELSEIF C = "j"
+
+      RETURN "Æ"
+
+   ELSEIF C = "Æ"
+
+      RETURN "j"
+
+   ELSEIF C = "k"
+
+      RETURN "´"
+
+   ELSEIF C = "´"
+
+      RETURN "k"
+
+   ELSEIF C = "l"
+
+      RETURN "§"
+
+   ELSEIF C = "§"
+
+      RETURN "l"
+
+   ELSEIF C = ";"
+
+      RETURN "¶"
+
+   ELSEIF C = "¶"
+
+      RETURN ";"
+
+   ELSEIF C = "'"
+
+      RETURN "Ì"
+
+   ELSEIF C = "Ì"
+
+      RETURN "'"
+
+   ELSEIF C = "z"
+
+      RETURN "Ô"
+
+   ELSEIF C = "Ô"
+
+      RETURN "z"
+
+   ELSEIF C = "x"
+
+      RETURN "Á"
+
+   ELSEIF C = "Á"
+
+      RETURN "x"
+
+   ELSEIF C = "c"
+
+      RETURN "·"
+
+   ELSEIF C = "·"
+
+      RETURN "c"
+
+   ELSEIF C = "v"
+
+      RETURN "¨"
+
+   ELSEIF C = "¨"
+
+      RETURN "v"
+
+   ELSEIF C = "b"
+
+      RETURN "®"
+
+   ELSEIF C = "®"
+
+      RETURN "b"
+
+   ELSEIF C = "n"
+
+      RETURN "‚"
+
+   ELSEIF C = "‚"
+
+      RETURN "n"
+
+   ELSEIF C = "m"
+
+      RETURN "Ï"
+
+   ELSEIF C = "Ï"
+
+      RETURN "m"
+
+   ELSEIF C = ","
+
+      RETURN "°"
+
+   ELSEIF C = "°"
+
+      RETURN ","
+
+   ELSEIF C = "."
+
+      RETURN "Ó"
+
+   ELSEIF C = "Ó"
+
+      RETURN "."
+
+   ENDIF
+
+
+RETURN -1
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RUSLOWER
+   Params: C
+   Return: Undefined
+  Example: RUSLOWER(C)
+  ..........................................................................
+*/
+
+FUNCTION RUSLOWER(C)
+
+   LOCAL ST
+
+   IF LEN(C) > 0
+
+      IF ASC(C) < 125
+
+         C := LOWER(C)
+
+      ELSE
+
+         ST := SUBSTR(C, 1, 1)
+
+         IF ST = "©" .OR. ST = "â"
+
+            ST := "©"
+
+         ELSEIF ST = "Ê" .OR. ST = "ñ"
+
+            ST := "Ê"
+
+         ELSEIF ST = "„" .OR. ST = "ì"
+
+            ST := "„"
+
+         ELSEIF ST = "™" .OR. ST = "ä"
+
+            ST := "™"
+
+         ELSEIF ST = "•" .OR. ST = "Ö"
+
+            ST := "•"
+
+         ELSEIF ST = "≠" .OR. ST = "ç"
+
+            ST := "≠"
+
+         ELSEIF ST = "£" .OR. ST = "É"
+
+            ST := "£"
+
+         ELSEIF ST = "Ë" .OR. ST = "ò"
+
+            ST := "Ë"
+
+         ELSEIF ST = "È" .OR. ST = "ô"
+
+            ST := "È"
+
+         ELSEIF ST = "ß" .OR. ST = "á"
+
+            ST := "ß"
+
+         ELSEIF ST = "Â" .OR. ST = "ï"
+
+            ST := "Â"
+
+         ELSEIF ST = "Í" .OR. ST = "ö"
+
+            ST := "Í"
+
+         ELSEIF ST = "‰" .OR. ST = "î"
+
+            ST := "‰"
+
+         ELSEIF ST = "Î" .OR. ST = "õ"
+
+            ST := "Î"
+
+         ELSEIF ST = "¢" .OR. ST = "Ç"
+
+            ST := "¢"
+
+         ELSEIF ST = "†" .OR. ST = "Ä"
+
+            ST := "†"
+
+         ELSEIF ST = "Ø" .OR. ST = "è"
+
+            ST := "Ø"
+
+         ELSEIF ST = "‡" .OR. ST = "ê"
+
+            ST := "‡"
+
+         ELSEIF ST = "Æ" .OR. ST = "é"
+
+            ST := "Æ"
+
+         ELSEIF ST = "´" .OR. ST = "ã"
+
+            ST := "´"
+
+         ELSEIF ST = "§" .OR. ST = "Ñ"
+
+            ST := "§"
+
+         ELSEIF ST = "¶" .OR. ST = "Ü"
+
+            ST := "¶"
+
+         ELSEIF ST = "Ì" .OR. ST = "ù"
+
+            ST := "Ì"
+
+         ELSEIF ST = "Ô" .OR. ST = "ü"
+
+            ST := "Ô"
+
+         ELSEIF ST = "Á" .OR. ST = "ó"
+
+            ST := "Á"
+
+         ELSEIF ST = "·" .OR. ST = "ë"
+
+            ST := "·"
+
+         ELSEIF ST = "¨" .OR. ST = "å"
+
+            ST := "¨"
+
+         ELSEIF ST = "®" .OR. ST = "à"
+
+            ST := "®"
+
+         ELSEIF ST = "‚" .OR. ST = "í"
+
+            ST := "‚"
+
+         ELSEIF ST = "Ï" .OR. ST = "ú"
+
+            ST := "Ï"
+
+         ELSEIF ST = "°" .OR. ST = "Å"
+
+            ST := "°"
+
+         ELSEIF ST = "Ó" .OR. ST = "û"
+
+            ST := "Ó"
+
+         ELSEIF ST = "Ò" .OR. ST = ""
+
+            ST := "Ò"
+
+         ENDIF
+
+         C := IF(LEN(C) > 1, ST + SUBSTR(C, 2), ST)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN C
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READALTKEY
+   Params: CC
+   Return: Number
+  Example: READALTKEY(CC)
+  ..........................................................................
+*/
+
+FUNCTION READALTKEY(CC)
+
+   PRIVATE C
+   MEMVAR->C := RUSLOWER(CC)
+
+   IF C = "1"
+
+      RETURN 376
+
+   ELSEIF C = "2"
+
+      RETURN 377
+
+   ELSEIF C = "3"
+
+      RETURN 378
+
+   ELSEIF C = "4"
+
+      RETURN 379
+
+   ELSEIF C = "5"
+
+      RETURN 380
+
+   ELSEIF C = "6"
+
+      RETURN 381
+
+   ELSEIF C = "7"
+
+      RETURN 382
+
+   ELSEIF C = "8"
+
+      RETURN 383
+
+   ELSEIF C = "9"
+
+      RETURN 384
+
+   ELSEIF C = "0"
+
+      RETURN 385
+
+   ELSEIF C = "q" .OR. C = "©"
+
+      RETURN 272
+
+   ELSEIF C = "w" .OR. C = "Ê"
+
+      RETURN 273
+
+   ELSEIF C = "e" .OR. C = "„"
+
+      RETURN 274
+
+   ELSEIF C = "r" .OR. C = "™"
+
+      RETURN 275
+
+   ELSEIF C = "t" .OR. C = "•"
+
+      RETURN 276
+
+   ELSEIF C = "y" .OR. C = "≠"
+
+      RETURN 277
+
+   ELSEIF C = "u" .OR. C = "£"
+
+      RETURN 278
+
+   ELSEIF C = "i" .OR. C = "Ë"
+
+      RETURN 279
+
+   ELSEIF C = "o" .OR. C = "È"
+
+      RETURN 280
+
+   ELSEIF C = "p" .OR. C = "ß"
+
+      RETURN 281
+
+   ELSEIF C = "a" .OR. C = "‰"
+
+      RETURN 286
+
+   ELSEIF C = "s" .OR. C = "Î"
+
+      RETURN 287
+
+   ELSEIF C = "d" .OR. C = "¢"
+
+      RETURN 288
+
+   ELSEIF C = "f" .OR. C = "†"
+
+      RETURN 289
+
+   ELSEIF C = "g" .OR. C = "Ø"
+
+      RETURN 290
+
+   ELSEIF C = "h" .OR. C = "‡"
+
+      RETURN 291
+
+   ELSEIF C = "j" .OR. C = "Æ"
+
+      RETURN 292
+
+   ELSEIF C = "k" .OR. C = "´"
+
+      RETURN 293
+
+   ELSEIF C = "l" .OR. C = "§"
+
+      RETURN 294
+
+   ELSEIF C = "z" .OR. C = "Ô"
+
+      RETURN 300
+
+   ELSEIF C = "x" .OR. C = "Á"
+
+      RETURN 301
+
+   ELSEIF C = "c" .OR. C = "·"
+
+      RETURN 302
+
+   ELSEIF C = "v" .OR. C = "¨"
+
+      RETURN 303
+
+   ELSEIF C = "b" .OR. C = "®"
+
+      RETURN 304
+
+   ELSEIF C = "n" .OR. C = "‚"
+
+      RETURN 305
+
+   ELSEIF C = "m" .OR. C = "Ï"
+
+      RETURN 306
+
+   ELSEIF C = "Â"
+
+      RETURN 282
+
+   ELSEIF C = "Í"
+
+      RETURN 283
+
+   ELSEIF C = "¶"
+
+      RETURN 295
+
+   ELSEIF C = "Ì"
+
+      RETURN 296
+
+   ELSEIF C = "°"
+
+      RETURN 307
+
+   ELSEIF C = "Ó"
+
+      RETURN 308
+
+   ENDIF
+
+
+RETURN -1
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETSYSOPT
+   Params: NAMEOPT, NAMEOPTOLD
+   Return: Variable
+  Example: GETSYSOPT(NAMEOPT, NAMEOPTOLD)
+  ..........................................................................
+*/
+
+FUNCTION GETSYSOPT(NAMEOPT, NAMEOPTOLD)
+
+   PRIVATE I, J, MASOPT, NM, OPTOLD, MASOPTOLD, K
+
+   FOR I := 1 TO LEN(SYSOPT)
+
+      MEMVAR->MASOPT := MEMVAR->SYSOPT[I, 9]
+
+      FOR J := 1 TO LEN(MASOPT)
+
+         IF MEMVAR->MASOPT[J, 1] = NAMEOPT
+
+            IF NAMEOPTOLD = NIL
+
+               RETURN {I, J}
+
+            ELSEIF LEN(NAMEOPTOLD) = 0
+
+               IF I = 1
+
+                  RETURN {I, J}
+
+               ENDIF
+
+            ELSEIF I > 1
+
+               MEMVAR->OPTOLD := MEMVAR->SYSOPT[I, 7]
+               MEMVAR->MASOPTOLD := MEMVAR->SYSOPT[OPTOLD, 9]
+
+               FOR K := 1 TO LEN(MASOPTOLD)
+
+                  IF MEMVAR->SYSOPT[OPTOLD, 9, K, 1] = NAMEOPTOLD .AND. ;
+                        TYPE("SysOpt[optold,9,k,6]") = "N" .AND. MEMVAR->;
+                        SYSOPT[OPTOLD, 9, K, 6] = I
+
+                     RETURN {I, J}
+
+                  ENDIF
+
+               NEXT
+
+            ENDIF
+
+         ENDIF
+
+      NEXT
+
+   NEXT
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETSTATUSO
+   Params: NAMEOPT, NAMEOPTOLD
+   Return: Nil
+  Example: GETSTATUSO(NAMEOPT, NAMEOPTOLD)
+  ..........................................................................
+*/
+
+FUNCTION GETSTATUSO(NAMEOPT, NAMEOPTOLD)
+
+   LOCAL MASS := GETSYSOPT(NAMEOPT, NAMEOPTOLD)
+
+   IF VALTYPE(MASS) = "A"
+
+      RETURN MEMVAR->SYSOPT[MASS[1], 9, MASS[2], 2]
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CURMENUDRA
+   Params: ALLMENU
+   Return: Undefined
+  Example: CURMENUDRA(ALLMENU)
+  ..........................................................................
+*/
+
+PROCEDURE CURMENUDRA(ALLMENU)
+
+   PRIVATE LV, IDC, PR := .F.
+
+   IF ALLMENU = NIL
+
+      ALLMENU := .F.
+
+   ENDIF
+
+   DISPBEGIN()
+
+   IF ALLMENU = .F.
+
+      IF PROPUSK = .T.
+
+         MENUCLOSE(ID)
+         MENUDRAW(ID)
+         OPTSELECT(ID, MEMVAR->SYSOPT[ID, 5], 1)
+
+      ELSE
+
+         MENUCLOSE(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+         OPTSELECT(ID, MEMVAR->SYSOPT[ID, 5], 1)
+         MENUDRAW(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->LV := LEVEL
+      MEMVAR->IDC := ID
+
+      DO WHILE LV > 1
+
+         IF PROPUSK = .F. .AND. PR = .F.
+
+            MENUCLOSE(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+            MEMVAR->PR := .T.
+
+         ELSE
+
+            MENUCLOSE(IDC)
+            MEMVAR->IDC := MEMVAR->SYSOPT[IDC, 7]
+
+         ENDIF
+
+         --MEMVAR->LV
+
+      ENDDO
+
+      MENUCLOSE(1)
+
+      DO WHILE IDC <> ID
+
+         MENUDRAW(IDC)
+         OPTSELECT(IDC, MEMVAR->SYSOPT[IDC, 5], 1)
+         MEMVAR->IDC := MEMVAR->SYSOPT[IDC, 9, MEMVAR->SYSOPT[IDC, 5], 6]
+
+      ENDDO
+
+      MENUDRAW(IDC)
+      OPTSELECT(IDC, MEMVAR->SYSOPT[IDC, 5], 1)
+
+      IF PR = .T.
+
+         MENUDRAW(MEMVAR->SYSOPT[ID, 9, MEMVAR->SYSOPT[ID, 5], 6])
+
+      ENDIF
+
+   ENDIF
+
+   DISPEND()
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NAMEOPT
+   Params: NM, HNM, NEWNM, NEWCOM
+   Return: Undefined
+  Example: NAMEOPT(NM, HNM, NEWNM, NEWCOM)
+  ..........................................................................
+*/
+
+PROCEDURE NAMEOPT(NM, HNM, NEWNM, NEWCOM)
+
+   PRIVATE IDC, C := "", K, ST := NEWNM, I, T := TERM, BIG := 0, IDW, PR ;
+         := .F., LN
+
+   IF NM = "@s" .OR. NM = "@d" .OR. NEWNM = "@s" .OR. NEWNM = "@d"
+
+      RETURN 
+
+   ENDIF
+
+   IF HNM <> NIL .AND. (HNM = "@s" .OR. HNM = "@d")
+
+      HNM := NIL
+
+   ENDIF
+
+   MEMVAR->IDC := GETSYSOPT(NM, HNM)
+
+   IF IDC = NIL
+
+      RETURN 
+
+   ENDIF
+
+   DISPBEGIN()
+   MEMVAR->K := AT("~", NEWNM)
+
+   IF K <> 0
+
+      MEMVAR->C := RUSUPPER(SUBSTR(NEWNM, K + 1, 1))
+      MEMVAR->ST := SUBSTR(NEWNM, K + 1)
+
+      IF K <> 1
+
+         MEMVAR->ST := SUBSTR(NEWNM, 1, K - 1) + ST
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->K := 1
+
+   ENDIF
+
+   MEMVAR->SYSOPT[MEMVAR->IDC[1], 9, MEMVAR->IDC[2], 1] := ST
+   MEMVAR->SYSOPT[MEMVAR->IDC[1], 9, MEMVAR->IDC[2], 4] := RUSUPPER(C)
+   MEMVAR->SYSOPT[MEMVAR->IDC[1], 9, MEMVAR->IDC[2], 5] := K - 1
+
+   IF NEWCOM <> NIL
+
+      MEMVAR->SYSOPT[MEMVAR->IDC[1], 9, MEMVAR->IDC[2], 3] := NEWCOM
+
+   ENDIF
+
+   IF MEMVAR->IDC[1] = 1
+
+      FOR I := 1 TO LEN(MEMVAR->SYSOPT[1, 9])
+
+         MEMVAR->SYSOPT[1, 9, I, 7] := T
+
+         IF MEMVAR->SYSOPT[1, 9, I, 1] <> "@s" .OR. MEMVAR->SYSOPT[1, 9, I, ;
+               1] <> "@d"
+
+            MEMVAR->T := T + LEN(MEMVAR->SYSOPT[1, 9, I, 1]) + TERM
+
+         ELSE
+
+            MEMVAR->T := T + 1 + TERM
+
+         ENDIF
+
+      NEXT
+
+      MEMVAR->SYSOPT[1, 3] := T
+      CURMENUDRA(.T.)
+
+   ELSE
+
+      FOR I := 1 TO LEN(MEMVAR->SYSOPT[MEMVAR->IDC[1], 9])
+
+         MEMVAR->LN := LEN(MEMVAR->SYSOPT[MEMVAR->IDC[1], 9, I, 1])
+
+         IF BIG < LN
+
+            MEMVAR->BIG := LN
+
+         ENDIF
+
+      NEXT
+
+      MEMVAR->SYSOPT[MEMVAR->IDC[1], 3] := BIG
+
+      IF MEMVAR->SYSOPT[MEMVAR->IDC[1], 8] <> NIL
+
+         IF WSELECT() = MEMVAR->SYSOPT[MEMVAR->IDC[1], 8]
+
+            CURMENUDRA(.F.)
+
+         ELSE
+
+            MEMVAR->IDW := ID
+
+            DO WHILE IDW <> MEMVAR->IDC[1]
+
+               IF PROPUSK = .F. .AND. PR = .F.
+
+                  MENUCLOSE(MEMVAR->SYSOPT[IDW, 9, MEMVAR->SYSOPT[IDW, 5], 6];
+                        )
+                  MEMVAR->PR := .T.
+
+               ELSE
+
+                  MENUCLOSE(IDW)
+                  MEMVAR->IDW := MEMVAR->SYSOPT[IDW, 7]
+
+               ENDIF
+
+            ENDDO
+
+            MENUCLOSE(IDW)
+
+            DO WHILE IDW <> ID
+
+               MENUDRAW(IDW)
+               OPTSELECT(IDW, MEMVAR->SYSOPT[IDW, 5], 1)
+               MEMVAR->IDW := MEMVAR->SYSOPT[IDW, 9, MEMVAR->SYSOPT[IDW, 5], ;
+                     6]
+
+            ENDDO
+
+            MENUDRAW(IDW)
+            OPTSELECT(IDW, MEMVAR->SYSOPT[IDW, 5], 1)
+
+            IF PR = .T.
+
+               MENUDRAW(MEMVAR->SYSOPT[IDW, 9, MEMVAR->SYSOPT[IDW, 5], 6])
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+   DISPEND()
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EXEON
+   Params: Y1, X1, Y2, X2, COLOR
+   Return: Logical
+  Example: EXEON(Y1, X1, Y2, X2, COLOR)
+  ..........................................................................
+*/
+
+FUNCTION EXEON(Y1, X1, Y2, X2, COLOR)
+
+   PUBLIC X1_EXECOOR := X1, X2_EXECOOR := X2, Y1_EXECOOR := Y1, Y2_EXECOOR ;
+         := Y2, EXE_CURREN := SUBSTR(SETCOLOR(), 1, AT(",", SETCOLOR()) - ;
+         1)
+   DISPBEGIN()
+
+   IF COLOR = NIL
+
+      COLOR := EXE_CURREN
+
+   ENDIF
+
+   COLORWIN2(Y1, X1, Y2, X2, COLOR)
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EXEOFF
+   Params: None.
+   Return: Logical
+  Example: EXEOFF()
+  ..........................................................................
+*/
+
+FUNCTION EXEOFF()
+
+   IF TYPE("Y1_ExeCoor") = "N"
+
+      DISPBEGIN()
+      COLORWIN2(Y1_EXECOOR, X1_EXECOOR, Y2_EXECOOR, X2_EXECOOR, EXE_CURREN)
+      DISPEND()
+      __MXRELEAS("Y1_ExeCoor", "X1_ExeCoor", "Y2_ExeCoor", "X2_ExeCoor", ;
+            "Exe_CurrentColor")
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: LINCOLOR
+   Params: PAS, ACT
+   Return: Variable
+  Example: LINCOLOR(PAS, ACT)
+  ..........................................................................
+*/
+
+FUNCTION LINCOLOR(PAS, ACT)
+
+   PRIVATE OLDCOLOR
+   MEMVAR->OLDCOLOR := {MEMVAR->COLORS[45], MEMVAR->COLORS[46]}
+
+   IF PAS = NIL
+
+      PAS := MEMVAR->COLORS[45]
+
+   ENDIF
+
+   IF ACT = NIL
+
+      ACT := MEMVAR->COLORS[46]
+
+   ENDIF
+
+   MEMVAR->COLORS[45] := PAS
+   MEMVAR->COLORS[46] := ACT
+
+RETURN OLDCOLOR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: REDBROWSER
+   Params: None.
+   Return: Number
+  Example: REDBROWSER()
+  ..........................................................................
+*/
+
+FUNCTION REDBROWSER()
+
+   PARAMETER REGIM, CURR, INWIN
+   PRIVATE KEY, MCOLOR, USERR := USERFF, II, CUREL := CURR
+   MEMVAR->KEY := LASTKEY()
+   HANDLEEVEN(KEY)
+
+   IF REGIM = 0 .AND. REGIMRED = 1 .AND. OLDCURR <> CURR .AND. K > 1
+
+      MEMVAR->MCOLOR := SETCOLOR()
+      SETCOLOR(MEMVAR->COLORS[17])
+      DEVPOS(SCALE(Y1, Y2, K, OLDCURR), XX)
+      DEVOUT("≤")
+      SETCOLOR(MEMVAR->COLORS[21])
+      DEVPOS(SCALE(Y1, Y2, K, CURR), XX)
+      DEVOUT("˛")
+      MEMVAR->OLDCURR := CURR
+      SETCOLOR(MCOLOR)
+
+   ENDIF
+
+   IF KEY = 13
+
+      RETURN 1
+
+   ENDIF
+
+   IF KEY = 27
+
+      RETURN 0
+
+   ENDIF
+
+   IF USERR <> NIL
+
+      MEMVAR->II := (&(MEMVAR->USERR))
+
+   ENDIF
+
+
+RETURN 2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STRZ
+   Params: NNUM, NLEN
+   Return: Undefined
+  Example: STRZ(NNUM, NLEN)
+  ..........................................................................
+*/
+
+FUNCTION STRZ(NNUM, NLEN)
+
+   LOCAL ST
+
+   IF(NLEN = NIL, ST := STR(NNUM), ST := STR(NNUM, NLEN))
+
+RETURN PADL(LTRIM(ST), LEN(ST), "0")
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: LENCOM
+   Params: MAS
+   Return: Undefined
+  Example: LENCOM(MAS)
+  ..........................................................................
+*/
+
+FUNCTION LENCOM(MAS)
+
+   LOCAL RET := 0
+
+   IF LEN(MAS) > 0
+
+      FOR I := 1 TO LEN(MAS)
+
+         IF SUBSTR(MAS[I], 1, 1) <> "@"
+
+            ++RET
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TXTOPT
+   Params: MAS
+   Return: Logical
+  Example: TXTOPT(MAS)
+  ..........................................................................
+*/
+
+FUNCTION TXTOPT(MAS)
+
+   LOCAL I, YY := 1
+
+   SETCOLOR(MEMVAR->COLORS[63])
+
+   FOR I := 1 TO LEN(MAS)
+
+      IF SUBSTR(MAS[I], 1, 1) = "@"
+
+         CENTR(NIL, 0, SUBSTR(MAS[I], 2), MEMVAR->COLORS[59])
+
+      ELSEIF SUBSTR(MAS[I], 1, 1) = "!"
+
+         CENTR(NIL, YY, SUBSTR(MAS[I], 2), MEMVAR->COLORS[58])
+         ++YY
+
+      ELSE
+
+         CENTR(NIL, YY, MAS[I])
+         ++YY
+
+      ENDIF
+
+   NEXT
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRHEAD
+   Params: X1, Y1, X2, Y2, HEAD, FVIEWFILE
+   Return: Variable
+  Example: OBRHEAD(X1, Y1, X2, Y2, HEAD, FVIEWFILE)
+  ..........................................................................
+*/
+
+FUNCTION OBRHEAD(X1, Y1, X2, Y2, HEAD, FVIEWFILE)
+
+   LOCAL GOL, OST
+
+   IF HEAD = NIL
+
+      MEMVAR->SHADOW := ""
+      MEMVAR->RAMKA := "d"
+      MEMVAR->GOLOVA := .F.
+
+   ELSEIF AT("@", HEAD) > 0 .AND. LEN(HEAD) >= AT("@", HEAD) + 1
+
+      GOL := SUBSTR(HEAD, AT("@", HEAD) + 1)
+      MEMVAR->GOLOVA := ( IF(AT("@", HEAD) > 1, OST := SUBSTR(HEAD, 1, AT(;
+            "@", HEAD) - 1), OST := ""), .T. )
+      IF(AT("s", OST) = 0, MEMVAR->RAMKA := "d", MEMVAR->RAMKA := "s")
+      IF(AT("t", OST) = 0, MEMVAR->SHADOW := "", MEMVAR->SHADOW := "t")
+
+   ELSE
+
+      MEMVAR->GOLOVA := .F.
+      IF(AT("s", HEAD) = 0, MEMVAR->RAMKA := "d", MEMVAR->RAMKA := "s")
+      IF(AT("t", HEAD) = 0, MEMVAR->SHADOW := "", MEMVAR->SHADOW := "t")
+
+   ENDIF
+
+   MEMVAR->WIN1 := WIN(Y1, X1, Y2, X2, RAMKA, IF(SHADOW == "t", "t", NIL))
+   IF(GOLOVA, WINHEADER(GOL, FVIEWFILE), WINHEADER(NIL, FVIEWFILE))
+   FVIEWFILE := FVIEWFILE
+
+RETURN RAMKA + SHADOW
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: __CLIP
+   Params: None.
+   Return: Nil
+  Example: __CLIP()
+  ..........................................................................
+*/
+
+FUNCTION __CLIP()
+
+   PRIVATE RET := 0
+   MEMVAR->INTERLINK := ( IF(VALTYPE(CODEBL) == "B", MEMVAR->RET := EVAL(;
+         CODEBL), .T.), IF(VALTYPE(RET) <> "N" .OR. RET <> 0 .AND. RET <> ;
+         1 .AND. RET <> 2, MEMVAR->RET := 0, ""), RET )
+   __MXRELEAS("ret")
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WINHEADER
+   Params: HEAD, FVIEWFILE
+   Return: Logical
+  Example: WINHEADER(HEAD, FVIEWFILE)
+  ..........................................................................
+*/
+
+FUNCTION WINHEADER(HEAD, FVIEWFILE)
+
+   IF HEAD <> NIL .AND. LEN(HEAD) + 2 < LN
+
+      CENTR(NIL, 0, HEAD, MEMVAR->COLORS[55])
+
+   ELSEIF AT("\", FVIEWFILE) > 0
+
+      IF(AT("\", FVIEWFILE) + 1 > LEN(FVIEWFILE), MEMVAR->FN := "NoName", ;
+            MEMVAR->FN := SUBSTR(FVIEWFILE, AT("\", FVIEWFILE) + 1))
+
+      IF LEN(FN) + 2 < LN
+
+         CENTR(NIL, 0, " " + FN + " ", MEMVAR->COLORS[55])
+
+      ENDIF
+
+   ELSEIF LEN(FVIEWFILE) + 2 < LN
+
+      CENTR(NIL, 0, " " + FVIEWFILE + " ", MEMVAR->COLORS[55])
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FPOPUP
+   Params: REGIM, EL, STROKA
+   Return: Number
+  Example: FPOPUP(REGIM, EL, STROKA)
+  ..........................................................................
+*/
+
+FUNCTION FPOPUP(REGIM, EL, STROKA)
+
+   LOCAL KK
+
+   COLORWIN2(STROKA + 1, 1, STROKA + 1, BIG, MEMVAR->COLORS[65])
+
+   IF LEN(ACOLOR) > 0
+
+      FOR I := 1 TO LEN(ACOLOR)
+
+         IF MEMVAR->ACOLOR[I, 1] == STROKA + 1
+
+            COLORWIN2(MEMVAR->ACOLOR[I, 1], MEMVAR->ACOLOR[I, 2] - 1, MEMVAR->;
+                  ACOLOR[I, 1], MEMVAR->ACOLOR[I, 3], MEMVAR->COLORS[69] + ;
+                  "/" + SUBSTR(MEMVAR->COLORS[65], 3))
+
+         ELSE
+
+            COLORWIN2(MEMVAR->ACOLOR[I, 1], MEMVAR->ACOLOR[I, 2] - 1, MEMVAR->;
+                  ACOLOR[I, 1], MEMVAR->ACOLOR[I, 3], MEMVAR->COLORS[69] + ;
+                  "/" + SUBSTR(MEMVAR->COLORS[64], 3))
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+   IF LEN(ZCOLOR) > 0
+
+      FOR I := 1 TO LEN(ZCOLOR)
+
+         COLORWIN2(MEMVAR->ZCOLOR[I], 1, MEMVAR->ZCOLOR[I], BIG, MEMVAR->;
+               COLORS[68])
+
+      NEXT
+
+   ENDIF
+
+   IF REGIM = 3
+
+      MEMVAR->KEY := LASTKEY()
+
+      IF KEY = 27
+
+         RETURN 0
+
+      ELSEIF KEY = 13
+
+         RETURN 1
+
+      ELSEIF KEY = 1
+
+         __KEYBOARD(CHR(31))
+
+      ELSEIF KEY = 6
+
+         __KEYBOARD(CHR(30))
+
+      ENDIF
+
+   ENDIF
+
+   __KEYBOARD("")
+   KK := INKEY(0)
+   IF(KK == 1, KK := 31, "")
+   IF(KK == 6, KK := 30, "")
+   IF(STROKA = 0 .AND. KK == 5, KK := 30, "")
+   IF(STROKA = LEN(ARR) - 1 .AND. KK == 24, KK := 31, "")
+   __KEYBOARD(CHR(KK))
+   COLORWIN2(STROKA + 1, 1, STROKA + 1, BIG, MEMVAR->COLORS[64])
+
+   FOR I := 1 TO LEN(ACOLOR)
+
+      IF MEMVAR->ACOLOR[I, 1] == STROKA + 1
+
+         COLORWIN2(MEMVAR->ACOLOR[I, 1], MEMVAR->ACOLOR[I, 2] - 1, MEMVAR->;
+               ACOLOR[I, 1], MEMVAR->ACOLOR[I, 3], MEMVAR->COLORS[69] + "/" +;
+                SUBSTR(MEMVAR->COLORS[64], 3))
+
+      ENDIF
+
+   NEXT
+
+
+RETURN 2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CMONTHI
+   Params: MES
+   Return: Undefined
+  Example: CMONTHI(MES)
+  ..........................................................................
+*/
+
+FUNCTION CMONTHI(MES)
+
+   LOCAL CHR := ""
+
+   IF MONTH(MES) == 3 .OR. MONTH(MES) == 8
+
+      CHR := CMONTHR(MES) + "†"
+
+   ELSE
+
+      CHR := SUBSTR(CMONTHR(MES), 1, LEN(CMONTHR(MES)) - 1) + "Ô"
+
+   ENDIF
+
+
+RETURN CHR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CMONTHR
+   Params: _DATE
+   Return: String
+  Example: CMONTHR(_DATE)
+  ..........................................................................
+*/
+
+FUNCTION CMONTHR(_DATE)
+
+   STATIC A_MONTH := {"ü≠¢†‡Ï", "î•¢‡†´Ï", "å†‡‚", "ÄØ‡•´Ï", "å†©", "àÓ≠Ï",;
+       "àÓ´Ï", "Ä¢£„·‚", "ë•≠‚Ô°‡Ï", "é™‚Ô°‡Ï", "çÆÔ°‡Ï", "Ñ•™†°‡Ï"}
+
+   LOCAL N_MONTH := MONTH(_DATE)
+
+
+RETURN IF(N_MONTH <= 12 .AND. N_MONTH > 0, A_MONTH[N_MONTH], "")
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CYEARI
+   Params: GOD
+   Return: Undefined
+  Example: CYEARI(GOD)
+  ..........................................................................
+*/
+
+FUNCTION CYEARI(GOD)
+
+   LOCAL CHR := "", I := GOD - INT(GOD / 10) * 10
+
+   DO CASE
+
+   CASE I == 1
+
+      CHR := "Ø•‡¢Æ£Æ"
+
+   CASE I == 2
+
+      CHR := "¢‚Æ‡Æ£Æ"
+
+   CASE I == 3
+
+      CHR := "‚‡•‚Ï•£Æ"
+
+   CASE I == 4
+
+      CHR := "Á•‚¢•‡‚Æ£Æ"
+
+   CASE I == 5
+
+      CHR := "ØÔ‚Æ£Æ"
+
+   CASE I == 6
+
+      CHR := "Ë•·‚Æ£Æ"
+
+   CASE I == 7
+
+      CHR := "·•§Ï¨Æ£Æ"
+
+   CASE I == 8
+
+      CHR := "¢Æ·Ï¨Æ£Æ"
+
+   CASE I == 9
+
+      CHR := "§•¢Ô‚Æ£Æ"
+
+   END CASE
+
+
+RETURN CHR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CYEARUI
+   Params: GOD
+   Return: Undefined
+  Example: CYEARUI(GOD)
+  ..........................................................................
+*/
+
+FUNCTION CYEARUI(GOD)
+
+   LOCAL CHR := "", I := GOD - INT(GOD / 10) * 10
+
+   DO CASE
+
+   CASE I == 1
+
+      CHR := "Ø•‡ËÆ£Æ"
+
+   CASE I == 2
+
+      CHR := "§‡„£Æ£Æ"
+
+   CASE I == 3
+
+      CHR := "‚‡•‚ÏÆ£Æ"
+
+   CASE I == 4
+
+      CHR := "Á•‚¢•‡‚Æ£Æ"
+
+   CASE I == 5
+
+      CHR := "Ø'Ô‚Æ£Æ"
+
+   CASE I == 6
+
+      CHR := "ËÆ·‚Æ£Æ"
+
+   CASE I == 7
+
+      CHR := "·ÏÆ¨Æ£Æ"
+
+   CASE I == 8
+
+      CHR := "¢Æ·Ï¨Æ£Æ"
+
+   CASE I == 9
+
+      CHR := "§•¢'Ô‚Æ£Æ"
+
+   END CASE
+
+
+RETURN CHR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SAYCOL
+   Params: Y, X, ST, COLACT, COLPAS
+   Return: Logical
+  Example: SAYCOL(Y, X, ST, COLACT, COLPAS)
+  ..........................................................................
+*/
+
+FUNCTION SAYCOL(Y, X, ST, COLACT, COLPAS)
+
+   LOCAL OLDC := SETCOLOR(), ATS := 0, CFL := .F.
+   LOCAL TERM := ARRAY(0)
+   LOCAL I
+
+   IF(COLACT == NIL, COLACT := "w+/w", "")
+   IF(COLPAS == NIL, COLPAS := "n/w", "")
+   IF(LEN(ST) > 0, ATS := AT("@", ST), ATS := 0)
+
+   DO WHILE .T.
+
+      IF ATS > 0
+
+         IF ATS > 1
+
+            AADD(TERM, {SUBSTR(ST, 1, ATS - 1), CFL})
+            IF(ATS < LEN(ST), ST := SUBSTR(ST, ATS + 1), ST := "")
+
+         ENDIF
+
+         IF LEN(ST) = 0
+
+            EXIT
+
+         ENDIF
+
+      ELSE
+
+         AADD(TERM, {ST, CFL})
+         EXIT
+
+      ENDIF
+
+      IF(CFL, CFL := .F., CFL := .T.)
+      IF(LEN(ST) > 0, ATS := AT("@", ST), ATS := 0)
+
+   ENDDO
+
+   IF LEN(TERM) > 0
+
+      SETPOS(Y, X)
+
+      FOR I := 1 TO LEN(TERM)
+
+         SETCOLOR(IF(TERM[I, 2], COLACT, COLPAS))
+         DISPOUT(TERM[I, 1])
+
+      NEXT
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRINTF9
+   Params: None.
+   Return: Number
+  Example: PRINTF9()
+  ..........................................................................
+*/
+
+FUNCTION PRINTF9()
+
+   LOCAL MMM
+
+   IF SCANCODE() = -8
+
+      IF PRINTYES()
+
+         MMM := MESS(NIL, NIL, {" à§•‚ Ø•Á†‚Ï ‰†©´† ", "Ü§®‚• ..."})
+         PRINTFILE(FVIEWFILE, .T.)
+         WINCLOSE(MMM)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN 0
+

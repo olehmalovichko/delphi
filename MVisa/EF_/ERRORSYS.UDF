@@ -1,0 +1,177 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ERRORSYS
+   Params: None.
+   Return: Undefined
+  Example: ERRORSYS()
+  ..........................................................................
+*/
+
+PROCEDURE ERRORSYS()
+
+   ERRORBLOCK({|BL1|DEFERROR(BL1)})
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DEFERROR
+   Params: P1
+   Return: Variable
+  Example: DEFERROR(P1)
+  ..........................................................................
+*/
+
+STATIC FUNCTION DEFERROR(P1)
+
+   LOCAL L2, L3, L4, L5
+
+   IF P1:GENCODE() == 5
+
+      RETURN 0
+
+   ENDIF
+
+   IF P1:GENCODE() == 21 .AND. P1:OSCODE() == 32 .AND. P1:CANDEFAULT()
+
+      NETERR(.T.)
+      RETURN .F.
+
+   ENDIF
+
+   IF P1:GENCODE() == 40 .AND. P1:CANDEFAULT()
+
+      NETERR(.T.)
+      RETURN .F.
+
+   ENDIF
+
+   L3 := ERRORMESSA(P1)
+   L4 := {"Quit"}
+
+   IF P1:CANRETRY()
+
+      AADD(L4, "Retry")
+
+   ENDIF
+
+   IF P1:CANDEFAULT()
+
+      AADD(L4, "Default")
+
+   ENDIF
+
+   L5 := 0
+
+   DO WHILE L5 == 0
+
+      IF EMPTY(P1:OSCODE())
+
+         L5 := ALERT(L3, L4)
+
+      ELSE
+
+         L5 := ALERT(L3 + ";(DOS Error " + LTRIM(STR(P1:OSCODE())) + ")", ;
+               L4)
+
+      ENDIF
+
+      IF L5 == NIL
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF  .NOT. EMPTY(L5)
+
+      IF L4[L5] == "Break"
+
+         BREAK( P1 )
+
+      ELSEIF L4[L5] == "Retry"
+
+         RETURN .T.
+
+      ELSEIF L4[L5] == "Default"
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   IF  .NOT. EMPTY(P1:OSCODE())
+
+      L3 := L3 + (" (DOS Error " + LTRIM(STR(P1:OSCODE())) + ") ")
+
+   ENDIF
+
+   OUTERR(CHR(13)+CHR(10))
+   OUTERR(L3)
+   L2 := 2
+
+   DO WHILE  .NOT. EMPTY(PROCNAME(L2))
+
+      OUTERR(CHR(13)+CHR(10))
+      OUTERR("Called from", TRIM(PROCNAME(L2)) + "(" + LTRIM(STR(PROCLINE(;
+            L2))) + ")  ")
+      ++L2
+
+   ENDDO
+
+   ERRORLEVEL(1)
+   __QUIT()
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ERRORMESSA
+   Params: P1
+   Return: Variable
+  Example: ERRORMESSA(P1)
+  ..........................................................................
+*/
+
+STATIC FUNCTION ERRORMESSA(P1)
+
+   LOCAL L2 := IF(P1:SEVERITY() > 1, "Error ", "Warning ")
+
+   IF VALTYPE(P1:SUBSYSTEM()) == "C"
+
+      L2 := L2 + P1:SUBSYSTEM()
+
+   ELSE
+
+      L2 := L2 + "???"
+
+   ENDIF
+
+   IF VALTYPE(P1:SUBCODE()) == "N"
+
+      L2 := L2 + ("/" + LTRIM(STR(P1:SUBCODE())))
+
+   ELSE
+
+      L2 := L2 + "/???"
+
+   ENDIF
+
+   IF VALTYPE(P1:DESCRIPTIO()) == "C"
+
+      L2 := L2 + ("  " + P1:DESCRIPTIO())
+
+   ENDIF
+
+   IF  .NOT. EMPTY(P1:FILENAME())
+
+      L2 := L2 + (": " + P1:FILENAME())
+
+   ELSEIF  .NOT. EMPTY(P1:OPERATION())
+
+      L2 := L2 + (": " + P1:OPERATION())
+
+   ENDIF
+
+
+RETURN L2
+

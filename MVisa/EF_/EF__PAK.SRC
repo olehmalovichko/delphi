@@ -1,0 +1,95 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADMPACKBAS
+   Params: None.
+   Return: Nil
+  Example: ADMPACKBAS()
+  ..........................................................................
+*/
+
+FUNCTION ADMPACKBAS()
+
+   LOCAL WIN, OLDCOLOR := SETCOLOR()
+   LOCAL I, BUT
+
+   PRIVATE MAS_PRC, CHAK := 0, ABASE := ARRAY(0)
+
+   IF 2 <> DIALOG(NIL, NIL, {"Вы действительно хотите", ;
+         "сделать паковку БД ?"}, {" Нет ", " Да  "})
+
+      RETURN NIL
+
+   ENDIF
+
+   IF USERS()
+
+      RETURN NIL
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 20, 16, 59, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, "Идет паковка БД")
+   MEMVAR->ABASE := DBASESTR(.T.)
+   MEMVAR->MAS_PRC := LINER(5, 2, 30, LEN(ABASE))
+   DBCLOSEALL()
+
+   FOR I := 1 TO LEN(ABASE)
+
+      IF  .NOT. PACKBASE(MEMVAR->ABASE[I], ++MEMVAR->CHAK)
+
+         WINCLOSE(WIN)
+         SETCOLOR(OLDCOLOR)
+         RETURN NIL
+
+      ENDIF
+
+   NEXT
+
+   CENTR(NIL, 1, "Паковка завершена !")
+   DEVPOS(4, 15)
+   DEVOUT(SPACE(15))
+   BUT := BUTTONS(NIL, 4, {"  OK  "})
+   WINCLOSE(WIN)
+   SETCOLOR(OLDCOLOR)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PACKBASE
+   Params: CFNAME, NNUM
+   Return: Logical
+  Example: PACKBASE(CFNAME, NNUM)
+  ..........................................................................
+*/
+
+FUNCTION PACKBASE(CFNAME, NNUM)
+
+   LOCAL MES
+
+   IF  .NOT. BASEOPEN(CFNAME, .T., 3)
+
+      DBCLOSEALL()
+      MES := ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть файл " + ;
+            UPPER(ALLTRIM(CFNAME) + ".DBF")}, {" Пропустить БД ", ;
+            "    Выйти     "})
+
+      IF MES = 2
+
+         RETURN .F.
+
+      ENDIF
+
+   ELSE
+
+      __DBPACK()
+      DBCLOSEALL()
+
+   ENDIF
+
+   LINER(MAS_PRC, NNUM)
+   DEVPOS(4, 15)
+   DEVOUT(UPPER(ALLTRIM(CFNAME) + ".dbf   "), "gr+/w")
+
+RETURN .T.
+

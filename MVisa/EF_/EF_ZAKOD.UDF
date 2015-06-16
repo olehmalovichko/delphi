@@ -1,0 +1,503 @@
+STATIC DAT_N_OD
+STATIC FL_PACK
+STATIC DAY
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CALC_OST
+   Params: None.
+   Return: Nil
+  Example: CALC_OST()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CALC_OST()
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_ZAKOD
+   Params: None.
+   Return: Nil
+  Example: EF_ZAKOD()
+  ..........................................................................
+*/
+
+FUNCTION EF_ZAKOD()
+
+   LOCAL CHOICE, DAY, MSG, ARR_ := {}
+   LOCAL FL_PR := .T., FL_RAS := .T.
+
+   IF HIDDEN_OPE("ef_sys", .T., 3)
+
+      IF  .NOT. (EF_SYS->FL_IPD_N .AND. EF_SYS->FL_IPD_V) .AND. 2 <> ERROR(;
+            NIL, NIL, {"@ Внимание !", "    "+CHR(34)+;
+            "ИТОГОВЫЕ ПРОВОДКИ ДНЯ"+CHR(34)+"    ", ;
+            "не отправлены в почту !"}, {"    Выйти   ", " Продолжить "})
+
+         DBCLOSEALL()
+         RETURN NIL
+
+      ENDIF
+
+   ELSE
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   FL_PR := .T.
+
+   IF  .NOT. HIDDEN_OPE("ef_kasr")
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ELSE
+
+      EF_KASR->(DBSETORDER(1))
+      EF_KASR->(DBSEEK(DTOS(DAT_OD__)))
+
+      DO WHILE EF_KASR->DAT_BANK == DAT_OD__
+
+         IF EF_KASR->PR_OPL == "н"
+
+            FL_PR := .F.
+            EXIT
+
+         ENDIF
+
+         EF_KASR->(DBSKIP())
+
+      ENDDO
+
+      IF  .NOT. FL_PR
+
+         ERROR(NIL, NIL, {"@ Внимание !", ;
+               "Есть не проведенные расходные ордера !!!", ;
+               "(или проведите эти ордера по кассе, или удалите их)"}, {;
+               " Выйти "})
+         DBCLOSEALL()
+         RETURN NIL
+
+      ENDIF
+
+      EF_KASR->(DBCLOSEARE())
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE({{"ef_s_gpl"}, {"ef_jpkpl"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_s_gpl")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF EF_S_GPL->PR_RVGB
+
+         AADD(ARR_, {EF_S_GPL->NAM_VPL, EF_S_GPL->KOD_VPL})
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   IF LEN(ARR_) > 0
+
+      FOR I := 1 TO LEN(ARR_)
+
+         EF_JPKPL->(DBSEEK(DTOS(DAT_OD__) + STR(ARR_[I, 2])))
+
+         DO WHILE EF_JPKPL->( .NOT. EOF()) .AND. EF_JPKPL->DAT_BANK == ;
+               DAT_OD__ .AND. EF_JPKPL->KOD_VPL = ARR_[I, 2]
+
+            IF  .NOT. EF_JPKPL->PR_OTPR
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Есть коммунальные платежи по которым", ;
+                     "необходимо отправить реестры в ГБ !", ;
+                     "Выполните опреацию "+CHR(34)+"Реестры в ГБ"+CHR(34)+;
+                     " !"}, {" Выход "})
+               DBCLOSEALL()
+               RETURN NIL
+
+            ENDIF
+
+            EF_JPKPL->(DBSKIP())
+
+         ENDDO
+
+      NEXT
+
+   ENDIF
+
+   IF USERS()
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE("ef_sys", .T., 3)
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   MSG := ""
+   DAY := EF_SYS->DAT_PPAK
+
+   IF DAT_OD__ - DAY <= 6
+
+      FL_PACK := .F.
+
+      IF DAT_OD__ - DAY = 0
+
+         MSG := ""
+
+      ELSEIF DAT_OD__ - DAY = 1
+
+         MSG := "(база не сжималась 1 день)"
+
+      ELSEIF DAT_OD__ - DAY <= 4
+
+         MSG := "(база не сжималась " + STR(DAT_OD__ - DAY, 1) + " дня)"
+
+      ELSEIF DAT_OD__ - DAY <= 6
+
+         MSG := "(база не сжималась " + STR(DAT_OD__ - DAY, 1) + " дней)"
+
+      ENDIF
+
+   ELSE
+
+      FL_PACK := .T.
+      MSG := "(будет проведено сжатие базы)"
+
+   ENDIF
+
+   IF 2 == DIALOG(NIL, NIL, {"@ Внимание !!!", "ОПЕРАЦИОННЫЙ ДЕНЬ", DTOC(;
+         DAT_OD__) + " г", "будет закрыт", MSG}, {" Выйти ", ;
+         " Продолжить "}, 1) .AND. PUTDATNOD()
+
+      CLOSE_OD()
+
+   ENDIF
+
+   DBCLOSEALL()
+   DIALOG(NIL, NIL, {"Bы выполняете работы операционного дня", DTOC(;
+         DAT_OD__) + " г"}, {" Продолжить "})
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PUTDATNOD
+   Params: None.
+   Return: Undefined
+  Example: PUTDATNOD()
+  ..........................................................................
+*/
+
+STATIC FUNCTION PUTDATNOD()
+
+   LOCAL WIN, FL := .F., OLDCOLOR := SETCOLOR(), FL_EXIT := .F.
+   LOCAL DAT1 := DAT_OD__ + 1
+   LOCAL NBUT, KEY
+
+   SETCOLOR("w+/w")
+   WIN := WIN(8, 20, 16, 59, "d", "t")
+   SETCOLOR("n/w, w+/b,,,w+/bg")
+   CENTR(NIL, 2, "нового ОПЕРАЦИОННОГО ДНЯ:")
+   DEVPOS(4, 24)
+   DEVOUT("г")
+   NBUT := BT_CREAT(2)
+
+   DO WHILE .T.
+
+      CENTR(NIL, 1, "  Введите дату  ")
+      SETPOS(4, 15)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, DAT1, DAT1 := _1)}, "dat1", ;
+            "99.99.9999", NIL, NIL):DISPLAY())
+      ATAIL(GETLIST):COLORDISP(15)
+      ATAIL(GETLIST):READER := {|GET|_GETREADER(GET)}
+      ATAIL(GETLIST):CARGO := GETLIST
+      AADD(GETLIST, _BUTTON(6, 8, 1, NBUT, "nBut", "n/g,w+/g", "F10", ;
+            "Запомнить", NIL, NIL, -9))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, "Запомнить", IF(VALTYPE(L) ;
+            == "L", _ARRAY_(NBUT, 1, L), _ARRAY_(NBUT, 1)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " F10Запомнить ");
+            }
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _BUTTON(6, 26, 2, NBUT, "nBut", "n/g,w+/g", "Esc", ;
+            "Отменить ", NIL, NIL, 27))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, "Отменить ", IF(VALTYPE(L) ;
+            == "L", _ARRAY_(NBUT, 2, L), _ARRAY_(NBUT, 2)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " EscОтменить  ");
+            }
+      ATAIL(GETLIST):DISPLAY()
+      SET(27, "ON")
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SET(27, "OFF")
+      KEY := LASTKEY()
+
+      IF KEY = -9 .OR. RB_SET(NBUT) = 1
+
+         IF DAT1 <= DAT_OD__
+
+            TONE(125, 3)
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27 .OR. RB_SET(NBUT) = 2
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY = -9 .OR. RB_SET(NBUT) = 1
+
+      DAT_N_OD := DAT1
+      FL_EXIT := .T.
+
+   ELSEIF KEY = 27 .OR. RB_SET(NBUT) = 2
+
+      FL_EXIT := .F.
+
+   ENDIF
+
+   WINCLOSE(WIN)
+
+RETURN FL_EXIT
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLOSE_OD
+   Params: None.
+   Return: Nil
+  Example: CLOSE_OD()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CLOSE_OD()
+
+   LOCAL WIN, OLDCOLOR := SETCOLOR("w+/w")
+   LOCAL DT, WIN1, NF, ZIP
+
+   WIN := WIN(8, 20, 16, 59, "d", "t")
+   SETCOLOR("n/w, w+/b,,,w+/bg")
+   CENTR(NIL, 1, "Выполняется закрытие")
+   CENTR(NIL, 2, "ОПЕРАЦИОННОГО ДНЯ:")
+   CENTR(NIL, 4, DTOC(EF_SYS->DAT_OD) + " г.")
+   CENTR(NIL, 6, "Ждите...")
+   DT := EF_SYS->DAT_OD
+   DBCOMMITAL()
+   DBCLOSEALL()
+   NF := ("") + ALLTRIM(CP_PATH__) + DTOS(DT) + ".zip"
+   ZIP := "pkzip.exe -a " + NF + " *.dbf"
+   SETCOLOR("W/N")
+   WIN1 := WIN(0, 0, 24, 79)
+   S_RUN(ZIP, -1, .T.)
+   WINCLOSE(WIN1)
+
+   IF FL_PACK
+
+      MAINPACKBA()
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE("ef_s_mop", .T., 3)
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      EF_S_MOP->NIRO_USD := 0
+      EF_S_MOP->NIRO_UAH := 0
+      EF_S_MOP->IRO_USD_V := .F.
+      EF_S_MOP->IRO_USD_D := .F.
+      EF_S_MOP->IRO_UAH_V := .F.
+      EF_S_MOP->IRO_UAH_D := .F.
+      DBSKIP()
+
+   ENDDO
+
+   IF  .NOT. HIDDEN_OPE("ef_sys", .T., 3)
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   EF_SYS->DAT_PD := DAT_OD__
+   EF_SYS->DAT_OD := DAT_N_OD
+
+   IF FL_PACK
+
+      EF_SYS->DAT_PPAK := DAT_OD__
+
+   ENDIF
+
+   EF_SYS->N_F := 47
+   EF_SYS->N_T := 47
+   EF_SYS->N_S := 47
+   EF_SYS->N_R := 47
+   EF_SYS->N_P := 47
+   EF_SYS->N_D := 0
+   EF_SYS->KURS := 0.00000
+   EF_SYS->N_PKT := 1
+   EF_SYS->N_PP := 0
+   EF_SYS->N_PF := 0
+   EF_SYS->N_SPP := 1
+   EF_SYS->NIRO_USD := 0
+   EF_SYS->NIRO_UAH := 0
+   EF_SYS->NIPO_UAH := 0
+   EF_SYS->IRO_USD_V := .F.
+   EF_SYS->IRO_USD_D := .F.
+   EF_SYS->IRO_UAH_V := .F.
+   EF_SYS->IRO_UAH_D := .F.
+   EF_SYS->IPO_UAH_V := .F.
+   EF_SYS->IPO_UAH_D := .F.
+   EF_SYS->FL_IPD_N := .F.
+   EF_SYS->FL_REESTR := .F.
+   EF_SYS->FL_VUD := .F.
+   EF_SYS->FL_IPD_V := .F.
+   EF_SYS->FL_KOM := .F.
+   DBCOMMITAL()
+
+   IF  .NOT. HIDDEN_OPE("ef_od", .T., 3)
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBAPPEND()
+   EF_OD->DAT_OD := DAT_OD__
+
+   IF  .NOT. HIDDEN_OPE("ef_s_gpl", .T., 3)
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DO WHILE  .NOT. EOF()
+
+      IF EF_S_GPL->DAT_BANK == DAT_OD__
+
+         EF_S_GPL->DAT_PD := EF_S_GPL->DAT_LAST
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   IF  .NOT. HIDDEN_OPE("for_ved", .T., 3)
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   MEMVAR->PPP := ALLTRIM(STR(DOY(DATE()), 3))
+
+   IF FILE(POS_PATH__ + "*." + PPP)
+
+      __COPYFILE(POS_PATH__ + "*." + PPP, CP_PATH__ + "*." + PPP)
+
+   ENDIF
+
+   DBCLOSEALL()
+   WINCLOSE(WIN)
+   DIALOG(NIL, NIL, {"", "ОПЕРАЦИОННЫЙ ДЕНЬ", "     З А К Р Ы Т  !     "}, ;
+         {" Выход "})
+   QUITMAIN()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MAINPACKBA
+   Params: None.
+   Return: Nil
+  Example: MAINPACKBA()
+  ..........................................................................
+*/
+
+STATIC FUNCTION MAINPACKBA()
+
+   LOCAL WIN, OLDCOLOR := SETCOLOR()
+   LOCAL I, BUT
+
+   PRIVATE MAS_PRC, CHAK := 0, ABASE := ARRAY(0)
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 20, 16, 59, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, "Идет паковка БД")
+   MEMVAR->ABASE := DBASESTR(.T.)
+   MEMVAR->MAS_PRC := LINER(5, 2, 30, LEN(ABASE))
+
+   FOR I := 1 TO LEN(ABASE)
+
+      LPACKBASE(MEMVAR->ABASE[I], ++MEMVAR->CHAK)
+
+   NEXT
+
+   CENTR(NIL, 1, "Паковка завершена !")
+   DEVPOS(4, 15)
+   DEVOUT(SPACE(15))
+   BUT := BUTTONS(NIL, 4, {" Продолжить "})
+   WINCLOSE(WIN)
+   SETCOLOR(OLDCOLOR)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: LPACKBASE
+   Params: CFNAME, NNUM
+   Return: Nil
+  Example: LPACKBASE(CFNAME, NNUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION LPACKBASE(CFNAME, NNUM)
+
+   IF  .NOT. BASEOPEN(CFNAME, .T., 3)
+
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть файл " + UPPER(;
+            ALLTRIM(CFNAME) + ".DBF")}, {" Пропустить БД "})
+
+   ELSE
+
+      __DBPACK()
+      DBCLOSEALL()
+
+   ENDIF
+
+   LINER(MAS_PRC, NNUM)
+   DEVPOS(4, 15)
+   DEVOUT(UPPER(ALLTRIM(CFNAME) + ".dbf   "), "gr+/w")
+
+RETURN NIL
+

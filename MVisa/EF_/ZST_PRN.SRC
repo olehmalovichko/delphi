@@ -1,0 +1,59 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ZST_PRN
+   Params: PR_0
+   Return: Variable
+  Example: ZST_PRN(PR_0)
+  ..........................................................................
+*/
+
+FUNCTION ZST_PRN(PR_0)
+
+   LOCAL MES, WIN
+
+   PRIVATE OLDC := SETCOLOR(), PR_5
+   MEMVAR->PR_5 := .T.
+
+   IF PR_0 = 1
+
+   ELSEIF PR_0 = 2
+
+      MES := DIALOG(NIL, NIL, {"Подготовте принтер для печати", ;
+            "документа"}, {" Печать ", " Выход "})
+
+      IF MES = 1
+
+         MEMVAR->PR_5 := .T.
+
+      ELSE
+
+         MEMVAR->PR_5 := .F.
+
+      ENDIF
+
+   ELSEIF PR_0 = 3
+
+      MES := DIALOG(NIL, NIL, {"Повторить печать документа ?"}, {"  Да ", ;
+            " Нет "}, 2)
+      IF(MES == 1, MEMVAR->PR_5 := .T., MEMVAR->PR_5 := .F.)
+
+   ELSEIF PR_0 = 4
+
+      MES := DIALOG(NIL, NIL, {" Переверните лист "}, {" Продолжить ", ;
+            "    Выход   "})
+
+      IF MES = 1
+
+         MEMVAR->PR_5 := .T.
+
+      ELSE
+
+         MEMVAR->PR_5 := .F.
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN PR_5
+

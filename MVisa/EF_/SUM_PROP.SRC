@@ -1,0 +1,278 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SUM_PROP
+   Params: SUM, FL, VN, VNM
+   Return: Variable
+  Example: SUM_PROP(SUM, FL, VN, VNM)
+  ..........................................................................
+*/
+
+FUNCTION SUM_PROP(SUM, FL, VN, VNM)
+
+   PRIVATE SUM_P, KOP, R1
+   MEMVAR->SUM_P := ""
+   MEMVAR->KOP := 0
+   MEMVAR->R1 := STR(INT(SUM), 13)
+
+   IF LEN(LTRIM(R1)) >= 13
+
+      RETURN SUM_P
+
+   ENDIF
+
+   MEMVAR->R1 := SUBSTR(R1, 2, 12)
+
+   IF  .NOT. SUBSTR(R1, 1, 3) == "   "
+
+      MEMVAR->SUM_P := SUM_P + SPRP_1(SUBSTR(R1, 1, 3), "мiльярд", ;
+            "мiльярди", "мiльярдiв")
+
+   ENDIF
+
+   IF  .NOT. SUBSTR(R1, 4, 3) == "   "
+
+      MEMVAR->SUM_P := SUM_P + SPRP_1(SUBSTR(R1, 4, 3), "мiльйон", ;
+            "мiльйони", "мiльйонiв")
+
+   ENDIF
+
+   IF  .NOT. SUBSTR(R1, 7, 3) == "   "
+
+      MEMVAR->SUM_P := SUM_P + SPRP_1(SUBSTR(R1, 7, 3), "тисяча", "тисячi", ;
+            "тисяч")
+
+   ENDIF
+
+   IF  .NOT. SUBSTR(R1, 10, 3) == "   "
+
+      MEMVAR->SUM_P := SUM_P + SPRP_1(SUBSTR(R1, 10, 3), "", "", "")
+
+   ENDIF
+
+   MEMVAR->SUM_P := IF(EMPTY(SUM_P), "ноль ", SUM_P)
+
+   IF FL
+
+      MEMVAR->KOP := SUM * 100 - INT(SUM) * 100
+
+      IF KOP <= 9
+
+         MEMVAR->SUM_P := SUM_P + IF(VN = NIL, "грн. ", VN + " ") + "0" + ;
+               STR(KOP, 1) + IF(VNM = NIL, " коп.", " " + VNM + " ")
+
+      ELSE
+
+         MEMVAR->SUM_P := SUM_P + IF(VN = NIL, "грн. ", VN + " ") + STR(KOP,;
+                2) + IF(VNM = NIL, " коп.", " " + VNM + " ")
+
+      ENDIF
+
+   ELSE
+
+      MEMVAR->SUM_P := SUM_P + IF(VN = NIL, "грн. ", VN + " ")
+
+   ENDIF
+
+
+RETURN SUM_P
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SPRP_1
+   Params: S0, S1, S2, S3
+   Return: Variable
+  Example: SPRP_1(S0, S1, S2, S3)
+  ..........................................................................
+*/
+
+STATIC FUNCTION SPRP_1(S0, S1, S2, S3)
+
+   PRIVATE SUM_P, FL
+   MEMVAR->SUM_P := ""
+   MEMVAR->FL := .T.
+
+   IF SUBSTR(S0, 1, 1) == " " .OR. SUBSTR(S0, 1, 1) == "0"
+
+   ELSEIF SUBSTR(S0, 1, 1) == "1"
+
+      MEMVAR->SUM_P := SUM_P + "сто "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "2"
+
+      MEMVAR->SUM_P := SUM_P + "двiстi "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "3"
+
+      MEMVAR->SUM_P := SUM_P + "триста "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "4"
+
+      MEMVAR->SUM_P := SUM_P + "чотириста "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "5"
+
+      MEMVAR->SUM_P := SUM_P + "п'ятьсот "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "6"
+
+      MEMVAR->SUM_P := SUM_P + "шiстьсот "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "7"
+
+      MEMVAR->SUM_P := SUM_P + "сiмсот "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "8"
+
+      MEMVAR->SUM_P := SUM_P + "вiсiмсот "
+
+   ELSEIF SUBSTR(S0, 1, 1) == "9"
+
+      MEMVAR->SUM_P := SUM_P + "дев'ятьсот "
+
+   ENDIF
+
+   MEMVAR->FL := .T.
+
+   IF SUBSTR(S0, 2, 1) == " " .OR. SUBSTR(S0, 2, 1) == "0"
+
+   ELSEIF SUBSTR(S0, 2, 1) == "1"
+
+      MEMVAR->FL := .F.
+
+      IF SUBSTR(S0, 2, 2) == "10"
+
+         MEMVAR->SUM_P := SUM_P + "десять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "11"
+
+         MEMVAR->SUM_P := SUM_P + "одинадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "12"
+
+         MEMVAR->SUM_P := SUM_P + "дванадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "13"
+
+         MEMVAR->SUM_P := SUM_P + "тринадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "14"
+
+         MEMVAR->SUM_P := SUM_P + "чотирнадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "15"
+
+         MEMVAR->SUM_P := SUM_P + "п'ятнадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "16"
+
+         MEMVAR->SUM_P := SUM_P + "шiстнадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "17"
+
+         MEMVAR->SUM_P := SUM_P + "сiмнадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "18"
+
+         MEMVAR->SUM_P := SUM_P + "вiсiмнадцять "
+
+      ELSEIF SUBSTR(S0, 2, 2) == "19"
+
+         MEMVAR->SUM_P := SUM_P + "дев'ятнадцять "
+
+      ENDIF
+
+      MEMVAR->SUM_P := SUM_P + S3
+
+   ELSEIF SUBSTR(S0, 2, 1) == "2"
+
+      MEMVAR->SUM_P := SUM_P + "двадцять "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "3"
+
+      MEMVAR->SUM_P := SUM_P + "тридцять "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "4"
+
+      MEMVAR->SUM_P := SUM_P + "сорок "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "5"
+
+      MEMVAR->SUM_P := SUM_P + "п'ятдесят "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "6"
+
+      MEMVAR->SUM_P := SUM_P + "шiстдесят "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "7"
+
+      MEMVAR->SUM_P := SUM_P + "сiмдесят "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "8"
+
+      MEMVAR->SUM_P := SUM_P + "вiсемдесят "
+
+   ELSEIF SUBSTR(S0, 2, 1) == "9"
+
+      MEMVAR->SUM_P := SUM_P + "дев'яносто "
+
+   ENDIF
+
+   IF FL
+
+      IF SUBSTR(S0, 3, 1) == " " .OR. SUBSTR(S0, 3, 1) == "0"
+
+         IF SUBSTR(S0, 1, 1) <> " " .AND. SUBSTR(S0, 1, 1) <> "0" .OR. ;
+               SUBSTR(S0, 2, 1) <> " " .AND. SUBSTR(S0, 2, 1) <> "0"
+
+            MEMVAR->SUM_P := SUM_P + S3
+
+         ENDIF
+
+      ELSEIF SUBSTR(S0, 3, 1) == "1"
+
+         MEMVAR->SUM_P := SUM_P + "одна " + S1
+
+      ELSEIF SUBSTR(S0, 3, 1) == "2"
+
+         MEMVAR->SUM_P := SUM_P + "двi " + S2
+
+      ELSEIF SUBSTR(S0, 3, 1) == "3"
+
+         MEMVAR->SUM_P := SUM_P + "три " + S2
+
+      ELSEIF SUBSTR(S0, 3, 1) == "4"
+
+         MEMVAR->SUM_P := SUM_P + "чотири " + S2
+
+      ELSEIF SUBSTR(S0, 3, 1) == "5"
+
+         MEMVAR->SUM_P := SUM_P + "п'ять " + S3
+
+      ELSEIF SUBSTR(S0, 3, 1) == "6"
+
+         MEMVAR->SUM_P := SUM_P + "шiсть " + S3
+
+      ELSEIF SUBSTR(S0, 3, 1) == "7"
+
+         MEMVAR->SUM_P := SUM_P + "сiм " + S3
+
+      ELSEIF SUBSTR(S0, 3, 1) == "8"
+
+         MEMVAR->SUM_P := SUM_P + "вiсiм " + S3
+
+      ELSEIF SUBSTR(S0, 3, 1) == "9"
+
+         MEMVAR->SUM_P := SUM_P + "дев'ять " + S3
+
+      ENDIF
+
+   ENDIF
+
+   IF  .NOT. EMPTY(S1) .AND. SUBSTR(S0, 1, 3) <> "   " .AND. SUBSTR(S0, 1, ;
+         3) <> "000"
+
+      MEMVAR->SUM_P := SUM_P + " "
+
+   ENDIF
+
+
+RETURN SUM_P
+

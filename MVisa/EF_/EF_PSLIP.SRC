@@ -1,0 +1,814 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: POS_SLIP
+   Params: None.
+   Return: Logical
+  Example: POS_SLIP()
+  ..........................................................................
+*/
+
+FUNCTION POS_SLIP()
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL KEY, NN, BUF, STROKA, KEY_T := DTOS(DAT_OD__), AA, KOD := ""
+   LOCAL WIN, WIN2, RET := .T., PPP := ALLTRIM(STR(DOY(DATE()), 3))
+   LOCAL NLENGTH, TEKPOS
+
+   PRIVATE NF := "", NAME_ARC
+
+   IF  .NOT. FILE(("") + IN_PATH__ + "*." + PPP)
+
+      TONE(125, 3)
+      RETURN .T.
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Выполнить импорт слипов ", ;
+         " от POS-эмуляторов ??"}, {"  Нет ", " Да "}, 1)
+
+   IF KEY = 1
+
+      RETURN .F.
+
+   ENDIF
+
+   IF  .NOT. AREA_OPEN({{"ef_merch"}, {"ef_sys"}, {"ef_head"}, {"ef_post"},;
+          {"cb_s_tc"}, {"ef_s_sc"}, {"ef_s_pr"}, {"ef_doc"}, {"ef_slip"}})
+
+      DBCLOSEALL()
+      RETURN .F.
+
+   ENDIF
+
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   DBSELECTAR("ef_doc")
+   DBSETORDER(2)
+   DBSELECTAR("ef_slip")
+   DBSETORDER(3)
+   MEMVAR->NF := DTOS(DAT_OD__) + ".err"
+   SETCOLOR("w+/w")
+   WIN2 := WIN(8, 20, 14, 60, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 5)
+   DEVOUT("    Принимаю файл от ")
+   MEMVAR->NAME_ARC := FILESEEK(IN_PATH__ + "*.log")
+
+   DO WHILE  .NOT. EMPTY(NAME_ARC)
+
+      KOD := SUBSTR(NAME_ARC, 10, 3)
+
+      IF  .NOT. EF_POST->(DBSEEK(NAME_ARC + DTOS(DAT_OD__)))
+
+         IF EF_MERCH->(DBSEEK(SUBSTR(NAME_ARC, 1, 8)))
+
+            DEVPOS(3, 5)
+            DEVOUT(EF_MERCH->MERCH_NAME)
+            NN := FOPEN(("") + IN_PATH__ + NAME_ARC, 0)
+
+            IF NN < 0
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть", "файл " + ;
+                     NAME_ARC + " !"}, {" Выход "})
+               WINCLOSE(WIN2)
+               SETCOLOR(OLDC)
+               DBCLOSEALL()
+               RETURN .F.
+
+            ENDIF
+
+            NLENGTH := FSEEK(NN, 0, 2)
+            TEKPOS := FSEEK(NN, 0, 0)
+
+            DO WHILE TEKPOS < NLENGTH
+
+               STROKA := STREAD(NN, NLENGTH)
+
+               IF  .NOT. ADD_SLIP(STROKA)
+
+                  RET := .F.
+
+               ENDIF
+
+               TEKPOS := FSEEK(NN, 0, 1)
+
+            ENDDO
+
+            IF  .NOT. RET
+
+               FILEVIEW(1, 0, 23, 79, ALLTRIM(REP_PATH__) + NF, ;
+                     "@ Протокол ошибок : " + FILENAMES(("") + ALLTRIM(;
+                     REP_PATH__) + NF) + " ", {||PRINTIMP()}, {;
+                     "~Esc-~выход", "~F2-~печать"})
+
+            ENDIF
+
+            __COPYFILE(IN_PATH__ + NAME_ARC, CP_PATH__ + NAME_ARC)
+
+            IF FILE(CP_PATH__ + NAME_ARC)
+
+               FERASE(("") + IN_PATH__ + NAME_ARC)
+
+            ENDIF
+
+            IF EF_POST->(ADDREC(3))
+
+               EF_POST->NAM_FILE := NAME_ARC
+               EF_POST->DAT_POST := DAT_OD__
+               EF_POST->TIME_POST := TIME()
+               EF_POST->PR_V_I := .T.
+               EF_POST->(DBUNLOCK())
+
+            ENDIF
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", " Мерчанта с кодом " + SUBSTR(;
+                  NAME_ARC, 1, 8), " нет в справочнике !!!"}, {" Выход "})
+
+         ENDIF
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Файл  " + NAME_ARC, ;
+               "уже обрабатывался " + DTOC(EF_POST->DAT_POST) + " в " + ;
+               EF_POST->TIME_POST + "!!!"}, {" Выход "})
+         FERASE(("") + IN_PATH__ + NAME_ARC)
+
+      ENDIF
+
+      MEMVAR->NAME_ARC := FILESEEK()
+
+   ENDDO
+
+   WINCLOSE(WIN2)
+   SETCOLOR(OLDC)
+   DBCLOSEALL()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: STREAD
+   Params: NHANDLE, NLENGTH
+   Return: Undefined
+  Example: STREAD(NHANDLE, NLENGTH)
+  ..........................................................................
+*/
+
+STATIC FUNCTION STREAD(NHANDLE, NLENGTH)
+
+   LOCAL I, TEKPOS, CSTRING := "", CBUFF := " "
+
+   TEKPOS := FSEEK(NHANDLE, 0, 1)
+
+   FOR I := TEKPOS TO NLENGTH - 1
+
+      IF FREAD(NHANDLE, @CBUFF, 1) <> 1
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Ошибка чтения файла !!!"}, {;
+               " Выход "})
+         DBCLOSEALL()
+         FCLOSE(NHANDLE)
+         __QUIT()
+
+      ENDIF
+
+      CSTRING := CSTRING + CBUFF
+      ++TEKPOS
+
+      IF CBUFF == CHR(13)
+
+         IF FREAD(NHANDLE, @CBUFF, 1) <> 1
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Ошибка чтения файла !!!"}, {;
+                  " Выход "})
+            DBCLOSEALL()
+            FCLOSE(NHANDLE)
+            __QUIT()
+
+         ENDIF
+
+         CSTRING := CSTRING + CBUFF
+         ++TEKPOS
+
+         IF CBUFF == CHR(10)
+
+            EXIT
+
+         ENDIF
+
+      ENDIF
+
+   NEXT
+
+   IF SUBSTR(CSTRING, LEN(CSTRING) - 1, 2) == CHR(13)+CHR(10)
+
+      CSTRING := SUBSTR(CSTRING, 1, LEN(CSTRING) - 2)
+
+   ENDIF
+
+
+RETURN CSTRING
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADD_SLIP
+   Params: STROKA
+   Return: Logical
+  Example: ADD_SLIP(STROKA)
+  ..........................................................................
+*/
+
+STATIC FUNCTION ADD_SLIP(STROKA)
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), OLDORD := INDEXORD()
+   LOCAL REC := MEMVAR->CUR_REC := RECNO(), DBERR := .F.
+   LOCAL V_NUMS, V_D_TR, V_NC, V_DEND, V_MER, V_SUM1, V_SUM2, V_KAVT, ;
+         V_EN, V_C, T_C := 0
+   LOCAL NN, RW
+
+   V_NUMS := VAL(SUBSTR(STROKA, 19, 7))
+   V_D_TR := CTOD(SUBSTR(STROKA, 4, 2) + "." + SUBSTR(STROKA, 1, 2) + "." +;
+          SUBSTR(STROKA, 7, 2))
+   V_NC := VAL(SUBSTR(STROKA, 66, 16))
+   V_DEND := VAL(SUBSTR(STROKA, 86, 2) + SUBSTR(STROKA, 83, 2))
+   V_MER := SUBSTR(STROKA, 57, 8)
+   V_EN := SUBSTR(STROKA, 89, 25)
+   V_SUM1 := VAL(SUBSTR(STROKA, 116, 11)) / 100
+   V_SUM2 := VAL(SUBSTR(STROKA, 128, 11)) / 100
+
+   IF LEN(STROKA) > 138
+
+      V_KAVT := SUBSTR(STROKA, 140, 6)
+
+   ELSE
+
+      V_KAVT := SPACE(6)
+
+   ENDIF
+
+   IF EMPTY(V_NUMS) .OR. .NOT. CH_TRD(V_D_TR, V_NUMS) .OR. .NOT. CH_NUM(;
+         V_NC, @T_C) .OR. .NOT. CH_END(V_DEND, V_D_TR, V_NUMS, V_NC) .OR. ;
+         .NOT. CH_MERCH(V_MER, V_NUMS) .OR. .NOT. CH_AVTOR(V_KAVT, T_C, ;
+         V_SUM1, V_NUMS)
+
+      RETURN .F.
+
+   ENDIF
+
+   DBERR := DBSEEK(DTOS(V_D_TR) + V_MER + STR(V_NUMS, 7))
+
+   IF DBERR
+
+      SET(24, ("") + REP_PATH__ + NF, .T.)
+      SET(20, "PRINTER")
+      RW := PROW()
+      ++RW
+      DEVPOS(RW++, 0)
+      DEVOUT(" Ошибка  в файле " + NAME_ARC)
+      DEVPOS(RW++, 0)
+      DEVOUT(" Запись с данными " + DTOC(V_D_TR) + " " + STR(V_NC, 16) + ;
+            " " + STR(V_NUMS, 7) + " слипа уже есть в базе данных !")
+      SET(24, "")
+      SET(20, "SCREEN")
+      RETURN .F.
+
+   ENDIF
+
+   IF EF_MERCH->TYPE == "1"
+
+      IF V_SUM1 > -0.001
+
+         V_C := "01"
+
+      ELSE
+
+         V_C := "09"
+
+      ENDIF
+
+   ELSE
+
+      V_C := "03"
+
+   ENDIF
+
+   IF EF_S_PR->(DBSEEK(V_MER))
+
+   ELSE
+
+      EF_S_PR->(DBSEEK("        "))
+
+   ENDIF
+
+   IF EF_S_PR->PR_VKL
+
+      IF EF_MERCH->CURR == KOD_VUAH__
+
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+         MEMVAR->N_K := EF_S_SC->NAM_SC
+         MEMVAR->PP := AT("##", EF_S_SC->SC)
+
+         IF PP > 0
+
+            MEMVAR->S_K := ATREPL("##", EF_S_SC->SC, "00")
+
+         ELSE
+
+            MEMVAR->S_K := EF_S_SC->SC
+
+         ENDIF
+
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+         MEMVAR->S_D := EF_S_SC->SC
+         MEMVAR->N_D := EF_S_SC->NAM_SC
+
+      ELSE
+
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUSD__))
+         MEMVAR->S_K := EF_S_SC->SC
+         MEMVAR->N_K := EF_S_SC->NAM_SC
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUSD__))
+         MEMVAR->S_D := EF_S_SC->SC
+         MEMVAR->N_D := EF_S_SC->NAM_SC
+
+      ENDIF
+
+      IF EF_DOC->(DBSEEK(DTOS(DAT_OD__) + S_D + PADR(ALLTRIM(KOD_B__), 9) + ;
+            S_K + PADR(KOD_B__, 9)))
+
+         IF ADDREC(3) .AND. FOR_VED->(ADDREC(3)) .AND. EF_DOC->(RECLOCK(3))
+
+            EF_SLIP->DC := .T.
+            EF_SLIP->CODE := V_C
+            EF_SLIP->PR_DATE := DAT_OD__
+            EF_SLIP->NO_SLIP := V_NUMS
+            EF_SLIP->TRAN_DATE := V_D_TR
+            EF_SLIP->CH_NO := ZERO_STR(V_NC, 16)
+            EF_SLIP->E_NAME := V_EN
+            EF_SLIP->EXP_DATE := ZERO_STR(V_DEND, 4)
+            EF_SLIP->MERCH := V_MER
+            EF_SLIP->CITY := EF_MERCH->CITY
+            EF_SLIP->CURR := EF_MERCH->CURR
+            EF_SLIP->AMOUNT := V_SUM1
+            EF_SLIP->CURR_M := EF_MERCH->CURR_M
+
+            IF V_C == "03"
+
+               EF_SLIP->AMOUNT_H := V_SUM2
+
+            ELSE
+
+               EF_SLIP->AMOUNT_M := V_SUM2
+
+            ENDIF
+
+            EF_SLIP->AUTH_NO := V_KAVT
+            EF_SLIP->FIO_OPER := FIO_OP__
+            EF_DOC->SUMMA := EF_DOC->SUMMA + V_SUM1
+            FOR_VED->CODE := "1"
+            FOR_VED->DAT_BANK := DAT_OD__
+            FOR_VED->N_PP := EF_DOC->NUM_DOC
+            FOR_VED->NO_SLIP := EF_SLIP->NO_SLIP
+            FOR_VED->TRAN_DATE := EF_SLIP->TRAN_DATE
+            FOR_VED->CH_NO := EF_SLIP->CH_NO
+            FOR_VED->MERCH := EF_SLIP->MERCH
+            EF_SLIP->DAT_PAY := DAT_OD__
+            DBCOMMITAL()
+            DBUNLOCKAL()
+
+         ELSE
+
+            RETURN .F.
+
+         ENDIF
+
+      ELSEIF ADDREC(3) .AND. FOR_VED->(ADDREC(3)) .AND. (EF_DOC->(ADDREC(3)) ;
+            .AND. EF_SYS->(RECLOCK(3)))
+
+         EF_SLIP->CODE := V_C
+         EF_SLIP->PR_DATE := DAT_OD__
+         EF_SLIP->NO_SLIP := V_NUMS
+         EF_SLIP->TRAN_DATE := V_D_TR
+         EF_SLIP->CH_NO := ZERO_STR(V_NC, 16)
+         EF_SLIP->E_NAME := V_EN
+         EF_SLIP->EXP_DATE := ZERO_STR(V_DEND, 4)
+         EF_SLIP->MERCH := V_MER
+         EF_SLIP->CITY := EF_MERCH->CITY
+         EF_SLIP->CURR := EF_MERCH->CURR
+         EF_SLIP->AMOUNT := V_SUM1
+         EF_SLIP->CURR_M := EF_MERCH->CURR_M
+
+         IF V_C == "03"
+
+            EF_SLIP->AMOUNT_H := V_SUM2
+
+         ELSE
+
+            EF_SLIP->AMOUNT_M := V_SUM2
+
+         ENDIF
+
+         EF_SLIP->AUTH_NO := V_KAVT
+         EF_SLIP->FIO_OPER := FIO_OP__
+         EF_DOC->VID_OP := "06"
+         EF_DOC->TIP_DOC := "м"
+         EF_DOC->NUM_DOC := EF_SYS->N_PP + 1
+         EF_DOC->KOD_V := EF_MERCH->CURR
+         EF_DOC->DAT_KL := DAT_OD__
+         EF_DOC->DAT_BANK := DAT_OD__
+         EF_DOC->SUMMA := V_SUM1
+         EF_DOC->NAM_DT := N_D
+         EF_DOC->BANK_DT := NAM_B__
+         EF_DOC->MFO_DT := PADR(ALLTRIM(KOD_B__), 9)
+         EF_DOC->SC_DT := S_D
+         EF_DOC->INDEX_DT := STR(POST_IND__, 6)
+         EF_DOC->OKPO_DT := KOD_OKPO__
+         EF_DOC->NAM_KT := N_K
+         EF_DOC->BANK_KT := NAM_B__
+         EF_DOC->MFO_KT := PADR(ALLTRIM(KOD_B__), 9)
+         EF_DOC->OKPO_KT := KOD_OKPO__
+         EF_DOC->SC_KT := S_K
+         EF_DOC->OSN := EF_S_PR->OSN
+         EF_DOC->FIO_OP := FIO_OP__
+         FOR_VED->CODE := "1"
+         FOR_VED->DAT_BANK := DAT_OD__
+         FOR_VED->N_PP := EF_SYS->N_PP + 1
+         FOR_VED->NO_SLIP := EF_SLIP->NO_SLIP
+         FOR_VED->TRAN_DATE := EF_SLIP->TRAN_DATE
+         FOR_VED->CH_NO := EF_SLIP->CH_NO
+         FOR_VED->MERCH := EF_SLIP->MERCH
+         ++EF_SYS->N_PP
+         DBCOMMITAL()
+         DBUNLOCKAL()
+
+      ELSE
+
+         RETURN .F.
+
+      ENDIF
+
+   ELSEIF ADDREC(3)
+
+      EF_SLIP->CODE := V_C
+      EF_SLIP->PR_DATE := DAT_OD__
+      EF_SLIP->NO_SLIP := V_NUMS
+      EF_SLIP->TRAN_DATE := V_D_TR
+      EF_SLIP->CH_NO := ZERO_STR(V_NC, 16)
+      EF_SLIP->E_NAME := V_EN
+      EF_SLIP->EXP_DATE := ZERO_STR(V_DEND, 4)
+      EF_SLIP->MERCH := V_MER
+      EF_SLIP->CITY := EF_MERCH->CITY
+      EF_SLIP->CURR := EF_MERCH->CURR
+      EF_SLIP->AMOUNT := V_SUM1
+      EF_SLIP->CURR_M := EF_MERCH->CURR_M
+
+      IF V_C == "03"
+
+         EF_SLIP->AMOUNT_H := V_SUM2
+
+      ELSE
+
+         EF_SLIP->AMOUNT_M := V_SUM2
+
+      ENDIF
+
+      EF_SLIP->AUTH_NO := V_KAVT
+      EF_SLIP->FIO_OPER := FIO_OP__
+      DBCOMMITAL()
+      DBUNLOCKAL()
+
+   ELSE
+
+      RETURN .F.
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRINTIMP
+   Params: None.
+   Return: Number
+  Example: PRINTIMP()
+  ..........................................................................
+*/
+
+STATIC FUNCTION PRINTIMP()
+
+   IF SCANCODE() = -1
+
+      IF PRINTYES()
+
+         PRINTFILE(FVIEWFILE, .T.)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_TRD
+   Params: TRD, NUM
+   Return: Undefined
+  Example: CH_TRD(TRD, NUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_TRD(TRD, NUM)
+
+   LOCAL RET := .F.
+
+   IF DAT_OD__ - TRD <= 90
+
+      RET := .T.
+
+   ELSE
+
+      SET(24, ("") + REP_PATH__ + NF, .T.)
+      SET(20, "PRINTER")
+      MEMVAR->RW := PROW()
+      ++MEMVAR->RW
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Ошибка  в файле " + NAME_ARC)
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Слип просрочен  " + NUM)
+      SET(24, "")
+      SET(20, "SCREEN")
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_NUM
+   Params: C_NN, TC
+   Return: Undefined
+  Example: CH_NUM(C_NN, TC)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_NUM(C_NN, TC)
+
+   LOCAL CRC := 0, I, DIGIT, RET := .F.
+
+   MEMVAR->C_N := ZERO_STR(C_NN, 16)
+
+   FOR I := 1 TO LEN(C_N) - 1
+
+      DIGIT := VAL(SUBSTR(C_N, I, 1))
+
+      IF I % 2 = 1
+
+         DIGIT := DIGIT * 2 + INT(DIGIT / 5)
+
+      ENDIF
+
+      CRC := CRC + DIGIT
+
+   NEXT
+
+   CRC := 10 - CRC % 10
+   CRC := CRC % 10
+
+   IF STR(CRC, 1) == SUBSTR(C_N, 16, 1)
+
+      RET := .T.
+
+   ELSE
+
+      SET(24, ("") + REP_PATH__ + NF, .T.)
+      SET(20, "PRINTER")
+      MEMVAR->RW := PROW()
+      ++MEMVAR->RW
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Ошибка  в файле " + NAME_ARC)
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Неверный номер карты  " + C_N)
+      SET(24, "")
+      SET(20, "SCREEN")
+
+   ENDIF
+
+   IF CB_S_TC->(DBSEEK(SUBSTR(C_N, 1, 6)))
+
+      TC := 1
+
+   ELSEIF SUBSTR(C_N, 1, 1) == "4"
+
+      TC := 2
+
+   ELSEIF SUBSTR(C_N, 1, 1) == "5" .OR. SUBSTR(C_N, 1, 1) == "6"
+
+      TC := 3
+
+   ELSE
+
+      SET(24, ("") + REP_PATH__ + NF, .T.)
+      SET(20, "PRINTER")
+      MEMVAR->RW := PROW()
+      ++MEMVAR->RW
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Ошибка  в файле " + NAME_ARC)
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Неверный тип карты  " + C_N)
+      SET(24, "")
+      SET(20, "SCREEN")
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_END
+   Params: D_EN, D_T, NUM, C_N
+   Return: Logical
+  Example: CH_END(D_EN, D_T, NUM, C_N)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_END(D_EN, D_T, NUM, C_N)
+
+   LOCAL DAT_E
+
+   MEMVAR->D_E := ZERO_STR(D_EN, 4)
+
+   IF SUBSTR(D_E, 3, 2) == "00"
+
+      DAT_E := EOM(CTOD("10." + SUBSTR(D_E, 1, 2) + ".20" + SUBSTR(D_E, 3, ;
+            2)))
+
+   ELSE
+
+      DAT_E := EOM(CTOD("10." + SUBSTR(D_E, 1, 2) + "." + SUBSTR(D_E, 3, 2);
+            ))
+
+   ENDIF
+
+   IF DAT_E < D_T
+
+      SET(24, ("") + REP_PATH__ + NF, .T.)
+      SET(20, "PRINTER")
+      MEMVAR->RW := PROW()
+      ++MEMVAR->RW
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Ошибка  в файле " + NAME_ARC)
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Карта уже закрыта !  " + STR(C_N, 16))
+      SET(24, "")
+      SET(20, "SCREEN")
+      RETURN .F.
+      RETURN 
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_MERCH
+   Params: MER, NUM
+   Return: Undefined
+  Example: CH_MERCH(MER, NUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_MERCH(MER, NUM)
+
+   LOCAL RET := .F.
+
+   IF EF_MERCH->(DBSEEK(MER))
+
+      RET := .T.
+
+   ELSE
+
+      SET(24, ("") + REP_PATH__ + NF, .T.)
+      SET(20, "PRINTER")
+      MEMVAR->RW := PROW()
+      ++MEMVAR->RW
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Ошибка  в файле " + NAME_ARC)
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT(" Мерчант слипа " + NUM + " не найден в справочнике !")
+      SET(24, "")
+      SET(20, "SCREEN")
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CH_AVTOR
+   Params: KOD, TC, SUM, NUM
+   Return: Undefined
+  Example: CH_AVTOR(KOD, TC, SUM, NUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CH_AVTOR(KOD, TC, SUM, NUM)
+
+   LOCAL RET := .F.
+   LOCAL S_A
+
+   IF EMPTY(KOD)
+
+      IF EF_SLIP->CODE == "03"
+
+         SET(24, ("") + REP_PATH__ + NF, .T.)
+         SET(20, "PRINTER")
+         MEMVAR->RW := PROW()
+         ++MEMVAR->RW
+         DEVPOS(MEMVAR->RW++, 0)
+         DEVOUT(" Ошибка  в файле " + NAME_ARC)
+         DEVPOS(MEMVAR->RW++, 0)
+         DEVOUT(" Код авторизации для слипа " + NUM + ;
+               " должен быть введен !")
+         SET(24, "")
+         SET(20, "SCREEN")
+         RET := .F.
+
+      ELSEIF TC = 1
+
+         IF SUM + 0.001 > EF_MERCH->LIM_PB + 0.001
+
+            SET(24, ("") + REP_PATH__ + NF, .T.)
+            SET(20, "PRINTER")
+            MEMVAR->RW := PROW()
+            ++MEMVAR->RW
+            DEVPOS(MEMVAR->RW++, 0)
+            DEVOUT(" Ошибка  в файле " + NAME_ARC)
+            DEVPOS(MEMVAR->RW++, 0)
+            DEVOUT(" Код авторизации для слипа " + NUM + ;
+                  " должен быть введен !")
+            SET(24, "")
+            SET(20, "SCREEN")
+            RET := .F.
+
+         ELSE
+
+            RET := .T.
+
+         ENDIF
+
+      ELSEIF TC = 2
+
+         IF SUM + 0.001 > EF_MERCH->LIM_V + 0.001
+
+            SET(24, ("") + REP_PATH__ + NF, .T.)
+            SET(20, "PRINTER")
+            MEMVAR->RW := PROW()
+            ++MEMVAR->RW
+            DEVPOS(MEMVAR->RW++, 0)
+            DEVOUT(" Ошибка  в файле " + NAME_ARC)
+            DEVPOS(MEMVAR->RW++, 0)
+            DEVOUT(" Код авторизации для слипа " + NUM + ;
+                  " должен быть введен !")
+            SET(24, "")
+            SET(20, "SCREEN")
+            RET := .F.
+
+         ELSE
+
+            RET := .T.
+
+         ENDIF
+
+      ELSEIF TC = 3
+
+         IF SUM + 0.001 > EF_MERCH->LIM_EM + 0.001
+
+            SET(24, ("") + REP_PATH__ + NF, .T.)
+            SET(20, "PRINTER")
+            MEMVAR->RW := PROW()
+            ++MEMVAR->RW
+            DEVPOS(MEMVAR->RW++, 0)
+            DEVOUT(" Ошибка  в файле " + NAME_ARC)
+            DEVPOS(MEMVAR->RW++, 0)
+            DEVOUT(" Код авторизации для слипа " + NUM + ;
+                  " должен быть введен !")
+            SET(24, "")
+            SET(20, "SCREEN")
+            RET := .F.
+
+         ELSE
+
+            RET := .T.
+
+         ENDIF
+
+      ENDIF
+
+   ELSE
+
+      RET := .T.
+
+   ENDIF
+
+
+RETURN RET
+

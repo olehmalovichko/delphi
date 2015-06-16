@@ -1,0 +1,88 @@
+compile = clipper $** /m /n
+link = RTLink
+
+// Clipper library version: Clipper (R) 5.2d Intl. (x215)  (1994.03.25)
+
+.prg.obj:   // Procedure
+   $(compile)
+
+.udf.obj:   // User defined function
+   $(compile)
+
+.src.obj:   // Source (debug modules)
+   $(compile)
+
+START_EF.obj: START_EF.SRC
+EF_ZAKOD.obj: EF_ZAKOD.UDF
+ERRORSYS.obj: ERRORSYS.UDF
+GETSYS.obj  : GETSYS.UDF
+EXT.obj     : EXT.SRC
+OPEN.obj    : OPEN.SRC
+EF_SLIP.obj : EF_SLIP.SRC
+EF_KOMP.obj : EF_KOMP.SRC
+EF_CASH.obj : EF_CASH.SRC
+EF_POPLN.obj: EF_POPLN.SRC
+EF_FIRM.obj : EF_FIRM.SRC
+EF_MERCH.obj: EF_MERCH.SRC
+EF_OPKTT.obj: EF_OPKTT.SRC
+EF_OPKTF.obj: EF_OPKTF.SRC
+EF_OPKTE.obj: EF_OPKTE.SRC
+EF_OPKTS.obj: EF_OPKTS.SRC
+EF_OPRES.obj: EF_OPRES.SRC
+EF_KPPE.obj : EF_KPPE.SRC
+EF_PPKP.obj : EF_PPKP.SRC
+EF_PPKTE.obj: EF_PPKTE.SRC
+EF_PPKTS.obj: EF_PPKTS.SRC
+EF_S_SC.obj : EF_S_SC.SRC
+EF_S_PR.obj : EF_S_PR.SRC
+EF_S_TAR.obj: EF_S_TAR.SRC
+EF_S_TC.obj : EF_S_TC.SRC
+EF_PSLIP.obj: EF_PSLIP.SRC
+EF_SVVED.obj: EF_SVVED.SRC
+EF_S_PL.obj : EF_S_PL.SRC
+EF_S_PPL.obj: EF_S_PPL.SRC
+EF_S_TK.obj : EF_S_TK.SRC
+EF_BUXKP.obj: EF_BUXKP.SRC
+EF_RSKOM.obj: EF_RSKOM.SRC
+EF_BUH.obj  : EF_BUH.SRC
+EF_ITOG.obj : EF_ITOG.SRC
+EF_S_U2M.obj: EF_S_U2M.SRC
+EF_S_VAL.obj: EF_S_VAL.SRC
+EF__IND.obj : EF__IND.SRC
+EF__INDV.obj: EF__INDV.SRC
+EF__PAK.obj : EF__PAK.SRC
+EF_NASTR.obj: EF_NASTR.SRC
+LOCKS52.obj : LOCKS52.SRC
+EF.obj      : EF.SRC
+BROWSE.obj  : BROWSE.SRC
+EF_KASR.obj : EF_KASR.SRC
+EF_PST_P.obj: EF_PST_P.SRC
+EF_AVTRZ.obj: EF_AVTRZ.SRC
+EF_KASP.obj : EF_KASP.SRC
+EF_BNALP.obj: EF_BNALP.SRC
+EF_BADSL.obj: EF_BADSL.SRC
+EF_KASRI.obj: EF_KASRI.SRC
+EF_KASPI.obj: EF_KASPI.SRC
+SUM_PROP.obj: SUM_PROP.SRC
+EF_MB.obj   : EF_MB.SRC
+EF_BASE.obj : EF_BASE.SRC
+EF_KPLAT.obj: EF_KPLAT.SRC
+ZST_PRN.obj : ZST_PRN.SRC
+LIB.obj     : LIB.UDF
+
+EF_KP.EXE   : START_EF.obj EF_ZAKOD.obj ERRORSYS.obj GETSYS.obj   \
+              EXT.obj      OPEN.obj     EF_SLIP.obj  EF_KOMP.obj  \
+              EF_CASH.obj  EF_POPLN.obj EF_FIRM.obj  EF_MERCH.obj \
+              EF_OPKTT.obj EF_OPKTF.obj EF_OPKTE.obj EF_OPKTS.obj \
+              EF_OPRES.obj EF_KPPE.obj  EF_PPKP.obj  EF_PPKTE.obj \
+              EF_PPKTS.obj EF_S_SC.obj  EF_S_PR.obj  EF_S_TAR.obj \
+              EF_S_TC.obj  EF_PSLIP.obj EF_SVVED.obj EF_S_PL.obj  \
+              EF_S_PPL.obj EF_S_TK.obj  EF_BUXKP.obj EF_RSKOM.obj \
+              EF_BUH.obj   EF_ITOG.obj  EF_S_U2M.obj EF_S_VAL.obj \
+              EF__IND.obj  EF__INDV.obj EF__PAK.obj  EF_NASTR.obj \
+              LOCKS52.obj  EF.obj       BROWSE.obj   EF_KASR.obj  \
+              EF_PST_P.obj EF_AVTRZ.obj EF_KASP.obj  EF_BNALP.obj \
+              EF_BADSL.obj EF_KASRI.obj EF_KASPI.obj SUM_PROP.obj \
+              EF_MB.obj    EF_BASE.obj  EF_KPLAT.obj ZST_PRN.obj  \
+              LIB.obj     
+   $(link) @EF_KP.LNK

@@ -1,0 +1,3209 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_CH
+   Params: FLAG
+   Return: Variable
+  Example: V_P_CH(FLAG)
+  ..........................................................................
+*/
+
+FUNCTION V_P_CH(FLAG)
+
+   LOCAL WIN, RW, I, SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 1)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(27))
+      RW := RW + 1
+      DEVPOS(RW + 2, 0)
+      DEVOUT(EF_MERCH->MERCH_NAME + " " + STR(EF_SLIP->NO_SLIP, 10) + "  !" +;
+             EF_MERCH->MERCH_NAME + " " + STR(EF_SLIP->NO_SLIP, 10) + "  !" +;
+             EF_MERCH->MERCH_NAME + " " + STR(EF_SLIP->NO_SLIP, 10))
+      DEVPOS(RW + 3, 0)
+      DEVOUT(EF_MERCH->CITY + "                         !" + EF_MERCH->CITY +;
+             "                         !" + EF_MERCH->CITY)
+      DEVPOS(RW + 4, 0)
+      DEVOUT("")
+      DEVPOS(RW + 5, 0)
+      DEVOUT("Дата транзакции : " + DTOC(EF_SLIP->TRAN_DATE) + ;
+            "          !" + "Дата транзакции : " + DTOC(EF_SLIP->TRAN_DATE) ;
+            + "          !" + "Дата транзакции : " + DTOC(EF_SLIP->;
+            TRAN_DATE))
+      DEVPOS(RW + 6, 0)
+      DEVOUT("Время транзакции: " + TIME() + "            !" + ;
+            "Время транзакции: " + TIME() + "            !" + ;
+            "Время транзакции: " + TIME())
+      DEVPOS(RW + 7, 0)
+      DEVOUT("Дата операционная: " + DTOC(EF_SLIP->PR_DATE) + "         !" +;
+             "Дата операционная: " + DTOC(EF_SLIP->PR_DATE) + "         !" +;
+             "Дата операционная: " + DTOC(EF_SLIP->PR_DATE))
+      DEVPOS(RW + 8, 0)
+      DEVOUT("Номер карты     : " + EF_SLIP->CH_NO + " !" + ;
+            "Номер карты     : " + EF_SLIP->CH_NO + " !" + ;
+            "Номер карты     : " + EF_SLIP->CH_NO)
+      DEVPOS(RW + 9, 0)
+      DEVOUT("Дата окончания  : " + SUBSTR(EF_SLIP->EXP_DATE, 1, 2) + "/" + ;
+            SUBSTR(EF_SLIP->EXP_DATE, 3, 2) + "               !" + ;
+            "Дата окончания  : " + SUBSTR(EF_SLIP->EXP_DATE, 1, 2) + "/" + ;
+            SUBSTR(EF_SLIP->EXP_DATE, 3, 2) + "               !" + ;
+            "Дата окончания  : " + SUBSTR(EF_SLIP->EXP_DATE, 1, 2) + "/" + ;
+            SUBSTR(EF_SLIP->EXP_DATE, 3, 2))
+      DEVPOS(RW + 10, 0)
+      DEVOUT("Клиент : " + EF_SLIP->E_NAME + "    !" + "Клиент : " + ;
+            EF_SLIP->E_NAME + "    !" + "Клиент : " + ALLTRIM(EF_SLIP->;
+            E_NAME))
+      DEVPOS(RW + 11, 0)
+      DEVOUT("")
+
+      IF FLAG
+
+         DEVPOS(RW + 12, 0)
+         DEVOUT(;
+               "CASH ADVANCE                          !CASH ADVANCE                          !CASH ADVANCE";
+               )
+
+      ELSE
+
+         DEVPOS(RW + 12, 0)
+         DEVOUT(;
+               "Безналичные платежи                   !Безналичные платежи                   !Безналичные платежи";
+               )
+
+      ENDIF
+
+      DEVPOS(RW + 13, 0)
+      DEVOUT("")
+      DEVPOS(RW + 14, 0)
+      DEVOUT("СУММА           : " + PADR(ALLTRIM(STR(EF_SLIP->AMOUNT, 13, 2);
+            ), 13) + IF(EF_SLIP->CURR == KOD_VUAH__, " " + KOD_VUAH__, ;
+            " USD") + "   !" + "СУММА           : " + PADR(ALLTRIM(STR(;
+            EF_SLIP->AMOUNT, 13, 2)), 13) + IF(EF_SLIP->CURR == KOD_VUAH__, ;
+            " " + KOD_VUAH__, " USD") + "   !" + "СУММА           : " + ;
+            PADR(ALLTRIM(STR(EF_SLIP->AMOUNT, 13, 2)), 13) + IF(EF_SLIP->;
+            CURR == KOD_VUAH__, " " + KOD_VUAH__, " USD"))
+
+      IF FLAG
+
+         DEVPOS(RW + 15, 0)
+         DEVOUT("ВЫДАНО НА РУКИ  : " + PADR(ALLTRIM(STR(EF_SLIP->AMOUNT_H, ;
+               13, 2)), 13) + IF(EF_SLIP->CURR == KOD_VUAH__, " " + ;
+               KOD_VUAH__, " USD") + "   !" + "ВЫДАНО НА РУКИ  : " + PADR(;
+               ALLTRIM(STR(EF_SLIP->AMOUNT_H, 13, 2)), 13) + IF(EF_SLIP->;
+               CURR == KOD_VUAH__, " " + KOD_VUAH__, " USD") + "   !" + ;
+               "ВЫДАНО НА РУКИ  : " + PADR(ALLTRIM(STR(EF_SLIP->AMOUNT_H, ;
+               13, 2)), 13) + IF(EF_SLIP->CURR == KOD_VUAH__, " " + ;
+               KOD_VUAH__, " USD"))
+
+      ELSE
+
+         DEVPOS(RW + 15, 0)
+         DEVOUT("")
+
+      ENDIF
+
+      DEVPOS(RW + 16, 0)
+      DEVOUT("")
+      DEVPOS(RW + 17, 0)
+      DEVOUT(;
+            "APPROVED                              !APPROVED                              !APPROVED";
+            )
+      DEVPOS(RW + 18, 0)
+      DEVOUT("")
+      DEVPOS(RW + 19, 0)
+      DEVOUT("Код терминала   : " + PADL(EF_SLIP->MERCH, 9, "0") + ;
+            "           !" + "Код терминала   : " + PADL(EF_SLIP->MERCH, 9, ;
+            "0") + "           !" + "Код терминала   : " + PADL(EF_SLIP->;
+            MERCH, 9, "0"))
+      DEVPOS(RW + 20, 0)
+      DEVOUT("Код торг.точки  : " + PADL(EF_SLIP->MERCH, 15, "0") + ;
+            "     !" + "Код торг.точки  : " + PADL(EF_SLIP->MERCH, 15, "0") ;
+            + "     !" + "Код торг.точки  : " + PADL(EF_SLIP->MERCH, 15, ;
+            "0"))
+      DEVPOS(RW + 21, 0)
+      DEVOUT("Код авторизации : " + EF_SLIP->AUTH_NO + "              !" + ;
+            "Код авторизации : " + EF_SLIP->AUTH_NO + "              !" + ;
+            "Код авторизации : " + EF_SLIP->AUTH_NO)
+      DEVPOS(RW + 22, 0)
+      DEVOUT("")
+      DEVPOS(RW + 23, 0)
+      DEVOUT(;
+            "Подпись клиента   : ________________    Подпись клиента   : ________________    Подпись клиента   : ________________  ";
+            )
+
+      IF N_SHEM__ = 2
+
+         DEVPOS(RW + 25, 0)
+         DEVOUT(;
+               "Подпись оператора : ________________    Подпись оператора : ________________    Подпись оператора : ________________  ";
+               )
+
+      ENDIF
+
+      DEVPOS(RW + 27, 0)
+      DEVOUT(IF( .NOT. FLAG, " ", ;
+            "Подпись кассира   : ________________    ") + IF( .NOT. FLAG, ;
+            " ", "Подпись кассира   : ________________    ") + IF( .NOT. ;
+            FLAG, " ", "Подпись кассира   : ________________  "))
+      RW := RW + 27
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(3, 17, 50, "N/W,+W/N", "W/N")
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_RCH
+   Params: FLAGG
+   Return: Logical
+  Example: V_P_RCH(FLAGG)
+  ..........................................................................
+*/
+
+FUNCTION V_P_RCH(FLAGG)
+
+   LOCAL WIN, RW, I, OLDORD := DBSETORDER(), KEY_T := "", BL := ""
+   LOCAL SUMPROP := "", CL, NN, REC := RECNO(), OLDC := SETCOLOR()
+   LOCAL ARR_ := {}
+   LOCAL FNAME
+
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 10, 15, 69, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, "Ждите, идет формирование реестра чеков ... ")
+   CENTR(NIL, 3, " Сканирование базы липов EF_SLIP.DBF ", "gr+/w")
+   MEMVAR->LIN := INOTDEAD(4, 18)
+   EF_SLIP->(DBSETORDER(1))
+
+   IF FLAGG
+
+      KEY_T := "03" + DTOS(DAT_OD__)
+      BL := {||ALLTRIM(EF_SLIP->FIO_OPER) == ALLTRIM(FIO_OP__) .AND. ;
+            EF_SLIP->PR_PK = IF(PR_BA__, .F., IF(EF_SLIP->CURR == KOD_VUAH__,;
+             KN_SYS->PR_PK, KV_SYS->PR_PK))}
+      FNAME := REP_PATH__ + ZERO_STR(RANDOM(), 5) + ".rch"
+
+   ELSE
+
+      KEY_T := "UP" + DTOS(DAT_OD__)
+      BL := {||.T.}
+      FNAME := REP_PATH__ + ZERO_STR(RANDOM(), 5) + ".rok"
+
+   ENDIF
+
+   IF EF_SLIP->(DBSEEK(KEY_T))
+
+      DO WHILE EF_SLIP->CODE + DTOS(EF_SLIP->PR_DATE) == KEY_T .AND. .NOT. ;
+            EOF()
+
+         IF EVAL(BL)
+
+            AADD(ARR_, {EF_SLIP->CURR, EF_SLIP->CH_NO, EF_SLIP->NO_SLIP, IF(;
+                  FLAGG, EF_SLIP->AMOUNT_H, EF_SLIP->AMOUNT)})
+
+         ENDIF
+
+         EF_SLIP->(DBSKIP())
+         MEMVAR->LIN := INOTDEAD(LIN)
+
+      ENDDO
+
+      ASORT(ARR_, NIL, NIL, {|X,Y|X[1] + X[2] + STR(X[3], 10) < Y[1] + Y[2];
+             + STR(Y[3], 10)})
+
+      IF LEN(ARR_) > 0
+
+         MEMVAR->VV := ""
+         I := 1
+         SET(24, ("") + FNAME, .F.)
+         SET(20, "PRINTER")
+         RW := PROW()
+
+         DO WHILE I <= LEN(ARR_)
+
+            IF VV <> ARR_[I, 1]
+
+               MEMVAR->VV := ARR_[I, 1]
+               MEMVAR->FLAG := .T.
+               MEMVAR->ITOG := 0
+               MEMVAR->KVO := 0
+               DEVPOS(++RW, 2)
+               DEVOUT("                     РЕЕСТР ЧЕКОВ")
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+
+               IF FLAGG
+
+                  MEMVAR->PP_K := IF(PR_BA__, .F., IF(EF_SLIP->CURR == ;
+                        KOD_VUAH__, KN_SYS->PR_PK, KV_SYS->PR_PK))
+                  MEMVAR->DAT_PK := IF(PR_BA__, DAT_OD__, IF(VV == ;
+                        KOD_VUAH__, KN_SYS->DAT_PD, KV_SYS->DAT_PD))
+
+                  IF PP_K
+
+                     DEVPOS(++RW, 2)
+                     DEVOUT("по выдаче наличных за  " + DTOC(DAT_PK) + ;
+                           " г.")
+                     DEVPOS(++RW, 2)
+                     DEVOUT("ВЕЧЕРНЯЯ, дата баланса - " + DTOC(DAT_OD__) + ;
+                           " р.")
+
+                  ELSE
+
+                     DEVPOS(++RW, 2)
+                     DEVOUT("по выдаче наличных за  " + DTOC(DAT_OD__) + ;
+                           " г.")
+                     DEVPOS(++RW, 2)
+                     DEVOUT("")
+
+                  ENDIF
+
+               ELSE
+
+                  DEVPOS(++RW, 2)
+                  DEVOUT("по оплате коммун. платежей за  " + DTOC(DAT_OD__);
+                         + " г.")
+                  DEVPOS(++RW, 2)
+                  DEVOUT("")
+
+               ENDIF
+
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+               DEVPOS(++RW, 2)
+               DEVOUT("ФИО оператора : " + FIO_OP__)
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+               DEVPOS(++RW, 2)
+               DEVOUT("Валюта : " + VV)
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+               DEVPOS(++RW, 2)
+               DEVOUT(;
+                     "===================================================")
+
+               IF FLAGG
+
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "!      № карты      ! Номер чека ! Сумма к выдаче !";
+                        )
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "!                   !            !  на руки       !";
+                        )
+
+               ELSE
+
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "!      № карты      ! Номер чека ! Сумма авториз. !";
+                        )
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "!                   !            !                !";
+                        )
+
+               ENDIF
+
+               DEVPOS(++RW, 2)
+               DEVOUT(;
+                     "!-------------------+------------+----------------!")
+
+            ENDIF
+
+            DEVPOS(++RW, 2)
+            DEVOUT("!" + ARR_[I, 2] + "! " + STR(ARR_[I, 3], 10) + " !" + ;
+                  STR(ARR_[I, 4], 16, 2) + "!")
+            MEMVAR->ITOG := MEMVAR->ITOG + ARR_[I, 4]
+            ++MEMVAR->KVO
+            ++I
+
+            IF (I > LEN(ARR_) .OR. VV <> ARR_[I, 1]) .AND. FLAG
+
+               DEVPOS(++RW, 2)
+               DEVOUT(;
+                     "!-------------------+------------+----------------!")
+               DEVPOS(++RW, 2)
+               DEVOUT(;
+                     "! Итого :           !            !                !")
+               DEVPOS(++RW, 2)
+               DEVOUT("! к-во  : " + STR(KVO, 6) + "    !            !" + ;
+                     STR(ITOG, 16, 2) + "!")
+               DEVPOS(++RW, 2)
+               DEVOUT(;
+                     "===================================================")
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+
+               IF FLAGG
+
+                  IF N_SHEM__ < 3
+
+                     DEVPOS(++RW, 2)
+                     DEVOUT("Бухгалтер")
+                     DEVPOS(++RW, 2)
+                     DEVOUT(;
+                           "           ___________________(__________________)";
+                           )
+                     DEVPOS(++RW, 2)
+                     DEVOUT(;
+                           "Кассир                                 ФИО        ";
+                           )
+
+                  ELSE
+
+                     DEVPOS(++RW, 2)
+                     DEVOUT(;
+                           "Кассир                                            ";
+                           )
+
+                  ENDIF
+
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "           ___________________(__________________)";
+                        )
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "Контролер                              ФИО        ";
+                        )
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "           ___________________(__________________)";
+                        )
+                  DEVPOS(++RW, 2)
+                  DEVOUT("                                       ФИО")
+
+               ELSE
+
+                  DEVPOS(++RW, 2)
+                  DEVOUT("Бухгалтер")
+                  DEVPOS(++RW, 2)
+                  DEVOUT(;
+                        "           ___________________(__________________)";
+                        )
+
+               ENDIF
+
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+               DEVPOS(++RW, 2)
+               DEVOUT("")
+
+            ENDIF
+
+         ENDDO
+
+         IF  .NOT. PR_R_L__
+
+            __EJECT()
+
+         ELSE
+
+            RW := PROW() + 1
+
+            FOR I := 1 TO KVO_STR__
+
+               DEVPOS(RW + I, 0)
+               DEVOUT("")
+
+            NEXT
+
+         ENDIF
+
+         SET(24, "")
+         SET(20, "SCREEN")
+         FILEVIEW(1, 0, 23, 79, FNAME, "@Реестр чеков : ", {||PRNCHEK(;
+               FNAME)}, {"~Esc~-выход", "~F2~-печать"})
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Сегодня выдачи наличных", ;
+               "операционистом " + FIO_OP__ + " не было  !"}, {" Выход "})
+
+      ENDIF
+
+   ELSEIF FLAGG
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Сегодня выдачи наличных", ;
+            "не было  !"}, {" Выход "})
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Сегодня оплаты комм. плат.", ;
+            "не было  !"}, {" Выход "})
+
+   ENDIF
+
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+   DBSETORDER(OLDORD)
+   DBGOTO(REC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_BRCH
+   Params: None.
+   Return: Logical
+  Example: V_P_BRCH()
+  ..........................................................................
+*/
+
+FUNCTION V_P_BRCH()
+
+   LOCAL WIN, RW, I, OLDORD := DBSETORDER()
+   LOCAL SUMPROP := "", CL, NN, REC := RECNO(), OLDC := SETCOLOR()
+   LOCAL ARR_ := {}, FNAME := REP_PATH__ + DTOS(DAT_OD__) + ".rbc"
+
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 10, 15, 69, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, "Ждите, идет формирование реестра чеков ... ")
+   CENTR(NIL, 3, " Сканирование базы липов EF_BADSL.DBF ", "gr+/w")
+   MEMVAR->LIN := INOTDEAD(4, 18)
+   EF_BADSL->(DBSETORDER(1))
+
+   IF DBSEEK(DTOS(DAT_OD__))
+
+      DO WHILE EF_BADSL->PR_DATE == DAT_OD__ .AND. .NOT. EOF()
+
+         AADD(ARR_, {EF_BADSL->CURR, EF_BADSL->CH_NO, EF_BADSL->NO_SLIP, ;
+               EF_BADSL->AMOUNT, EF_BADSL->FIO_OP, EF_BADSL->KOMENT})
+         DBSKIP()
+         MEMVAR->LIN := INOTDEAD(LIN)
+
+      ENDDO
+
+      ASORT(ARR_, NIL, NIL, {|X,Y|X[1] + X[5] + X[2] + STR(X[3], 10) < Y[1];
+             + Y[5] + Y[2] + STR(Y[3], 10)})
+      MEMVAR->VV := ""
+      I := 1
+      SET(24, ("") + FNAME, .F.)
+      SET(20, "PRINTER")
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(27))
+
+      DO WHILE I <= LEN(ARR_)
+
+         IF VV <> ARR_[I, 1]
+
+            MEMVAR->VV := ARR_[I, 1]
+            MEMVAR->FLAG := .T.
+            MEMVAR->ITOG := 0
+            MEMVAR->KVO := 0
+            DEVPOS(++RW, 2)
+            DEVOUT("                     РЕЕСТР ЧЕКОВ")
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+            DEVPOS(++RW, 2)
+            DEVOUT("по которым произведен отказ от оплаты за " + DTOC(;
+                  DAT_OD__) + " г.")
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+            DEVPOS(++RW, 2)
+            DEVOUT("Валюта : " + VV)
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+            DEVPOS(++RW, 2)
+            DEVOUT(;
+                  "=================================================================================================================";
+                  )
+            DEVPOS(++RW, 2)
+            DEVOUT(;
+                  "!      № карты      ! Номер чека ! Сумма к выдаче !  ФИО операциониста !         Причина отказа                 !";
+                  )
+            DEVPOS(++RW, 2)
+            DEVOUT(;
+                  "!                   !            !  на руки       !                    !                                        !";
+                  )
+            DEVPOS(++RW, 2)
+            DEVOUT(;
+                  "!-------------------+------------+----------------!--------------------!----------------------------------------!";
+                  )
+
+         ENDIF
+
+         DEVPOS(++RW, 2)
+         DEVOUT("!" + ARR_[I, 2] + "! " + STR(ARR_[I, 3], 10) + " !" + STR(;
+               ARR_[I, 4], 16, 2) + "!" + ARR_[I, 5] + "!" + ARR_[I, 6] + ;
+               "!")
+         MEMVAR->ITOG := MEMVAR->ITOG + ARR_[I, 4]
+         ++MEMVAR->KVO
+         ++I
+
+         IF (I > LEN(ARR_) .OR. VV <> ARR_[I, 1]) .AND. FLAG
+
+            DEVPOS(++RW, 2)
+            DEVOUT(;
+                  "!-------------------+------------+----------------!--------------------!----------------------------------------!";
+                  )
+            DEVPOS(++RW, 2)
+            DEVOUT("! Итого :           !            !                !")
+            DEVPOS(++RW, 2)
+            DEVOUT("! к-во  : " + STR(KVO, 6) + "    !            !" + STR(;
+                  ITOG, 16, 2) + ;
+                  "!                    !                                        !";
+                  )
+            DEVPOS(++RW, 2)
+            DEVOUT(;
+                  "=================================================================================================================";
+                  )
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+            DEVPOS(++RW, 2)
+            DEVOUT("Бухгалтер")
+            DEVPOS(++RW, 2)
+            DEVOUT("           ___________________(__________________)")
+            DEVPOS(++RW, 2)
+            DEVOUT("Контролер                              ФИО        ")
+            DEVPOS(++RW, 2)
+            DEVOUT("           ___________________(__________________)")
+            DEVPOS(++RW, 2)
+            DEVOUT("                                       ФИО")
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+            DEVPOS(++RW, 2)
+            DEVOUT("")
+
+         ENDIF
+
+      ENDDO
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      SET(24, "")
+      SET(20, "SCREEN")
+      FILEVIEW(1, 0, 23, 79, FNAME, "@Реестр бракованных чеков : ", {||;
+            PRNCHEK(FNAME)}, {"~Esc~-выход", "~F2~-печать"})
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Сегодня отказов ", ;
+            "от выдачи наличныхне было  !"}, {" Выход "})
+
+   ENDIF
+
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+   DBSETORDER(OLDORD)
+   DBGOTO(REC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_RO
+   Params: None.
+   Return: Variable
+  Example: V_P_RO()
+  ..........................................................................
+*/
+
+FUNCTION V_P_RO()
+
+   LOCAL WIN, RW, I, SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(27))
+      RW := RW + 1
+
+      FOR I := 1 TO 2
+
+         IF EF_KASR->PR_PK
+
+            DEVPOS(RW + 0, 94)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(EF_KASR->DAT_BANK) + ;
+                  " р.")
+
+         ENDIF
+
+         DEVPOS(RW + 1, 0)
+         DEVOUT(EF_KASR->FIO_OP)
+         DEVPOS(RW + 1, 87)
+         DEVOUT("-------------------------------------------")
+         DEVPOS(RW + 2, 35)
+         DEVOUT(;
+               "В И Д А Т К О В И Й                                 !                  !        0482006       !";
+               )
+         DEVPOS(RW + 3, 87)
+         DEVOUT("!    мiсце для     !-----------------------")
+         DEVPOS(RW + 4, 29)
+         DEVOUT("КАСОВИЙ ОРДЕР     N " + ALLTRIM(STR(EF_KASR->NUM_DOC, 10)))
+         DEVPOS(RW + 4, 87)
+         DEVOUT("!   наклеєння      !")
+         DEVPOS(RW + 5, 87)
+         DEVOUT("!     талона       !  T  N " + ALLTRIM(STR(EF_KASR->;
+               NUM_DOC, 10)))
+         CL := INT((87 - (3 + LEN(CMONTHU(EF_KASR->DAT_DOC)) + 8)) / 2)
+         DEVPOS(RW + 6, CL)
+         DEVOUT(ZERO_STR(DAY(EF_KASR->DAT_DOC), 2) + " " + CMONTHU(EF_KASR->;
+               DAT_DOC) + " " + STR(YEAR(EF_KASR->DAT_DOC), 4) + " г.")
+         DEVPOS(RW + 6, 87)
+         DEVOUT("!                  !")
+         DEVPOS(RW + 7, 87)
+         DEVOUT("!                  !     талон до каси")
+         DEVPOS(RW + 8, 0)
+         DEVOUT(;
+               "Видати:                                                                                !==================+=======================";
+               )
+         DEVPOS(RW + 9, 8)
+         DEVOUT(EF_KASR->PL)
+         DEVPOS(RW + 9, 87)
+         DEVOUT("!    Д Е Б Е Т     !      С у м а         !")
+         DEVPOS(RW + 10, 87)
+         DEVOUT("!                  !                      !")
+         DEVPOS(RW + 11, 87)
+         DEVOUT("!  " + EF_KASR->SC_DT + "  !   " + SUBSTR(STR(EF_KASR->;
+               SUMMA, 16, 2), 1, 13) + "," + SUBSTR(STR(EF_KASR->SUMMA, 16, ;
+               2), 15, 2) + "   !")
+         DEVPOS(RW + 12, 0)
+         DEVOUT("Найменування банку: " + ALLTRIM(NAM_B__) + IF(EMPTY(;
+               NAM_FIL__), " ", " " + ALLTRIM(NAM_FIL__) + " ") + ALLTRIM(;
+               GOROD__))
+         DEVPOS(RW + 12, 87)
+         DEVOUT("!рах. N            !                      !")
+         DEVPOS(RW + 13, 0)
+         DEVOUT(;
+               "---------------------------------------------------------------------------------------===================!                      !";
+               )
+         DEVPOS(RW + 14, 0)
+         DEVOUT("Вид витрат  банку: " + EF_KASR->NAM_DT)
+         DEVPOS(RW + 14, 91)
+         DEVOUT("К Р Е Д И Т    ! Загальна             !")
+         DEVPOS(RW + 15, 87)
+         DEVOUT("===================+=======================")
+         DEVPOS(RW + 16, 87)
+         DEVOUT("!  рах. N          ! Показ. касплана")
+         DEVPOS(RW + 17, 87)
+         DEVOUT("!  " + EF_KASR->SC_KT + "  !-----------------------")
+         DEVPOS(RW + 18, 87)
+         DEVOUT("!                  ! Сума            Код")
+         DEVPOS(RW + 19, 0)
+         DEVOUT(;
+               "----------------------------------------------------------------------------------------------------------+=======================";
+               )
+         DEVPOS(RW + 20, 0)
+         DEVOUT(;
+               "Сума  прописом:                                                                                           !";
+                + SUBSTR(STR(EF_KASR->SUMMA, 16, 2), 1, 13) + "," + SUBSTR(;
+               STR(EF_KASR->SUMMA, 16, 2), 15, 2) + "! " + EF_KASR->CH_KPLAN ;
+               + "  !")
+         SUMPROP := SUM_PROP(EF_KASR->SUMMA, .T.)
+         TOKENUPPER(@SUMPROP, 1)
+
+         IF LEN(SUMPROP) <= 89
+
+            DEVPOS(RW + 21, 16)
+            DEVOUT(SUMPROP)
+            DEVPOS(RW + 21, 106)
+            DEVOUT("!----------------+-----!")
+            DEVPOS(RW + 22, 106)
+            DEVOUT("!                !     !")
+
+         ELSEIF LEN(SUMPROP) <= 178
+
+            NN := 89
+
+            DO WHILE .T.
+
+               IF SUBSTR(SUMPROP, NN + 1, 1) = " "
+
+                  EXIT
+
+               ELSE
+
+                  --NN
+
+               ENDIF
+
+            ENDDO
+
+            DEVPOS(RW + 21, 16)
+            DEVOUT(SUBSTR(SUMPROP, 1, NN))
+            DEVPOS(RW + 21, 106)
+            DEVOUT("!----------------+-----!")
+            DEVPOS(RW + 22, 16)
+            DEVOUT(SUBSTR(SUMPROP, NN + 2))
+            DEVPOS(RW + 22, 106)
+            DEVOUT("!                !     !")
+
+         ENDIF
+
+         DEVPOS(RW + 23, 106)
+         DEVOUT("!----------------+-----!")
+         DEVPOS(RW + 24, 0)
+         DEVOUT("Призначення платежу: " + EF_KASR->OSN)
+         DEVPOS(RW + 24, 106)
+         DEVOUT("!                !     !")
+         DEVPOS(RW + 25, 106)
+         DEVOUT("!======================!")
+         DEVPOS(RW + 26, 106)
+         DEVOUT("!Вид  !                !")
+         DEVPOS(RW + 27, 106)
+         DEVOUT("!опер.!                !")
+         DEVPOS(RW + 28, 106)
+         DEVOUT("!-----+----------------!")
+         DEVPOS(RW + 29, 106)
+         DEVOUT("!Призн!                !")
+         DEVPOS(RW + 30, 0)
+         DEVOUT("Пред`явлен: Паспорт, серiя " + IF(EMPTY(EF_KASR->PASP_S), ;
+               SPACE(7), ALLTRIM(EF_KASR->PASP_S)) + ", за N " + IF(EMPTY(;
+               EF_KASR->PASP_S), "", ALLTRIM(STR(EF_KASR->PASP_N, 7))))
+         DEVPOS(RW + 30, 106)
+         DEVOUT("!плат.!                !")
+         DEVPOS(RW + 31, 106)
+         DEVOUT("!-----+----------------!")
+
+         IF  .NOT. EMPTY(EF_KASR->PASP_VYD)
+
+            DEVPOS(RW + 32, 0)
+            DEVOUT("Видан: " + ALLTRIM(EF_KASR->PASP_VYD) + "  " + ZERO_STR(;
+                  DAY(EF_KASR->PASP_DAT), 2) + " " + CMONTHU(EF_KASR->;
+                  PASP_DAT) + " " + STR(YEAR(EF_KASR->PASP_DAT), 4) + " р.")
+
+         ELSE
+
+            DEVPOS(RW + 32, 0)
+            DEVOUT("Видан: ")
+
+         ENDIF
+
+         DEVPOS(RW + 32, 106)
+         DEVOUT("!N гр.!                !")
+         DEVPOS(RW + 33, 106)
+         DEVOUT("!банку!                !")
+         DEVPOS(RW + 34, 0)
+         DEVOUT(;
+               "Зазначенную в ордерi суму одержав                                                                          ========================";
+               )
+         DEVPOS(RW + 37, 0)
+         DEVOUT(;
+               "Контролер                                           Бухгалтер                                             Касир";
+               )
+
+         IF I = 1
+
+            DEVPOS(RW + 40, 0)
+            DEVOUT(;
+                  "-------------------------------------------------------------------------------------------------------------------------------------";
+                  )
+
+         ENDIF
+
+         RW := RW + 43
+
+      NEXT
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(3, 17, 50, "N/W,+W/N", "W/N")
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRKASPRNVA
+   Params: VAL_
+   Return: Logical
+  Example: PRKASPRNVA(VAL_)
+  ..........................................................................
+*/
+
+FUNCTION PRKASPRNVA(VAL_)
+
+   LOCAL WIN, RW, I, SUMPR := ""
+   LOCAL CL, NN, PROP1, PROP2, PROP, S_PROP
+
+   SET(25, 1)
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      SET(20, "SCREEN")
+
+      IF  .NOT. PRINTYES(1)
+
+         RETURN .F.
+
+      ENDIF
+
+      SET(20, "PRINTER")
+      PROP := SUM_PROP(EF_KASR->SUMMA, .T., VAL_, " ")
+      TOKENUPPER(@PROP, 1)
+      S_PROP := SPLIT_STR(PROP, 50)
+      PROP1 := IF(LEN(S_PROP) >= 1, S_PROP[1], "")
+      PROP2 := IF(LEN(S_PROP) >= 2, S_PROP[2], "")
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(21))
+
+      FOR I := 1 TO 3
+
+         DEVPOS(RW + 1, 0)
+         DEVOUT("")
+         DEVPOS(RW + 2, 0)
+         DEVOUT(FIO_OP__)
+
+         IF EF_KASR->PR_PK
+
+            DEVPOS(RW + 2, 86)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(EF_KASR->DAT_BANK))
+
+         ELSE
+
+            DEVPOS(RW + 2, 86)
+            DEVOUT(ZERO_STR(DAY(EF_KASR->DAT_BANK), 2) + " " + ALLTRIM(;
+                  CMONTHUI(EF_KASR->DAT_BANK)) + " " + STR(YEAR(EF_KASR->;
+                  DAT_BANK), 4) + " г.")
+
+         ENDIF
+
+         DEVPOS(RW + 3, 0)
+         DEVOUT("")
+         DEVPOS(RW + 4, 0)
+         DEVOUT(;
+               "                                         ВИДАТКОВИЙ ВАЛЮТНИЙ ОРДЕР N ";
+                + ALLTRIM(STR(EF_KASR->NUM_DOC, 10)))
+         DEVPOS(RW + 5, 0)
+         DEVOUT("")
+         DEVPOS(RW + 6, 0)
+         DEVOUT("")
+         DEVPOS(RW + 7, 0)
+         DEVOUT("   Видати: " + EF_KASR->PL)
+         DEVPOS(RW + 8, 0)
+         DEVOUT("")
+         DEVPOS(RW + 9, 0)
+         DEVOUT("")
+         DEVPOS(RW + 10, 0)
+         DEVOUT("   Змiст операцiї: " + EF_KASR->OSN)
+         DEVPOS(RW + 11, 0)
+         DEVOUT("")
+         DEVPOS(RW + 12, 0)
+         DEVOUT(;
+               "   =============================================================================================================================";
+               )
+         DEVPOS(RW + 13, 0)
+         DEVOUT(;
+               "       Дебет     !   Кредит     !Код !      Сума        !               Сума iнвалюти прописом             !   Сума  грн.       ";
+               )
+         DEVPOS(RW + 14, 0)
+         DEVOUT(;
+               "     рахунка N   !  рахунка N   !iнв.!     iнвалюти     !                                                  !                    ";
+               )
+         DEVPOS(RW + 15, 0)
+         DEVOUT(;
+               "   ==============+==============+====+==================+==================================================+====================";
+               )
+         DEVPOS(RW + 16, 0)
+         DEVOUT("")
+         DEVPOS(RW + 17, 0)
+         DEVOUT("   " + EF_KASR->SC_DT + " " + EF_KASR->SC_KT + " " + VAL_ + ;
+               "   " + SUBSTR(STR(EF_KASR->SUMMA, 16, 2), 1, 13) + "," + ;
+               SUBSTR(STR(EF_KASR->SUMMA, 16, 2), 15, 2) + "   " + PADR(;
+               PROP1, 50) + "  " + STR(EF_KASR->SUM_V, 16, 2))
+         DEVPOS(RW + 18, 0)
+         DEVOUT("                                                      " + ;
+               PROP2)
+         DEVPOS(RW + 19, 0)
+         DEVOUT("")
+         DEVPOS(RW + 20, 0)
+         DEVOUT(;
+               "   -----------------------------------------------------------------------------------------------------------------------------";
+               )
+         DEVPOS(RW + 21, 0)
+         DEVOUT("")
+         DEVPOS(RW + 22, 0)
+         DEVOUT("")
+         DEVPOS(RW + 23, 0)
+         DEVOUT("   Пред`явлен паспорт (посвiдка) серiя " + EF_KASR->PASP_S ;
+               + "  N " + STR(EF_KASR->PASP_N, 7))
+         DEVPOS(RW + 24, 0)
+         DEVOUT("")
+         DEVPOS(RW + 25, 0)
+         DEVOUT("   Видан " + EF_KASR->PASP_VYD + "   дата видачи " + DTOC(;
+               EF_KASR->PASP_DAT))
+         DEVPOS(RW + 26, 0)
+         DEVOUT("")
+         DEVPOS(RW + 27, 0)
+         DEVOUT(;
+               "                                                                                                    Зазначенную iнвалюту одержав";
+               )
+         DEVPOS(RW + 28, 0)
+         DEVOUT("")
+         DEVPOS(RW + 29, 0)
+         DEVOUT("")
+         DEVPOS(RW + 30, 0)
+         DEVOUT(;
+               "   Контролер................     Бухгалтер................     Видав касир..................         .......................... ";
+               )
+         DEVPOS(RW + 31, 0)
+         DEVOUT("")
+         DEVPOS(RW + 32, 0)
+         DEVOUT("")
+         DEVPOS(RW + 33, 0)
+         DEVOUT("")
+
+         IF I == 1 .OR. I == 2
+
+            MEMVAR->SEPARATOR := PADR("-----лiнiя вiдрiзу", 130, "-")
+            DEVPOS(RW + 34, 0)
+            DEVOUT(SEPARATOR)
+            RW := RW + 35
+
+         ELSE
+
+            RW := RW + 34
+
+         ENDIF
+
+      NEXT
+
+      DEVPOS(RW, 0)
+      DEVOUT("")
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. PRINTYES(1, .T.)
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_ZPO
+   Params: ARR_
+   Return: Variable
+  Example: V_P_ZPO(ARR_)
+  ..........................................................................
+*/
+
+FUNCTION V_P_ZPO(ARR_)
+
+   LOCAL WIN, RW, I, SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 0)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(24, "")
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(27))
+      RW := RW + 1
+
+      FOR I := 1 TO 2
+
+         IF EF_KASP->PR_PK
+
+            DEVPOS(RW++, 45)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(DAT_OD__) + " р.")
+
+         ENDIF
+
+         DEVPOS(RW++, 2)
+         DEVOUT(ALLTRIM(NAM_B__) + " " + ALLTRIM(NAM_FIL__) + " " + ;
+               ALLTRIM(GOROD__))
+         DEVPOS(RW++, 0)
+         DEVOUT("")
+         DEVPOS(RW++, 30)
+         DEVOUT("ЗВЕДEНИЙ")
+         DEVPOS(RW++, 20)
+         DEVOUT("КАСОВИЙ ОРДЕР ПЛАТЕЖIВ, ПРИЙНЯТИХ")
+         DEVPOS(RW++, 25)
+         DEVOUT("за " + ZERO_STR(DAY(EF_KASP->DAT_DOC), 2) + " " + CMONTHUI(;
+               EF_KASP->DAT_DOC) + " " + STR(YEAR(EF_KASP->DAT_DOC), 4) + ;
+               " р.")
+         DEVPOS(RW++, 0)
+         DEVOUT("")
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "-------------------------------------------------------------------------";
+               )
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "!N символу!    Дебет       !    Кредит      !Кiлькiсть !     Сума       !";
+               )
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "!звiтностi!   рахунку      !   рахунку      !документiв!                !";
+               )
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "-------------------------------------------------------------------------";
+               )
+
+         FOR PPP := 1 TO LEN(ARR_)
+
+            DEVPOS(RW++, 2)
+            DEVOUT("!    " + ARR_[PPP, 1] + "   ! " + EF_KASP->SC_DT + ;
+                  " ! " + EF_KASP->SC_KT + " !   " + STR(ARR_[PPP, 2], 4) + ;
+                  "   !" + STR(ARR_[PPP, 3], 16, 2) + "!")
+
+         NEXT
+
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "-------------------------------------------------------------------------";
+               )
+         DEVPOS(RW++, 2)
+         DEVOUT("")
+         DEVPOS(RW++, 2)
+         DEVOUT("")
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "  Касир________________                  Контролер________________";
+               )
+         DEVPOS(RW++, 2)
+         DEVOUT("")
+         DEVPOS(RW++, 2)
+         DEVOUT(;
+               "  Перевiрено: бухгалтер_____________      Дата_________________";
+               )
+         DEVPOS(RW++, 0)
+         DEVOUT("")
+         DEVPOS(RW++, 0)
+         DEVOUT("")
+
+         IF I < 2
+
+            DEVPOS(RW++, 0)
+            DEVOUT(;
+                  "--------------------------------------------------------------";
+                  )
+
+         ENDIF
+
+      NEXT
+
+      IF  .NOT. EF_BANK->PR_R_L
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO EF_BANK->KVO_STR
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(3, 17, 50, "N/W,+W/N", "W/N")
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_PO
+   Params: None.
+   Return: Variable
+  Example: V_P_PO()
+  ..........................................................................
+*/
+
+FUNCTION V_P_PO()
+
+   LOCAL WIN, RW, I, SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(24, "")
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(21))
+      RW := RW + 1
+
+      FOR I := 1 TO 3
+
+         DEVPOS(RW + 0, 0)
+         DEVOUT(EF_KASP->FIO_OP)
+
+         IF EF_KASP->PR_PK
+
+            DEVPOS(RW + 0, 94)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(DAT_OD__) + " р.")
+
+         ENDIF
+
+         DEVPOS(RW + 1, 54)
+         DEVOUT("ПРИХОДНИЙ")
+         DEVPOS(RW + 1, 106)
+         DEVOUT("------------------------")
+         DEVPOS(RW + 2, 49)
+         DEVOUT("КАСОВИЙ ОРДЕР N  " + ALLTRIM(STR(EF_KASP->NUM_DOC, 10)))
+         DEVPOS(RW + 2, 106)
+         DEVOUT("!        0402008       !")
+         DEVPOS(RW + 3, 106)
+         DEVOUT("------------------------")
+         DEVPOS(RW + 4, 48)
+         DEVOUT(ZERO_STR(DAY(EF_KASP->DAT_DOC), 2) + " " + CMONTHUI(EF_KASP->;
+               DAT_DOC) + " " + STR(YEAR(EF_KASP->DAT_DOC), 4) + " р.")
+         DEVPOS(RW + 5, 0)
+         DEVOUT(;
+               "Вiд кого                                                                                    Д Е Б Е Т              Сума";
+               )
+         DEVPOS(RW + 6, 87)
+         DEVOUT("===========================================")
+         DEVPOS(RW + 7, 87)
+         DEVOUT("!  " + EF_KASP->SC_DT + "  !                      !")
+         DEVPOS(RW + 8, 12)
+         DEVOUT(ALLTRIM(EF_KASP->PL))
+         DEVPOS(RW + 8, 87)
+         DEVOUT("!рах. N            !   " + SUBSTR(STR(EF_KASP->SUMMA, 16, ;
+               2), 1, 13) + "," + SUBSTR(STR(EF_KASP->SUMMA, 16, 2), 15, 2) ;
+               + "   !")
+         DEVPOS(RW + 9, 87)
+         DEVOUT("===================!                      !")
+         DEVPOS(RW + 10, 91)
+         DEVOUT("К Р Е Д И Т    ! Загальна             !")
+         DEVPOS(RW + 11, 0)
+         DEVOUT(;
+               "---------------------------------------------------------------------=====================================!======================!";
+               )
+         DEVPOS(RW + 12, 69)
+         DEVOUT(;
+               "!                 !                  ! частковi      !  код";
+               )
+         DEVPOS(RW + 13, 0)
+         DEVOUT("Банк одержувача: " + ALLTRIM(EF_KASP->BANK_KT))
+         DEVPOS(RW + 13, 69)
+         DEVOUT("! Код   " + ALLTRIM(EF_KASP->MFO_KT))
+         DEVPOS(RW + 13, 87)
+         DEVOUT("!                  !-----------------------")
+         DEVPOS(RW + 14, 0)
+         DEVOUT(;
+               "---------------------------------------------------------------------==================!                  !";
+                + STR(EF_KASP->SUMMA, 15, 2) + "!  " + EF_KASP->CH_KPLAN + ;
+               "  !")
+         DEVPOS(RW + 15, 0)
+         DEVOUT(;
+               "Одержувач :                                                                            !                  !----------------------!";
+               )
+         DEVPOS(RW + 16, 12)
+         DEVOUT(ALLTRIM(EF_KASP->NAM_KT))
+         DEVPOS(RW + 16, 87)
+         DEVOUT("!                  !                      !")
+         DEVPOS(RW + 17, 87)
+         DEVOUT("!  " + EF_KASP->SC_KT + "  !----------------------!")
+         DEVPOS(RW + 18, 87)
+         DEVOUT("!                  !                      !")
+         DEVPOS(RW + 19, 87)
+         DEVOUT("!                  !----------------------!")
+         DEVPOS(RW + 20, 87)
+         DEVOUT("!                  !                      !")
+         DEVPOS(RW + 21, 87)
+         DEVOUT("!                  !----------------------!")
+         DEVPOS(RW + 22, 87)
+         DEVOUT("!рах. N            !                      !")
+         DEVPOS(RW + 23, 0)
+         DEVOUT(;
+               "---------------------------------------------------------------------------------------===================+======================!";
+               )
+         SUMPROP := SUM_PROP(EF_KASP->SUMMA, .T.)
+         TOKENUPPER(@SUMPROP, 1)
+         DEVPOS(RW + 24, 0)
+         DEVOUT("Сума прописом: ")
+
+         IF LEN(SUMPROP) <= 88
+
+            DEVPOS(RW + 24, 16)
+            DEVOUT(SUMPROP)
+            DEVPOS(RW + 24, 106)
+            DEVOUT("! Вид !                !")
+            DEVPOS(RW + 25, 106)
+            DEVOUT("!опер.!                !")
+
+         ELSEIF LEN(SUMPROP) <= 176
+
+            NN := 114
+
+            DO WHILE .T.
+
+               IF SUBSTR(SUMPROP, NN + 1, 1) = " "
+
+                  EXIT
+
+               ELSE
+
+                  --NN
+
+               ENDIF
+
+            ENDDO
+
+            DEVPOS(RW + 24, 16)
+            DEVOUT(SUBSTR(SUMPROP, 1, NN))
+            DEVPOS(RW + 24, 106)
+            DEVOUT("! Вид !                !")
+            DEVPOS(RW + 25, 16)
+            DEVOUT(SUBSTR(SUMPROP, NN + 2))
+            DEVPOS(RW + 25, 106)
+            DEVOUT("!опер.!                !")
+            ++RW
+
+         ELSE
+
+            DEVPOS(RW + 24, 106)
+            DEVOUT("! Вид !                !")
+            DEVPOS(RW + 25, 106)
+            DEVOUT("!опер.!                !")
+
+         ENDIF
+
+         DEVPOS(RW + 26, 0)
+         DEVOUT(;
+               "----------------------------------------------------------------------------------------------------------!-----+----------------!";
+               )
+         DEVPOS(RW + 27, 0)
+         DEVOUT("Призначення платежу: " + ALLTRIM(EF_KASP->OSN))
+         DEVPOS(RW + 27, 106)
+         DEVOUT("!Призн!                !")
+         DEVPOS(RW + 28, 106)
+         DEVOUT("!плат.!                !")
+         DEVPOS(RW + 29, 106)
+         DEVOUT("!-----+----------------!")
+         DEVPOS(RW + 30, 106)
+         DEVOUT("!N гр.!                !")
+         DEVPOS(RW + 31, 106)
+         DEVOUT("!банку!                !")
+         DEVPOS(RW + 32, 106)
+         DEVOUT("========================")
+         DEVPOS(RW + 33, 0)
+         DEVOUT(;
+               "   Пiдпис клiєнта                                          Бухгалтер                             Касир";
+               )
+         DEVPOS(RW + 34, 0)
+         DEVOUT("")
+
+         IF I < 3
+
+            DEVPOS(RW + 35, 0)
+            DEVOUT(;
+                  "----------------------------------------------------------------------------------------------------------------------------------";
+                  )
+            RW := RW + 36
+
+         ENDIF
+
+      NEXT
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(3, 17, 50, "N/W,+W/N", "W/N")
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PR_KASPRNV
+   Params: VAL_
+   Return: Logical
+  Example: PR_KASPRNV(VAL_)
+  ..........................................................................
+*/
+
+FUNCTION PR_KASPRNV(VAL_)
+
+   LOCAL WIN, RW, I, SUMPR := ""
+   LOCAL CL, NN
+
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      SET(20, "SCREEN")
+
+      IF  .NOT. PRINTYES(1)
+
+         RETURN .F.
+
+      ENDIF
+
+      SET(20, "PRINTER")
+      MEMVAR->PROP := SUM_PROP(EF_KASP->SUMMA, .T., VAL_, " ")
+      TOKENUPPER(@PROP, 1)
+      MEMVAR->S_PROP := SPLIT_STR(PROP, 50)
+      MEMVAR->PROP1 := IF(LEN(S_PROP) >= 1, MEMVAR->S_PROP[1], "")
+      MEMVAR->PROP2 := IF(LEN(S_PROP) >= 2, MEMVAR->S_PROP[2], "")
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(21))
+
+      FOR I := 1 TO 3
+
+         DEVPOS(RW + 1, 0)
+         DEVOUT("")
+         DEVPOS(RW + 2, 0)
+         DEVOUT(FIO_OP__)
+
+         IF EF_KASP->PR_PK
+
+            DEVPOS(RW + 2, 86)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(EF_KASP->DAT_BANK))
+
+         ELSE
+
+            DEVPOS(RW + 2, 86)
+            DEVOUT(ZERO_STR(DAY(EF_KASP->DAT_BANK), 2) + " " + ALLTRIM(;
+                  CMONTHUI(EF_KASP->DAT_BANK)) + " " + STR(YEAR(EF_KASP->;
+                  DAT_BANK), 4) + " г.")
+
+         ENDIF
+
+         DEVPOS(RW + 3, 0)
+         DEVOUT("")
+         DEVPOS(RW + 4, 0)
+         DEVOUT(;
+               "                                         ПРИХОДНИЙ ВАЛЮТНИЙ ОРДЕР N ";
+                + ALLTRIM(STR(EF_KASP->NUM_DOC, 10)))
+         DEVPOS(RW + 5, 0)
+         DEVOUT("")
+         DEVPOS(RW + 6, 0)
+         DEVOUT("")
+         DEVPOS(RW + 7, 0)
+         DEVOUT("   Вiд кого: " + EF_KASP->PL)
+         DEVPOS(RW + 8, 0)
+         DEVOUT("")
+         DEVPOS(RW + 9, 0)
+         DEVOUT("")
+         DEVPOS(RW + 10, 0)
+         DEVOUT("   Змiст операцiї: " + EF_KASP->OSN)
+         DEVPOS(RW + 11, 0)
+         DEVOUT("")
+         DEVPOS(RW + 12, 0)
+         DEVOUT(;
+               "   =============================================================================================================================";
+               )
+         DEVPOS(RW + 13, 0)
+         DEVOUT(;
+               "       Дебет     !   Кредит     !Код !      Сума        !               Сума iнвалюти прописом             !   Сума  грн.       ";
+               )
+         DEVPOS(RW + 14, 0)
+         DEVOUT(;
+               "     рахунка N   !  рахунка N   !iнв.!     iнвалюти     !                                                  !                    ";
+               )
+         DEVPOS(RW + 15, 0)
+         DEVOUT(;
+               "   ==============+==============+====+==================+==================================================+====================";
+               )
+         DEVPOS(RW + 16, 0)
+         DEVOUT("")
+         DEVPOS(RW + 17, 0)
+         DEVOUT("   " + EF_KASP->SC_DT + " " + EF_KASP->SC_KT + " " + VAL_ + ;
+               "   " + SUBSTR(STR(EF_KASP->SUMMA, 16, 2), 1, 13) + "," + ;
+               SUBSTR(STR(EF_KASP->SUMMA, 16, 2), 15, 2) + "   " + PADR(;
+               PROP1, 50) + "  " + STR(EF_KASP->SUM_V, 16, 2))
+         DEVPOS(RW + 18, 0)
+         DEVOUT("                                                      " + ;
+               PROP2)
+         DEVPOS(RW + 19, 0)
+         DEVOUT("")
+         DEVPOS(RW + 20, 0)
+         DEVOUT(;
+               "   -----------------------------------------------------------------------------------------------------------------------------";
+               )
+         DEVPOS(RW + 21, 0)
+         DEVOUT("")
+         DEVPOS(RW + 22, 0)
+         DEVOUT("")
+         DEVPOS(RW + 23, 0)
+         DEVOUT("")
+         DEVPOS(RW + 24, 0)
+         DEVOUT(;
+               "   Пiдпис                 Перший                 Другий                Виконавець                 Зазначену валюту";
+               )
+         DEVPOS(RW + 25, 0)
+         DEVOUT(;
+               "   клiєнта                пiдпис                 пiдпис                                            принйяв касир";
+               )
+         DEVPOS(RW + 26, 0)
+         DEVOUT("")
+         DEVPOS(RW + 27, 0)
+         DEVOUT("")
+         DEVPOS(RW + 28, 0)
+         DEVOUT("")
+
+         IF I == 1 .OR. I == 2
+
+            MEMVAR->SEPARATOR := PADR("-----лiнiя вiдрiзу", 130, "-")
+            DEVPOS(RW + 29, 0)
+            DEVOUT(SEPARATOR)
+            RW := RW + 30
+
+         ELSE
+
+            RW := RW + 29
+
+         ENDIF
+
+      NEXT
+
+      DEVPOS(RW, 0)
+      DEVOUT("")
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. PRINTYES(1, .T.)
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_PV_PP
+   Params: None.
+   Return: Logical
+  Example: V_PV_PP()
+  ..........................................................................
+*/
+
+FUNCTION V_PV_PP()
+
+   LOCAL WIN, RW, I, NB := CHR(34) + ALIAS() + CHR(34)
+   LOCAL SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(25))
+      RW := RW + 3
+
+      FOR I := 1 TO 2
+
+         DEVPOS(RW + 0, 6)
+         DEVOUT(;
+               "                                                                   -----------------------";
+               )
+         DEVPOS(RW + 1, 6)
+         DEVOUT(;
+               "                          П Л А Т I Ж Н Е     Д О Р У Ч Е Н Н Я    ! N :  ";
+                + STR(EF_DOC->NUM_DOC, 10) + "     !")
+         DEVPOS(RW + 2, 6)
+         DEVOUT("                                  вiд: " + PADR(ZERO_STR(;
+               DAY(EF_DOC->DAT_BANK), 2) + " " + CMONTHUI(EF_DOC->DAT_BANK) +;
+                " " + STR(YEAR(EF_DOC->DAT_BANK), 4) + " р.", 19) + ;
+               "         -----------------------")
+         DEVPOS(RW + 3, 6)
+         DEVOUT(;
+               "                                                                  -----------------------------------------------------------";
+               )
+         DEVPOS(RW + 4, 6)
+         DEVOUT("ПЛАТНИК    : " + EF_DOC->NAM_DT + ;
+               "                       !         Д Е Б Е Т               !      С У М А          !";
+               )
+         DEVPOS(RW + 5, 6)
+         DEVOUT("КОД: " + EF_DOC->OKPO_DT + ;
+               "                                 --------------------+---------------------------------+-----------------------!";
+               )
+         DEVPOS(RW + 6, 6)
+         DEVOUT("                                              ! КОД : " + ;
+               EF_DOC->MFO_DT + "   ! РАХУНОК:  " + EF_DOC->SC_DT + ;
+               "         !   " + SUBSTR(STR(EF_DOC->SUMMA, 16, 2), 1, 13) + ;
+               "," + SUBSTR(STR(EF_DOC->SUMMA, 16, 2), 15, 2) + "    !")
+         DEVPOS(RW + 7, 6)
+         DEVOUT(;
+               "БАНК ПЛАТНИКА    :                            -------------------------------------------------------------------------------";
+               )
+         DEVPOS(RW + 8, 6)
+         DEVOUT(PADR(ALLTRIM(EF_DOC->BANK_DT), 45))
+         DEVPOS(RW + 9, 6)
+         DEVOUT(;
+               "                                                                  -------------------------------";
+               )
+         DEVPOS(RW + 10, 6)
+         DEVOUT("ОДЕРЖУВАЧ : " + EF_DOC->NAM_KT + ;
+               "                        !        К Р Е Д И Т          !")
+         DEVPOS(RW + 11, 6)
+         DEVOUT("КОД: " + EF_DOC->OKPO_KT + ;
+               "                                 --------------------------------------------------!";
+               )
+         DEVPOS(RW + 12, 6)
+         DEVOUT("                                              ! КОД : " + ;
+               EF_DOC->MFO_KT + "   ! РАХУНОК:  " + EF_DOC->SC_KT + "     !")
+         DEVPOS(RW + 13, 6)
+         DEVOUT(;
+               "БАНК ОДЕРЖУВАЧА :                             ---------------------------------------------------";
+               )
+         DEVPOS(RW + 14, 6)
+         DEVOUT(PADR(ALLTRIM(EF_DOC->BANK_KT), 45))
+         DEVPOS(RW + 15, 6)
+         DEVOUT(;
+               "                                                                            ПЕНЯ  за     днiв";
+               )
+         DEVPOS(RW + 16, 6)
+         DEVOUT("СУМА  ПРОПИСОМ:")
+
+         IF EF_DOC->KOD_V == KOD_VUAH__
+
+            SUMPROP := SUM_PROP(EF_DOC->SUMMA, .T.)
+
+         ELSE
+
+            SUMPROP := SUM_PROP(EF_DOC->SUMMA, .T., EF_DOC->KOD_V, " ")
+
+         ENDIF
+
+         TOKENUPPER(@SUMPROP, 1)
+
+         IF LEN(SUMPROP) <= 115
+
+            DEVPOS(RW + 16, 23)
+            DEVOUT(SUMPROP)
+
+         ELSEIF LEN(SUMPROP) <= 230
+
+            NN := 115
+
+            DO WHILE .T.
+
+               IF SUBSTR(SUMPROP, NN + 1, 1) = " "
+
+                  EXIT
+
+               ELSE
+
+                  --NN
+
+               ENDIF
+
+            ENDDO
+
+            DEVPOS(RW + 16, 23)
+            DEVOUT(SUBSTR(SUMPROP, 1, NN))
+            DEVPOS(RW + 17, 23)
+            DEVOUT(SUBSTR(SUMPROP, NN + 2))
+            ++RW
+
+         ENDIF
+
+         DEVPOS(RW + 19, 6)
+         DEVOUT(;
+               "                                                                            сума з пенею";
+               )
+         DEVPOS(RW + 20, 6)
+         DEVOUT(;
+               "ДАТА ОДЕРЖАННЯ ТОВАРУ, ПОДАННЯ  ПОСЛУГ                        вид опер.";
+               )
+         DEVPOS(RW + 21, 6)
+         DEVOUT(;
+               "                                                              строк плат.";
+               )
+         DEVPOS(RW + 22, 6)
+         DEVOUT(;
+               "                                                              очер плат.";
+               )
+         DEVPOS(RW + 23, 6)
+         DEVOUT(;
+               "                                                              N гр. банку";
+               )
+         DEVPOS(RW + 24, 6)
+         DEVOUT("ПРИЗНАЧЕННЯ ПЛАТЕЖУ: " + EF_DOC->OSN)
+         DEVPOS(RW + 25, 6)
+         DEVOUT("")
+         DEVPOS(RW + 26, 6)
+         DEVOUT("")
+         DEVPOS(RW + 27, 6)
+         DEVOUT(;
+               "                  М. П.                                                Пiдписи банку";
+               )
+         DEVPOS(RW + 28, 6)
+         DEVOUT(;
+               "                                         Пiдписи клiєнта               Проведено банком '_____'__________199___р.";
+               )
+         DEVPOS(RW + 29, 6)
+         DEVOUT(" ")
+
+         IF I = 1
+
+            DEVPOS(RW + 31, 0)
+            DEVOUT(;
+                  "----- Линия разреза --------------------------------------------------------------------------------------------------------------";
+                  )
+
+         ENDIF
+
+         RW := RW + 35
+
+      NEXT
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(3, 17, 50, "N/W,+W/N", "W/N")
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+   SET(20, "SCREEN")
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_PV_MO
+   Params: None.
+   Return: Logical
+  Example: V_PV_MO()
+  ..........................................................................
+*/
+
+FUNCTION V_PV_MO()
+
+   LOCAL WIN, RW, I, NB := CHR(34) + ALIAS() + CHR(34)
+   LOCAL SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(25))
+      RW := RW + 3
+
+      FOR I := 1 TO 2
+
+         DEVPOS(RW + 0, 58)
+         DEVOUT(;
+               "--------------------------                         ---------------------";
+               )
+         DEVPOS(RW + 1, 16)
+         DEVOUT("М Е М О Р I А Л Ь Н И Й   О Р Д Е Р  N    !       " + STR(;
+               EF_DOC->NUM_DOC, 10) + ;
+               "       !                         !      0401009      !")
+         DEVPOS(RW + 2, 58)
+         DEVOUT(;
+               "--------------------------                         ---------------------";
+               )
+         CL := INT((130 - LEN(ZERO_STR(DAY(EF_DOC->DAT_BANK), 2) + " " + ;
+               CMONTHUI(EF_DOC->DAT_BANK) + " " + STR(YEAR(EF_DOC->DAT_BANK),;
+                4) + " р.")) / 2)
+         DEVPOS(RW + 4, CL)
+         DEVOUT(ZERO_STR(DAY(EF_DOC->DAT_BANK), 2) + " " + CMONTHUI(EF_DOC->;
+               DAT_BANK) + " " + STR(YEAR(EF_DOC->DAT_BANK), 4) + " р.")
+         DEVPOS(RW + 6, 0)
+         DEVOUT("Платник   : " + EF_DOC->NAM_DT)
+         DEVPOS(RW + 6, 90)
+         DEVOUT("Д Е Б Е Т              С у м а  ")
+         DEVPOS(RW + 7, 83)
+         DEVOUT("===============================================")
+         DEVPOS(RW + 8, 0)
+         DEVOUT(;
+               "----------------------------                                                       !                      !                      !";
+               )
+         DEVPOS(RW + 9, 0)
+         DEVOUT("! Код   " + EF_DOC->OKPO_DT + ;
+               "           !                                                       !    ";
+                + EF_DOC->SC_DT + "     !                      !")
+         DEVPOS(RW + 10, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------==================!                      !                      !";
+               )
+         DEVPOS(RW + 11, 65)
+         DEVOUT(;
+               "!                 !рах. N                !                      !";
+               )
+         DEVPOS(RW + 12, 0)
+         DEVOUT("Банк платника   : " + PADR(ALLTRIM(EF_DOC->BANK_DT), 45))
+         DEVPOS(RW + 12, 65)
+         DEVOUT("! Код  " + EF_DOC->MFO_DT + ;
+               "  !======================!                      !")
+         DEVPOS(RW + 13, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------===================                      !                      !";
+               )
+         DEVPOS(RW + 14, 0)
+         DEVOUT("Одержувач : " + EF_DOC->NAM_KT)
+         DEVPOS(RW + 14, 89)
+         DEVOUT("К Р Е Д И Т      !   " + SUBSTR(STR(EF_DOC->SUMMA, 16, 2), ;
+               1, 13) + "," + SUBSTR(STR(EF_DOC->SUMMA, 16, 2), 15, 2) + ;
+               "   !")
+         DEVPOS(RW + 15, 83)
+         DEVOUT("=======================!                      !")
+         DEVPOS(RW + 16, 0)
+         DEVOUT(;
+               "----------------------------                                                       !                      !                      !";
+               )
+         DEVPOS(RW + 17, 0)
+         DEVOUT("! Код   " + EF_DOC->OKPO_KT + ;
+               "           !                                                       !                      !                      !";
+               )
+         DEVPOS(RW + 18, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------==================!    ";
+                + EF_DOC->SC_KT + "     !                      !")
+         DEVPOS(RW + 19, 65)
+         DEVOUT(;
+               "!                 !                      !                      !";
+               )
+         DEVPOS(RW + 20, 0)
+         DEVOUT("Банк одержувача: " + PADR(ALLTRIM(EF_DOC->BANK_KT), 45))
+         DEVPOS(RW + 20, 65)
+         DEVOUT("! Код  " + EF_DOC->MFO_KT + ;
+               "  ! сч. N                !                      !")
+         DEVPOS(RW + 21, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------=================================================================";
+               )
+
+         IF EF_DOC->KOD_V == KOD_VUAH__
+
+            SUMPROP := SUM_PROP(EF_DOC->SUMMA, .T.)
+
+         ELSE
+
+            SUMPROP := SUM_PROP(EF_DOC->SUMMA, .T., EF_DOC->KOD_V, " ")
+
+         ENDIF
+
+         TOKENUPPER(@SUMPROP, 1)
+         DEVPOS(RW + 23, 0)
+         DEVOUT("Сума  прописом: ")
+
+         IF LEN(SUMPROP) <= 115
+
+            DEVPOS(RW + 23, 16)
+            DEVOUT(SUMPROP)
+
+         ELSEIF LEN(SUMPROP) <= 230
+
+            NN := 115
+
+            DO WHILE .T.
+
+               IF SUBSTR(SUMPROP, NN + 1, 1) = " "
+
+                  EXIT
+
+               ELSE
+
+                  --NN
+
+               ENDIF
+
+            ENDDO
+
+            DEVPOS(RW + 23, 16)
+            DEVOUT(SUBSTR(SUMPROP, 1, NN))
+            DEVPOS(RW + 24, 16)
+            DEVOUT(SUBSTR(SUMPROP, NN + 2))
+            ++RW
+
+         ENDIF
+
+         DEVPOS(RW + 24, 0)
+         DEVOUT(;
+               "----------------------------------------------------------------------------------------------------------------------------------";
+               )
+         DEVPOS(RW + 25, 0)
+         DEVOUT("Призначення платежу: " + EF_DOC->OSN)
+         DEVPOS(RW + 25, 119)
+         DEVOUT("Коди")
+         DEVPOS(RW + 26, 100)
+         DEVOUT("==============================")
+         DEVPOS(RW + 27, 100)
+         DEVOUT("! Вид опер. !                !")
+         DEVPOS(RW + 28, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 29, 100)
+         DEVOUT("!Призн плат.!                !")
+         DEVPOS(RW + 30, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 31, 100)
+         DEVOUT("!Строк плат.!                !")
+         DEVPOS(RW + 32, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 33, 100)
+         DEVOUT("!Очер. плат.!                !")
+         DEVPOS(RW + 34, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 35, 100)
+         DEVOUT("!N гр. банку!                !")
+         DEVPOS(RW + 36, 100)
+         DEVOUT("==============================")
+         DEVPOS(RW + 38, 0)
+         DEVOUT(;
+               "Додаток    на _______________ сторiнках                                     Пiдписи";
+               )
+         DEVPOS(RW + 39, 0)
+         DEVOUT("")
+
+         IF I = 1
+
+            DEVPOS(RW + 40, 0)
+            DEVOUT(;
+                  "----- Линия разреза --------------------------------------------------------------------------------------------------------------";
+                  )
+
+         ENDIF
+
+         RW := RW + 47
+
+      NEXT
+
+      IF  .NOT. PR_R_L__
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO KVO_STR__
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(3, 17, 50, "N/W,+W/N", "W/N")
+
+         EXIT
+
+      ENDIF
+
+      SET(20, "PRINTER")
+
+   ENDDO
+
+   SET(20, "SCREEN")
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRNCHEK
+   Params: FNAME
+   Return: Number
+  Example: PRNCHEK(FNAME)
+  ..........................................................................
+*/
+
+FUNCTION PRNCHEK(FNAME)
+
+   IF SCANCODE() = -1
+
+      IF PRINTYES()
+
+         PRINTFILE(FNAME, .T.)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_P_PE_K
+   Params: FLAG
+   Return: Logical
+  Example: V_P_PE_K(FLAG)
+  ..........................................................................
+*/
+
+FUNCTION V_P_PE_K(FLAG)
+
+   LOCAL WIN, RW, I, NB := CHR(34) + ALIAS() + CHR(34)
+   LOCAL SUMPROP := ""
+   LOCAL CL, NN
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "SCREEN")
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      DO WHILE  .NOT. PRINTREADY(1)
+
+         SET(20, "SCREEN")
+
+         IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+            RETURN .F.
+
+         ENDIF
+
+         SET(20, "PRINTER")
+         PRNREADY(1, 2)
+
+      ENDDO
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(25))
+      RW := RW + 2
+
+      IF  .NOT. FLAG
+
+         IF EF_JPKPL->PR_PK
+
+            DEVPOS(RW, 30)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(EF_JPKPL->DAT_OPL) + ;
+                  " р.")
+
+         ENDIF
+
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 24)
+         DEVOUT(EF_S_PPL->NAM_POL)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! -----------------------------------")
+         DEVPOS(RW, 60)
+         DEVOUT("   КОД ОКПО ! " + STR(EF_S_PPL->KOD_OKPO, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 26)
+         DEVOUT("одержувач  платежу                  одержувача")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! Установа банка :          МФО            КОД ОКПО")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 35)
+         DEVOUT("            банку " + STR(EF_S_PPL->MFO, 6) + ;
+               "      банку  ! " + STR(EF_S_PPL->OKPO_BANK, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 22)
+         DEVOUT(EF_S_PPL->BANK)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "! Рах. одер-  ----------------     Особовий --------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! жувача      !")
+         MEMVAR->SC_PLL := EF_S_PPL->SC
+         DEVPOS(RW, 35)
+         DEVOUT(STR(SC_PLL, 14))
+         DEVPOS(RW, 49)
+         DEVOUT("!")
+         DEVPOS(RW, 56)
+         DEVOUT("рахунок")
+         DEVPOS(RW, 64)
+         DEVOUT("!")
+         DEVPOS(RW, 65)
+         DEVOUT(EF_JPKPL->LS_PLAT)
+         DEVPOS(RW, 83)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 34)
+         DEVOUT("----------------")
+         DEVPOS(RW, 64)
+         DEVOUT("--------------------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(EF_JPKPL->NAM_PLAT + " " + EF_JPKPL->ADRES)
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT(;
+               "  СПОВIЩЕННЯ      ! ---------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT("N " + EF_JPKPL->NUM_DOC)
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 38)
+         DEVOUT("Фамiлiя I.П., адреса")
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + DTOC(DATE()) + " " + TIME())
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + SUBSTR(EF_JPKPL->FIO_OP, 1, 19))
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!    Вид             !Недоїмка!Платежи!   Дата   !   Сума ";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!    платежу         !минулих !поточно! баланса  !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    ! рокiв  !го року!          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(EF_S_GPL->NAM_VPL)
+         DEVPOS(RW, 41)
+         DEVOUT("!        !       !" + DTOC(EF_JPKPL->DAT_BANK) + "!" + STR(;
+               EF_JPKPL->SUMMA, 16, 2))
+
+         IF  .NOT. EMPTY(EF_S_PL->NAM_PL)
+
+            ++RW
+            DEVPOS(RW, 20)
+            DEVOUT("!" + EF_S_PL->NAM_PL + "!        !       !          !")
+
+         ENDIF
+
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    !        !       !          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                                       Пеня     !")
+         ++RW
+         DEVPOS(RW, 5)
+         DEVOUT("Касир")
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!     Платник                           Разом    !")
+         DEVPOS(RW, 70)
+         DEVOUT(STR(EF_JPKPL->SUMMA, 16, 2))
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(;
+               "-------------------+-----------------------------------------------------------------";
+               )
+         ++RW
+
+         IF EF_JPKPL->PR_PK
+
+            DEVPOS(RW, 30)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(EF_JPKPL->DAT_OPL) + ;
+                  " р.")
+            ++RW
+
+         ELSE
+
+            ++RW
+
+         ENDIF
+
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 24)
+         DEVOUT(EF_S_PPL->NAM_POL)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! -----------------------------------")
+         DEVPOS(RW, 60)
+         DEVOUT("   КОД ОКПО ! " + STR(EF_S_PPL->KOD_OKPO, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 26)
+         DEVOUT("одержувач  платежу                  одержувача")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! Установа банка :          МФО            КОД ОКПО")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 35)
+         DEVOUT("            банку " + STR(EF_S_PPL->MFO, 6) + ;
+               "      банку  ! " + STR(EF_S_PPL->OKPO_BANK, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 22)
+         DEVOUT(EF_S_PPL->BANK)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "! Рах. одер-  ----------------     Особовий --------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! жувача      !")
+         DEVPOS(RW, 35)
+         DEVOUT(STR(SC_PLL, 14))
+         DEVPOS(RW, 49)
+         DEVOUT("!")
+         DEVPOS(RW, 56)
+         DEVOUT("рахунок")
+         DEVPOS(RW, 64)
+         DEVOUT("!")
+         DEVPOS(RW, 65)
+         DEVOUT(EF_JPKPL->LS_PLAT)
+         DEVPOS(RW, 83)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 34)
+         DEVOUT("----------------")
+         DEVPOS(RW, 64)
+         DEVOUT("--------------------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(EF_JPKPL->NAM_PLAT + " " + EF_JPKPL->ADRES)
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT(;
+               "  КВИТАНЦИЯ       ! ---------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT("N " + EF_JPKPL->NUM_DOC)
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 38)
+         DEVOUT("Фамiлiя I.П., адреса")
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + DTOC(DATE()) + " " + TIME())
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + SUBSTR(EF_JPKPL->FIO_OP, 1, 19))
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!    Вид             !Недоїмка!Платежi!   Дата   !   Сумма";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!    платежу         !минулих !поточно! баланса  !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    ! рокiв  !го року!          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(EF_S_GPL->NAM_VPL)
+         DEVPOS(RW, 41)
+         DEVOUT("!        !       !" + DTOC(EF_JPKPL->DAT_BANK) + "!" + STR(;
+               EF_JPKPL->SUMMA, 16, 2))
+
+         IF  .NOT. EMPTY(EF_S_PL->NAM_PL)
+
+            ++RW
+            DEVPOS(RW, 20)
+            DEVOUT("!" + EF_S_PL->NAM_PL + "!        !       !          !")
+
+         ENDIF
+
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    !        !       !          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                                       Пеня     !")
+         ++RW
+         DEVPOS(RW, 5)
+         DEVOUT("Касир")
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!     Платник                           Разом    !")
+         DEVPOS(RW, 70)
+         DEVOUT(STR(EF_JPKPL->SUMMA, 16, 2))
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+
+      ELSE
+
+         IF K_PLAT->PR_PK
+
+            DEVPOS(RW, 30)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(K_PLAT->DAT_OPL) + ;
+                  " р.")
+
+         ENDIF
+
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 24)
+         DEVOUT(EF_S_PPL->NAM_POL)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! -----------------------------------")
+         DEVPOS(RW, 60)
+         DEVOUT("   КОД ОКПО ! " + STR(EF_S_PPL->KOD_OKPO, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 26)
+         DEVOUT("одержувач  платежу                  одержувача")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! Установа банка :          МФО            КОД ОКПО")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 35)
+         DEVOUT("            банку " + STR(EF_S_PPL->MFO, 6) + ;
+               "      банку  ! " + STR(EF_S_PPL->OKPO_BANK, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 22)
+         DEVOUT(EF_S_PPL->BANK)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "! Рах. одер-  ----------------     Особовий --------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! жувача      !")
+         MEMVAR->SC_PLL := EF_S_PPL->SC
+         DEVPOS(RW, 35)
+         DEVOUT(STR(SC_PLL, 14))
+         DEVPOS(RW, 49)
+         DEVOUT("!")
+         DEVPOS(RW, 56)
+         DEVOUT("рахунок")
+         DEVPOS(RW, 64)
+         DEVOUT("!")
+         DEVPOS(RW, 65)
+         DEVOUT(K_PLAT->LS_PLAT)
+         DEVPOS(RW, 83)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 34)
+         DEVOUT("----------------")
+         DEVPOS(RW, 64)
+         DEVOUT("--------------------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(K_PLAT->NAM_PLAT + " " + K_PLAT->ADRES)
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT(;
+               "  СПОВIЩЕННЯ      ! ---------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT("N " + K_PLAT->NUM_DOC)
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 38)
+         DEVOUT("Фамiлiя I.П., адреса")
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + DTOC(DATE()) + " " + TIME())
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + SUBSTR(K_PLAT->FIO_OP, 1, 19))
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!    Вид             !Недоїмка!Платежи!   Дата   !   Сума ";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!    платежу         !минулих !поточно! баланса  !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    ! рокiв  !го року!          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(EF_S_GPL->NAM_VPL)
+         DEVPOS(RW, 41)
+         DEVOUT("!        !       !" + DTOC(K_PLAT->DAT_BANK) + "!" + STR(;
+               K_PLAT->SUMMA, 16, 2))
+
+         IF  .NOT. EMPTY(EF_S_PL->NAM_PL)
+
+            ++RW
+            DEVPOS(RW, 20)
+            DEVOUT("!" + EF_S_PL->NAM_PL + "!        !       !          !")
+
+         ENDIF
+
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    !        !       !          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                                       Пеня     !")
+         ++RW
+         DEVPOS(RW, 5)
+         DEVOUT("Касир")
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!     Платник                           Разом    !")
+         DEVPOS(RW, 70)
+         DEVOUT(STR(K_PLAT->SUMMA, 16, 2))
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(;
+               "-------------------+-----------------------------------------------------------------";
+               )
+         ++RW
+
+         IF K_PLAT->PR_PK
+
+            DEVPOS(RW, 30)
+            DEVOUT("ВЕЧIРНЯ, дата баланса - " + DTOC(K_PLAT->DAT_OPL) + ;
+                  " р.")
+            ++RW
+
+         ELSE
+
+            ++RW
+
+         ENDIF
+
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 24)
+         DEVOUT(EF_S_PPL->NAM_POL)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! -----------------------------------")
+         DEVPOS(RW, 60)
+         DEVOUT("   КОД ОКПО ! " + STR(EF_S_PPL->KOD_OKPO, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 26)
+         DEVOUT("одержувач  платежу                  одержувача")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! Установа банка :          МФО            КОД ОКПО")
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 35)
+         DEVOUT("            банку " + STR(EF_S_PPL->MFO, 6) + ;
+               "      банку  ! " + STR(EF_S_PPL->OKPO_BANK, 8) + " !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 22)
+         DEVOUT(EF_S_PPL->BANK)
+         DEVPOS(RW, 73)
+         DEVOUT("----------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "! Рах. одер-  ----------------     Особовий --------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("! жувача      !")
+         DEVPOS(RW, 35)
+         DEVOUT(STR(SC_PLL, 14))
+         DEVPOS(RW, 49)
+         DEVOUT("!")
+         DEVPOS(RW, 56)
+         DEVOUT("рахунок")
+         DEVPOS(RW, 64)
+         DEVOUT("!")
+         DEVPOS(RW, 65)
+         DEVOUT(K_PLAT->LS_PLAT)
+         DEVPOS(RW, 83)
+         DEVOUT("!")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 34)
+         DEVOUT("----------------")
+         DEVPOS(RW, 64)
+         DEVOUT("--------------------")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(K_PLAT->NAM_PLAT + " " + K_PLAT->ADRES)
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT(;
+               "  КВИТАНЦИЯ       ! ---------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 2)
+         DEVOUT("N " + K_PLAT->NUM_DOC)
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 38)
+         DEVOUT("Фамiлiя I.П., адреса")
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + DTOC(DATE()) + " " + TIME())
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 1)
+         DEVOUT(("") + SUBSTR(K_PLAT->FIO_OP, 1, 19))
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!    Вид             !Недоїмка!Платежi!   Дата   !   Сумма";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!    платежу         !минулих !поточно! баланса  !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    ! рокiв  !го року!          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!")
+         DEVPOS(RW, 21)
+         DEVOUT(EF_S_GPL->NAM_VPL)
+         DEVPOS(RW, 41)
+         DEVOUT("!        !       !" + DTOC(K_PLAT->DAT_BANK) + "!" + STR(;
+               K_PLAT->SUMMA, 16, 2))
+
+         IF  .NOT. EMPTY(EF_S_PL->NAM_PL)
+
+            ++RW
+            DEVPOS(RW, 20)
+            DEVOUT("!" + EF_S_PL->NAM_PL + "!        !       !          !")
+
+         ENDIF
+
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!--------------------+--------+-------+----------+----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                    !        !       !          !")
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!-----------------------------------------------------------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!                                       Пеня     !")
+         ++RW
+         DEVPOS(RW, 5)
+         DEVOUT("Касир")
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT("!     Платник                           Разом    !")
+         DEVPOS(RW, 70)
+         DEVOUT(STR(K_PLAT->SUMMA, 16, 2))
+         ++RW
+         DEVPOS(RW, 20)
+         DEVOUT(;
+               "!                                                !----------------";
+               )
+
+      ENDIF
+
+      IF  .NOT. EF_BANK->PR_R_L
+
+         __EJECT()
+
+      ELSE
+
+         RW := PROW() + 1
+
+         FOR I := 1 TO EF_BANK->KVO_STR
+
+            DEVPOS(RW + I, 0)
+            DEVOUT("")
+
+         NEXT
+
+      ENDIF
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+      EXIT
+
+   ENDDO
+
+   SET(20, "PRINTER")
+   SET(20, "SCREEN")
+   RESTSCREEN(0, 0, 24, 79, WIN)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SPLIT_STR
+   Params: STRING, SLEN
+   Return: Undefined
+  Example: SPLIT_STR(STRING, SLEN)
+  ..........................................................................
+*/
+
+FUNCTION SPLIT_STR(STRING, SLEN)
+
+   LOCAL ARR[0]
+   LOCAL TAIL, N := 1
+
+   TAIL := SUBSTR(STRING, 1)
+
+   DO WHILE LEN(TAIL) > SLEN
+
+      FOR N := SLEN TO 1 STEP -1
+
+         IF SUBSTR(TAIL, N, 1) == " "
+
+            EXIT
+
+         ENDIF
+
+      NEXT
+
+      AADD(ARR, SUBSTR(TAIL, 1, N))
+      TAIL := SUBSTR(TAIL, N + 1)
+
+   ENDDO
+
+   TAIL := ALLTRIM(TAIL)
+
+   IF LEN(TAIL) > 0
+
+      AADD(ARR, TAIL)
+
+   ENDIF
+
+
+RETURN ARR
+

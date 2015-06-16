@@ -1,0 +1,591 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_OPKTE
+   Params: None.
+   Return: Nil
+  Example: EF_OPKTE()
+  ..........................................................................
+*/
+
+FUNCTION EF_OPKTE()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, ABROWSE, BOTIO_1 := {"~Esc-~выход", ;
+         "~F10-~сформировать и отправить пакет", "~+,-,Ins-~отметить"}
+
+   PRIVATE BROWSE, COLUMN, DESKTOP
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "0", IKEY_BOT := "0"
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+
+   IF  .NOT. AREA_OPEN({{"ef_slip", .T.}, {"ef_merch"}, {"ef_kasr"}, {;
+         "ef_post"}, {"ef_bank"}, {"ef_sys"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(EF_BANK->BRANCH)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Заполните код Вашего подразделения", ;
+            "в настройке комплекса !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   DBSELECTAR("ef_kasr")
+   DBSETORDER(2)
+   DBSELECTAR("ef_slip")
+   DBSETORDER(5)
+
+   IF  .NOT. DBSEEK("0")
+
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", "Нет ни одной слипа для отправки !"};
+            , {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      EF_SLIP->FL_INS := .F.
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   DBSEEK("0")
+   ABROWSE := CREATTBROW(3, 10, 19, 64, "senddate", {||VYVSTR()})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 1) == "0"}
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   MEMVAR->DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " ОТПРАВКА ПАКЕТОВ С СЛИПАМИ В ВЫШЕСТОЯЩИЙ EF")
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   OBRIO_1()
+   WINCLOSE(DESKTOP)
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYVSTR
+   Params: None.
+   Return: Undefined
+  Example: VYVSTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYVSTR()
+
+   LOCAL CSTR, CTMP
+
+   IF DBEMPTY()
+
+      CSTR := SPACE(55)
+
+   ELSE
+
+      IF EF_SLIP->FL_INS
+
+         CSTR := " √"
+
+      ELSE
+
+         CSTR := "  "
+
+      ENDIF
+
+      CSTR := CSTR + ("   " + DTOC(EF_SLIP->PR_DATE))
+      CSTR := CSTR + ("     " + ZERO_STR(EF_SLIP->NO_SLIP, 10))
+      CSTR := CSTR + ("   " + EF_SLIP->CURR)
+      CSTR := CSTR + ("       " + STR(EF_SLIP->AMOUNT, 11, 2) + " ")
+
+   ENDIF
+
+
+RETURN CSTR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL CSTR
+
+   SETCOLOR("w+/w")
+
+   IF DBEMPTY()
+
+      DEVPOS(21, 17)
+      DEVOUT(SPACE(47))
+
+   ELSE
+
+      DEVPOS(21, 14)
+      DEVOUT(TRANSFORM(EF_SLIP->CH_NO, "@R 9999 9999 9999 9999 999") + ;
+            "   " + EF_SLIP->E_NAME)
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(2, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   DEVPOS(20, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 15)
+   DEVOUT("Дата слипа     N слипа     Валюта     Сумма")
+   DEVPOS(21, 6)
+   DEVOUT("Карта")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY, REC
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(10)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -9
+
+            OUT_PKT()
+            LMORE := .F.
+
+         ELSEIF NKEY == 43
+
+            REC := RECNO()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF() .AND. LMORE
+
+               IF EF_MERCH->(DBSEEK(EF_SLIP->MERCH))
+
+                  IF EF_KASR->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(EF_SLIP->;
+                        NO_SLIP, 10)))
+
+                     IF EF_KASR->PR_OPL == "о"
+
+                        EF_SLIP->FL_INS := .T.
+
+                     ENDIF
+
+                  ELSE
+
+                     EF_SLIP->FL_INS := .T.
+
+                  ENDIF
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@ Ошибка !", "Точка с кодом "+CHR(34) +;
+                         EF_SLIP->MERCH + CHR(34)+" ", ;
+                        "отсутствует в справочнике точек !", ;
+                        "Занесите точку в справочник !"}, {" Выход "})
+                  LMORE := .F.
+
+               ENDIF
+
+               EF_SLIP->(DBSKIP())
+
+            ENDDO
+
+            DBGOTO(REC)
+
+         ELSEIF NKEY == 45
+
+            REC := RECNO()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+               EF_SLIP->FL_INS := .F.
+               EF_SLIP->(DBSKIP())
+
+            ENDDO
+
+            DBGOTO(REC)
+
+         ELSEIF NKEY == 22 .AND. EMPTY(EF_SLIP->SENDDATE)
+
+            IF EF_SLIP->FL_INS
+
+               EF_SLIP->FL_INS := .F.
+
+            ELSEIF EF_MERCH->(DBSEEK(EF_SLIP->MERCH))
+
+               IF EF_KASR->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(EF_SLIP->;
+                     NO_SLIP, 10)))
+
+                  IF EF_KASR->PR_OPL == "о"
+
+                     EF_SLIP->FL_INS := .T.
+
+                  ENDIF
+
+               ELSE
+
+                  EF_SLIP->FL_INS := .T.
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Точка с кодом "+CHR(34) + ;
+                     EF_SLIP->MERCH + CHR(34)+" ", ;
+                     "отсутствует в справочнике точек !", ;
+                     "Занесите точку в справочник !"}, {" Выход "})
+               LMORE := .F.
+
+            ENDIF
+
+         ENDIF
+
+         BROWSE:REFRESHALL()
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      EF_SLIP->FL_INS := .F.
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OUT_PKT
+   Params: None.
+   Return: Nil
+  Example: OUT_PKT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OUT_PKT()
+
+   LOCAL REC, RES := .F., NF := ""
+   LOCAL HOST, WIN, NUM_P
+
+   DBSELECTAR("ef_sys")
+   NUM_P := NUM_PAK(3)
+
+   IF NUM_P > "z"
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "На сегодня свободные", ;
+            "N для отправки пакетов кончились !"}, {" Выход "})
+      DBSELECTAR("ef_slip")
+      RETURN NIL
+
+   ENDIF
+
+   IF RECLOCK(3)
+
+      NF := "E" + EF_BANK->BRANCH + ZERO_STR(DOY(DAT_OD__), 3) + NUM_P + ;
+            "." + ALLTRIM(EF_BANK->KOD_PVN)
+      EF_SYS->N_S := ASC(NUM_P)
+      DBCOMMIT()
+      DBUNLOCK()
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось получить", ;
+            "N пакета для отправки !"}, {" Выход "})
+      DBSELECTAR("ef_slip")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_slip")
+   REC := RECNO()
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      IF EF_SLIP->FL_INS
+
+         RES := .T.
+         EXIT
+
+      ENDIF
+
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   DBGOTO(REC)
+
+   IF  .NOT. RES
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Нет ни одного отмеченного слипа !", ;
+            "Пакет не сформирован !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE("c_tmp", .T.)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось открыть временную базу !",;
+             "Пакет не сформирован !"}, {" Выход "})
+      DBSELECTAR("ef_slip")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("c_tmp")
+   __DBZAP()
+   DBSELECTAR("ef_slip")
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      IF  .NOT. EF_SLIP->FL_INS
+
+         EF_SLIP->(DBSKIP())
+         LOOP
+
+      ENDIF
+
+      DBSELECTAR("c_tmp")
+
+      IF  .NOT. ADDREC(3)
+
+         LOOP
+
+      ENDIF
+
+      C_TMP->CODE := EF_SLIP->CODE
+      C_TMP->PR_DATE := EF_SLIP->PR_DATE
+      C_TMP->NO_SLIP := EF_SLIP->NO_SLIP
+      C_TMP->TRAN_DATE := EF_SLIP->TRAN_DATE
+      C_TMP->CH_NO := EF_SLIP->CH_NO
+      C_TMP->E_NAME := EF_SLIP->E_NAME
+      C_TMP->EXP_DATE := EF_SLIP->EXP_DATE
+      C_TMP->MERCH := EF_SLIP->MERCH
+      C_TMP->BRANCH := KOD_OTD__
+      C_TMP->CURR := EF_SLIP->CURR
+      C_TMP->CURR_M := EF_SLIP->CURR_M
+      C_TMP->AMOUNT := EF_SLIP->AMOUNT
+      C_TMP->AMOUNT_H := EF_SLIP->AMOUNT_H
+      C_TMP->AMOUNT_M := EF_SLIP->AMOUNT_M
+      C_TMP->AUTH_NO := EF_SLIP->AUTH_NO
+      C_TMP->FIO_OPER := EF_SLIP->FIO_OPER
+      C_TMP->DAT_ACCPT := EF_SLIP->DAT_ACCPT
+      C_TMP->DAT_PAY := EF_SLIP->DAT_PAY
+      C_TMP->IMPORTFILE := EF_SLIP->IMPORTFILE
+      C_TMP->EXPORTFILE := EF_SLIP->EXPORTFILE
+      C_TMP->SENDDATE := EF_SLIP->SENDDATE
+      C_TMP->DAT_A_OPL := EF_SLIP->DAT_A_OPL
+      C_TMP->PS_DATE := EF_SLIP->PS_DATE
+      C_TMP->OPL_KEY := EF_SLIP->OPL_KEY
+      C_TMP->AMOUNT_PS := EF_SLIP->AMOUNT_PS
+      C_TMP->AMOUNT_V := EF_SLIP->AMOUNT_V
+      C_TMP->AMOUNT_FIL := EF_SLIP->AMOUNT_FIL
+      C_TMP->AMOUNT_DPK := EF_SLIP->AMOUNT_DPK
+      C_TMP->MAGTRACKRD := EF_SLIP->MAGTRACKRD
+      DBSELECTAR("ef_slip")
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   C_TMP->(DBCLOSEARE())
+
+   IF FRENAME("c_tmp.dbf", NF) = -1
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось переименовть файл !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   HOST := "pkzip -m " + OUT_PATH__ + NF + " " + NF
+   WSELECT(0)
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   DISPBOX(0, 0, 24, 79, "         ", "W/N")
+   S_RUN(HOST, -1, .T.)
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   WSELECT(DESKTOP)
+   FERASE(NF)
+
+   IF FILE(OUT_PATH__ + NF)
+
+      IF EF_POST->(ADDREC(3))
+
+         EF_POST->NAM_FILE := NF
+         EF_POST->DAT_POST := DAT_OD__
+         EF_POST->TIME_POST := TIME()
+         EF_POST->PR_V_I := .F.
+         EF_POST->(DBCOMMIT())
+         EF_POST->(DBUNLOCK())
+
+      ENDIF
+
+      __COPYFILE(OUT_PATH__ + NF, CP_PATH__ + NF)
+      DBSELECTAR("ef_slip")
+      DBGOTOP()
+
+      DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+         IF EF_SLIP->FL_INS
+
+            EF_SLIP->FL_INS := .F.
+            EF_SLIP->SENDDATE := DAT_OD__
+            EF_SLIP->EXPORTFILE := NF
+            EF_SLIP->(DBGOTOP())
+
+         ELSE
+
+            EF_SLIP->(DBSKIP())
+
+         ENDIF
+
+      ENDDO
+
+      DIALOG(NIL, NIL, {"@Сообщение", "", "Пакет сформирован успешно !", ;
+            ""}, {" Выход "})
+
+   ELSE
+
+      DBSELECTAR("ef_slip")
+      DBGOTOP()
+
+      DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+         EF_SLIP->FL_INS := .F.
+         EF_SLIP->(DBSKIP())
+
+      ENDDO
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось сформировать пакет !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+
+   ENDIF
+
+
+RETURN NIL
+

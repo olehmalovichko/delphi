@@ -1,0 +1,308 @@
+FUNCTION EF_BALANS(CSTROKA, VALT)
+
+   LOCAL CF_READY, FNAME, RW, FL_EXIT, AA, BB, MES, FL_MES, NHANDLE, ;
+         NLENGTH, HOST := ""
+   LOCAL WIN
+
+   CF_READY := FILESEEK(POS_PATH__ + "READY.*")
+
+   IF EMPTY(CF_READY)
+
+      ERROR(NIL, NIL, {"@ Внимание !", ;
+            "Программа авторизации не готова к работе !", ;
+            "Выполните авторизацию голосом"}, {" Продолжить "})
+      RETURN ""
+
+   ENDIF
+
+   MEMVAR->COLORS[3] := "gr+/g"
+   MEMVAR->COLORS[4] := "w+/g"
+   MES := MESS(NIL, NIL, {"@Внимание", "", "Отправлен запрос ", ;
+         "Ожидайте...", "", "(Esc - отказаться от запроса)"})
+   MEMVAR->COLORS[3] := "w+/w"
+   MEMVAR->COLORS[4] := "n/w"
+
+   DO WHILE .T.
+
+      FNAME := "TMP" + PADL(LTRIM(STR(RANDOM(), 5)), 5, "0")
+      CF_READY := FILESEEK(POS_PATH__ + FNAME + ".REQ")
+
+      IF  .NOT. EMPTY(CF_READY)
+
+         LOOP
+
+      ENDIF
+
+      SET(24, ("") + POS_PATH__ + FNAME + ".REQ", .F.)
+      SET(25, 0)
+      SET(20, "PRINTER")
+      SETPRC(0, 0)
+      DEVPOS(0, 0)
+      DEVOUT(CSTROKA)
+      SET(20, "SCREEN")
+      SET(24, "")
+      AA := FILESEEK(POS_PATH__ + FNAME + ".REQ")
+
+      IF EMPTY(AA)
+
+         LOOP
+
+      ENDIF
+
+      SET(24, ("") + POS_PATH__ + FNAME + ".Q-F", .F.)
+      SET(24, "")
+      BB := FILESEEK(POS_PATH__ + FNAME + ".Q-F")
+
+      IF EMPTY(BB)
+
+         DO WHILE  .NOT. EMPTY(AA)
+
+            IF FERASE(POS_PATH__ + AA) = -1
+
+               ERROR(NIL, NIL, {"@ Внимание !", "Файл ", CHR(34) + ;
+                     POS_PATH__ + AA + CHR(34), "не удается удалить !", ;
+                     "Удалите файл вручную !", "Ошибка DOS: " + ALLTRIM(;
+                     STR(FERROR(), 10))}, {" Продолжить "})
+               EXIT
+
+            ELSE
+
+               EXIT
+
+            ENDIF
+
+         ENDDO
+
+         LOOP
+
+      ENDIF
+
+      EXIT
+
+   ENDDO
+
+   FL_EXIT := .F.
+   FL_MES := .T.
+   __KEYBOARD()
+
+   DO WHILE LASTKEY() <> 27
+
+      INKEY(1)
+
+      IF FL_MES
+
+         BB := FILESEEK(POS_PATH__ + FNAME + ".Q-F")
+
+         IF EMPTY(BB)
+
+            FL_MES := .F.
+
+            IF  .NOT. PR_POSE__
+
+               WINCLOSE(MES)
+
+            ENDIF
+
+            MEMVAR->COLORS[3] := "gr+/g"
+            MEMVAR->COLORS[4] := "w+/g"
+            MES := MESS(NIL, NIL, {"@Внимание", "", "Происходит запрос", ;
+                  "Ожидайте...", "", "(Esc - отказаться от запроса)"})
+            MEMVAR->COLORS[3] := "w+/w"
+            MEMVAR->COLORS[4] := "n/w"
+
+         ENDIF
+
+      ENDIF
+
+      CF_READY := FILESEEK(POS_PATH__ + FNAME + ".P-F")
+
+      IF EMPTY(CF_READY)
+
+         LOOP
+
+      ELSE
+
+         DO WHILE  .NOT. EMPTY(CF_READY) .AND. LASTKEY() <> 27
+
+            MILLISEC(1000)
+
+            IF FERASE(POS_PATH__ + CF_READY) = -1
+
+               ERROR(NIL, NIL, {"@ Внимание !", "Файл ", CHR(34) + ;
+                     POS_PATH__ + CF_READY + CHR(34), ;
+                     "не удается удалить !", "Удалите файл вручную !", ;
+                     "Ошибка DOS: " + ALLTRIM(STR(FERROR(), 10))}, {;
+                     " Выход "})
+               EXIT
+
+            ELSE
+
+               FL_EXIT := .T.
+               EXIT
+
+            ENDIF
+
+         ENDDO
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF  .NOT. FL_EXIT
+
+      BB := FILESEEK(POS_PATH__ + FNAME + ".Q-F")
+
+      DO WHILE  .NOT. EMPTY(BB)
+
+         IF FERASE(POS_PATH__ + BB) = -1
+
+            ERROR(NIL, NIL, {"@ Внимание !", "Файл ", CHR(34) + POS_PATH__ ;
+                  + BB + CHR(34), "не удается удалить !", ;
+                  "Удалите файл вручную !", "Ошибка DOS: " + ALLTRIM(STR(;
+                  FERROR(), 10))}, {" Продолжить "})
+            EXIT
+
+         ELSE
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+      AA := FILESEEK(POS_PATH__ + FNAME + ".REQ")
+
+      DO WHILE  .NOT. EMPTY(AA)
+
+         IF FERASE(POS_PATH__ + AA) = -1
+
+            ERROR(NIL, NIL, {"@ Внимание !", "Файл ", CHR(34) + POS_PATH__ ;
+                  + AA + CHR(34), "не удается удалить !", ;
+                  "Удалите файл вручную !", "Ошибка DOS: " + ALLTRIM(STR(;
+                  FERROR(), 10))}, {" Продолжить "})
+            EXIT
+
+         ELSE
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+      CSTROKA := ""
+
+      IF  .NOT. PR_POSE__
+
+         WINCLOSE(MES)
+
+      ENDIF
+
+      ERROR(NIL, NIL, {"@ Внимание !", "Программная авторизация", ;
+            "была прервана по клавише "+CHR(34)+"Esc"+CHR(34)+" !"}, {;
+            " Продолжить "})
+
+   ELSE
+
+      CF_READY := FILESEEK(POS_PATH__ + FNAME + ".RSP")
+
+      IF EMPTY(CF_READY)
+
+         IF  .NOT. PR_POSE__
+
+            WINCLOSE(MES)
+
+         ENDIF
+
+         ERROR(NIL, NIL, {"@ Внимание !", "Файл ответа"+CHR(34) + FNAME + ;
+               ".RSP" + CHR(34) + "не найден !"}, {" Выход "})
+         CSTROKA := ""
+
+      ELSE
+
+         NHANDLE := FOPEN(POS_PATH__ + CF_READY, 0)
+
+         IF FERROR() <> 0
+
+            IF  .NOT. PR_POSE__
+
+               WINCLOSE(MES)
+
+            ENDIF
+
+            ERROR(NIL, NIL, {"@ Внимание !", "Файл ", CHR(34) + POS_PATH__ ;
+                  + CF_READY + CHR(34), "не может быть открыт !", ;
+                  "Ошибка DOS: " + ALLTRIM(STR(FERROR(), 10))}, {" Выход "};
+                  )
+            RETURN ""
+
+         ENDIF
+
+         NLENGTH := FSEEK(NHANDLE, 0, 2)
+         FSEEK(NHANDLE, 0, 0)
+         CSTROKA := STREAD(NHANDLE, NLENGTH)
+         FCLOSE(NHANDLE)
+         AA := FILESEEK(POS_PATH__ + FNAME + ".RSP")
+
+         DO WHILE  .NOT. EMPTY(AA)
+
+            IF FERASE(POS_PATH__ + AA) = -1
+
+               IF 2 = ERROR(NIL, NIL, {"@ Внимание !", "Файл ", CHR(34) + ;
+                     POS_PATH__ + AA + CHR(34), "не удается удалить !", ;
+                     "Удалите файл вручную !", "Ошибка DOS: " + ALLTRIM(;
+                     STR(FERROR(), 10))}, {" Повторить ", " Выйти "})
+
+                  EXIT
+
+               ELSE
+
+                  LOOP
+
+               ENDIF
+
+            ELSE
+
+               EXIT
+
+            ENDIF
+
+         ENDDO
+
+         IF  .NOT. PR_POSE__
+
+            WINCLOSE(MES)
+
+         ENDIF
+
+         IF SUBSTR(CSTROKA, 2, 2) == "00"
+
+            MEMVAR->TTT := ATNUM(CHR(28), CSTROKA)
+            MEMVAR->SUM_BAL := 0
+            MEMVAR->CC := ""
+            MEMVAR->CC := SUBSTR(CSTROKA, TTT + 1)
+            MEMVAR->CC := SUBSTR(CC, 1, LEN(CC) - 1)
+            DIALOG(NIL, NIL, {"@Баланс !", "", "Программа авторизации", ;
+                  "вернула код: "+CHR(34) + SUBSTR(CSTROKA, 2, 2) + CHR(34);
+                  , "Сумма " + STR(VAL(ALLTRIM(CC)) / 100, 10, 2) + " " + ;
+                  VALT}, {" Продолжить "})
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@Ошибка !", "", "Программа авторизации", ;
+                  "вернула код: "+CHR(34) + SUBSTR(CSTROKA, 2, 2) + CHR(34);
+                  , CHR(34) + ALLTRIM(SUBSTR(CSTROKA, 5, LEN(CSTROKA) - 5));
+                   + CHR(34)}, {" Продолжить "})
+            CSTROKA := ""
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN .T.
+

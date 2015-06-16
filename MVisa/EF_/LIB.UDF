@@ -1,0 +1,101 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: WINMENU
+   Params: P1, P2, P3, P4, P5, P6
+   Return: Number
+  Example: WINMENU(P1, P2, P3, P4, P5, P6)
+  ..........................................................................
+*/
+
+FUNCTION WINMENU(P1, P2, P3, P4, P5, P6)
+
+   LOCAL L7, L8, L9, L10 := WSELECT()
+   LOCAL L11 := LEN(P2)
+   LOCAL L12 := 1
+   LOCAL L13, L14, L15, L16
+
+   IF P3 <> NIL
+
+      L11 := L11 + 3 + LEN(P3)
+
+      IF P4 <> NIL
+
+         L11 := L11 + 3 + LEN(P4)
+
+         IF P5 <> NIL
+
+            L11 := L11 + 3 + LEN(P5)
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+   L8 := L11
+   L9 := NUMTOKEN(P1, ";")
+
+   FOR L7 := 1 TO L9
+
+      L8 := MAX(L8, LEN(TOKEN(P1, ";", L7)))
+
+   NEXT
+
+   L15 := 3 + L9
+   L16 := 3 + L8
+   WSELECT(0)
+   L13 := WFROW() + (WFLASTROW() - WFROW() - L15) / 2
+   L15 := L15 + L13
+   L14 := WFCOL() + (WFLASTCOL() - WFCOL() - L16) / 2
+   L16 := L16 + L14
+   WOPEN(L13, L14, L15, L16)
+
+   IF P6 <> NIL
+
+      SETCOLOR(P6)
+
+   ELSEIF ISCOLOR()
+
+      SETCOLOR("W+/R, W+/B")
+
+   ELSE
+
+      SETCOLOR("N/W, W/N")
+
+   ENDIF
+
+   WBOX(1)
+   WFORMAT(0, 1, 0, 1)
+
+   FOR L7 := 1 TO L9
+
+      DISPOUT(CENTER(TOKEN(P1, ";", L7), .T.))
+      SETPOS(L7, 0)
+
+   NEXT
+
+   __ATPROMPT(ROW() + 1, (MAXCOL() - L11) / 2, P2, NIL)
+
+   IF P3 <> NIL
+
+      __ATPROMPT(ROW(), COL() + 3, P3, NIL)
+
+      IF P4 <> NIL
+
+         __ATPROMPT(ROW(), COL() + 3, P4, NIL)
+
+         IF P5 <> NIL
+
+            __ATPROMPT(ROW(), COL() + 3, P5, NIL)
+
+         ENDIF
+
+      ENDIF
+
+   ENDIF
+
+   L12 := __MENUTO({|BL1|IF(PCOUNT() == 0, L12, L12 := BL1)}, "nResult")
+   WCLOSE()
+   WSELECT(L10)
+
+RETURN L12
+

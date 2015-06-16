@@ -1,0 +1,618 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_PPKTS
+   Params: None.
+   Return: Nil
+  Example: EF_PPKTS()
+  ..........................................................................
+*/
+
+FUNCTION EF_PPKTS()
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL KEY, LMORE, WIN, WIN2, NF := ""
+   LOCAL HOST, NAME_ARC
+
+   IF  .NOT. AREA_OPEN({{"ef_bank"}, {"ef_head"}, {"ef_mrchz"}, {"ef_sys"},;
+          {"ef_merch"}, {"ef_post"}, {"ef_slip"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. FILE(IN_PATH__ + KOD_OTD__ + "*.zip")
+
+      TONE(125, 3)
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", "Не найден ни один пакет !"}, {;
+            " Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Выполнить прием пакета ?"}, {"  Нет ", " Да "};
+         , 1)
+
+   IF KEY = 1
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_merch")
+   DBSETORDER(4)
+   DBSELECTAR("ef_mrchz")
+   DBSETORDER(2)
+   DBSELECTAR("ef_slip")
+   DBSETORDER(3)
+   SETCOLOR("w+/w")
+   WIN2 := WIN(8, 20, 14, 60, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 5)
+   DEVOUT("    Принимаю файл ")
+   NAME_ARC := FILESEEK(IN_PATH__ + KOD_OTD__ + "*.zip")
+   MEMVAR->WWW := EF_POST->(DBSEEK(NAME_ARC))
+
+   IF  .NOT. WWW .OR. WWW .AND. YEAR(DAT_OD__) > YEAR(EF_POST->DAT_POST)
+
+      DEVPOS(3, 5)
+      DEVOUT(NAME_ARC)
+      HOST := "pkunzip -d " + IN_PATH__ + NAME_ARC
+      WSELECT(0)
+      WIN := SAVESCREEN(0, 0, 24, 79)
+      DISPBOX(0, 0, 24, 79, "         ", "W/N")
+      S_RUN(HOST, -1, .T.)
+      RESTSCREEN(0, 0, 24, 79, WIN)
+      WSELECT(WIN2)
+
+      IF FILE("h" + KOD_OTD__ + "*.*")
+
+         MEMVAR->NAME_F := FILESEEK("h" + KOD_OTD__ + "*.*")
+         DBUSEAREA(.T., NIL, ("") + NAME_F, "head", .F., .F.)
+         DBGOTOP()
+
+         DO WHILE  .NOT. EOF()
+
+            IF EF_HEAD->(DBSEEK(HEAD->HO_CODE))
+
+               IF EF_HEAD->(RECLOCK(3))
+
+                  EF_HEAD->HEAD_OFICE := HEAD->HEAD_OFICE
+                  EF_HEAD->RUS_NAME := HEAD->RUS_NAME
+                  EF_HEAD->HO_ADRES := HEAD->HO_ADRES
+                  EF_HEAD->PHONE := HEAD->PHONE
+                  EF_HEAD->PERSON := HEAD->PERSON
+                  EF_HEAD->DAT_TR := HEAD->DAT_TR
+                  EF_HEAD->TREATY := HEAD->TREATY
+                  EF_HEAD->ACOUNT := HEAD->ACOUNT
+                  EF_HEAD->MFO := HEAD->MFO
+                  EF_HEAD->OKPO := HEAD->OKPO
+                  EF_HEAD->COR_ACOUNT := HEAD->COR_ACOUNT
+                  EF_HEAD->PR_SWIFT := HEAD->PR_SWIFT
+                  EF_HEAD->BBF_BIC := HEAD->BBF_BIC
+                  EF_HEAD->BBF_NAM1 := HEAD->BBF_NAM1
+                  EF_HEAD->BBF_NAM2 := HEAD->BBF_NAM2
+                  EF_HEAD->BBF_NAM3 := HEAD->BBF_NAM3
+                  EF_HEAD->BBF_NAM4 := HEAD->BBF_NAM4
+                  EF_HEAD->BF_SC_ISO := HEAD->BF_SC_ISO
+                  EF_HEAD->BF_NAM1_SC := HEAD->BF_NAM1_SC
+                  EF_HEAD->BF_NAM2_SC := HEAD->BF_NAM2_SC
+                  EF_HEAD->BF_NAM3_SC := HEAD->BF_NAM3_SC
+                  EF_HEAD->BF_NAM4_SC := HEAD->BF_NAM4_SC
+                  EF_HEAD->BPS_SC_ISO := HEAD->BPS_SC_ISO
+                  EF_HEAD->BPS_BIC := HEAD->BPS_BIC
+                  EF_HEAD->BPS_NAM1 := HEAD->BPS_NAM1
+                  EF_HEAD->BPS_NAM2 := HEAD->BPS_NAM2
+                  EF_HEAD->BPS_NAM3 := HEAD->BPS_NAM3
+                  EF_HEAD->BPS_NAM4 := HEAD->BPS_NAM4
+                  EF_HEAD->COMPBRANCH := HEAD->COMPBRANCH
+                  EF_HEAD->OPLBRANCH := HEAD->OPLBRANCH
+                  EF_HEAD->(DBUNLOCK())
+
+               ENDIF
+
+            ELSEIF VAL(HEAD->HO_CODE) = 0
+
+               IF EF_HEAD->(ADDREC(3)) .AND. EF_SYS->(RECLOCK(3))
+
+                  EF_HEAD->HO_CODE := HEAD->HO_CODE
+                  EF_HEAD->HEAD_OFICE := HEAD->HEAD_OFICE
+                  EF_HEAD->RUS_NAME := HEAD->RUS_NAME
+                  EF_HEAD->HO_ADRES := HEAD->HO_ADRES
+                  EF_HEAD->PHONE := HEAD->PHONE
+                  EF_HEAD->PERSON := HEAD->PERSON
+                  EF_HEAD->DAT_TR := HEAD->DAT_TR
+                  EF_HEAD->TREATY := HEAD->TREATY
+                  EF_HEAD->ACOUNT := HEAD->ACOUNT
+                  EF_HEAD->MFO := HEAD->MFO
+                  EF_HEAD->OKPO := HEAD->OKPO
+                  EF_HEAD->COR_ACOUNT := HEAD->COR_ACOUNT
+                  EF_HEAD->PR_SWIFT := HEAD->PR_SWIFT
+                  EF_HEAD->BBF_BIC := HEAD->BBF_BIC
+                  EF_HEAD->BBF_NAM1 := HEAD->BBF_NAM1
+                  EF_HEAD->BBF_NAM2 := HEAD->BBF_NAM2
+                  EF_HEAD->BBF_NAM3 := HEAD->BBF_NAM3
+                  EF_HEAD->BBF_NAM4 := HEAD->BBF_NAM4
+                  EF_HEAD->BF_SC_ISO := HEAD->BF_SC_ISO
+                  EF_HEAD->BF_NAM1_SC := HEAD->BF_NAM1_SC
+                  EF_HEAD->BF_NAM2_SC := HEAD->BF_NAM2_SC
+                  EF_HEAD->BF_NAM3_SC := HEAD->BF_NAM3_SC
+                  EF_HEAD->BF_NAM4_SC := HEAD->BF_NAM4_SC
+                  EF_HEAD->BPS_SC_ISO := HEAD->BPS_SC_ISO
+                  EF_HEAD->BPS_BIC := HEAD->BPS_BIC
+                  EF_HEAD->BPS_NAM1 := HEAD->BPS_NAM1
+                  EF_HEAD->BPS_NAM2 := HEAD->BPS_NAM2
+                  EF_HEAD->BPS_NAM3 := HEAD->BPS_NAM3
+                  EF_HEAD->BPS_NAM4 := HEAD->BPS_NAM4
+                  EF_HEAD->COMPBRANCH := HEAD->COMPBRANCH
+                  EF_HEAD->OPLBRANCH := HEAD->OPLBRANCH
+                  EF_SYS->HO_CODE := ZERO_STR(VAL(EF_SYS->HO_CODE) + 1, 3)
+                  EF_SYS->(DBUNLOCK())
+                  EF_HEAD->(DBUNLOCK())
+
+               ENDIF
+
+            ENDIF
+
+            DBSELECTAR("head")
+            DBSKIP()
+
+         ENDDO
+
+         DBCOMMITAL()
+         DBSELECTAR("head")
+         HEAD->(DBCLOSEARE())
+         FILEDELETE(("") + NAME_F)
+
+      ENDIF
+
+      IF FILE("m" + KOD_OTD__ + "*.*")
+
+         MEMVAR->NAME_F := FILESEEK("m" + KOD_OTD__ + "*.*")
+         DBUSEAREA(.T., NIL, ("") + NAME_F, "merch", .F., .F.)
+         DBGOTOP()
+
+         DO WHILE  .NOT. EOF()
+
+            IF EF_MERCH->(DBSEEK(STR(MERCH->KEY_SP, 6)))
+
+               IF EF_MERCH->(RECLOCK(3))
+
+                  EF_MERCH->HO_CODE := MERCH->HO_CODE
+                  EF_MERCH->MERCH := MERCH->MERCH
+                  EF_MERCH->TYPE := MERCH->TYPE
+                  EF_MERCH->CITY := MERCH->CITY
+                  EF_MERCH->HEAD_OFICE := MERCH->HEAD_OFICE
+                  EF_MERCH->MERCH_NAME := MERCH->MERCH_NAME
+                  EF_MERCH->RUS_NAME := MERCH->RUS_NAME
+                  EF_MERCH->ADRESS := MERCH->ADRESS
+                  EF_MERCH->TEL := MERCH->TEL
+                  EF_MERCH->CONT_PERSO := MERCH->CONT_PERSO
+                  EF_MERCH->VID := MERCH->VID
+                  EF_MERCH->MCC := MERCH->MCC
+                  EF_MERCH->LIM_PB := MERCH->LIM_PB
+                  EF_MERCH->LIM_V := MERCH->LIM_V
+                  EF_MERCH->LIM_EM := MERCH->LIM_EM
+                  EF_MERCH->COM_PB := MERCH->COM_PB
+                  EF_MERCH->COM_V := MERCH->COM_V
+                  EF_MERCH->COM_EM := MERCH->COM_EM
+                  EF_MERCH->PRO_PB := MERCH->PRO_PB
+                  EF_MERCH->PRO_V := MERCH->PRO_V
+                  EF_MERCH->PRO_EM := MERCH->PRO_EM
+                  EF_MERCH->VOZM_PB := MERCH->VOZM_PB
+                  EF_MERCH->VOZM_V := MERCH->VOZM_V
+                  EF_MERCH->VOZM_EM := MERCH->VOZM_EM
+                  EF_MERCH->CURR := MERCH->CURR
+                  EF_MERCH->CURR_M := MERCH->CURR_M
+                  EF_MERCH->IMPRINTER := MERCH->IMPRINTER
+                  EF_MERCH->POS := MERCH->POS
+                  EF_MERCH->DAT_RAB := MERCH->DAT_RAB
+                  EF_MERCH->DAT_EMB := MERCH->DAT_EMB
+                  EF_MERCH->DISCOUTN := MERCH->DISCOUTN
+                  EF_MERCH->TYPE1 := MERCH->TYPE1
+                  EF_MERCH->CREDIT := MERCH->CREDIT
+                  EF_MERCH->MANUAL := MERCH->MANUAL
+                  EF_MERCH->MULTICASH := MERCH->MULTICASH
+                  EF_MERCH->PREAUTH := MERCH->PREAUTH
+                  EF_MERCH->(DBUNLOCK())
+
+                  IF EF_MRCHZ->(DBSEEK(STR(MERCH->KEY_SP, 6))) .AND. ;
+                        EF_MRCHZ->(RECLOCK(3))
+
+                     EF_MRCHZ->DAT_BANK := DAT_OD__
+                     EF_MRCHZ->(DBCOMMIT())
+                     EF_MRCHZ->(DBUNLOCK())
+
+                  ENDIF
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Точка с номером "+CHR(34) + ;
+                     MERCH->MERCH + CHR(34), "и кодом KEY_SP "+CHR(34) + ;
+                     STR(MERCH->KEY_SP, 7) + CHR(34), ;
+                     "отсутствует в справочнике точек !"}, {" Продолжить "};
+                     )
+
+            ENDIF
+
+            DBSELECTAR("merch")
+            DBSKIP()
+
+         ENDDO
+
+         DBCOMMITAL()
+         DBSELECTAR("merch")
+         MERCH->(DBCLOSEARE())
+         FILEDELETE(("") + NAME_F)
+
+      ENDIF
+
+      DBSELECTAR("ef_merch")
+      DBSETORDER(2)
+
+      IF FILE("s" + KOD_OTD__ + "*.*")
+
+         MEMVAR->NAME_F := FILESEEK("s" + KOD_OTD__ + "*.*")
+         DBUSEAREA(.T., NIL, ("") + NAME_F, "slip", .F., .F.)
+         DBGOTOP()
+         LMORE := .T.
+
+         DO WHILE  .NOT. EOF()
+
+            IF EF_MERCH->(DBSEEK(SLIP->MERCH))
+
+               IF EF_HEAD->(DBSEEK(EF_MERCH->HO_CODE))
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@ Ошибка !", "Фирма с кодом "+CHR(34) +;
+                         EF_MERCH->HO_CODE + CHR(34), ;
+                        "отсутствует в справочнике фирм !", "(слип N "+CHR(;
+                        34) + ALLTRIM(STR(SLIP->NO_SLIP, 10)) + CHR(34)+")",;
+                         "Пакет не принят !"}, {" Выход "})
+                  LMORE := .F.
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Точка с кодом "+CHR(34) + ;
+                     SLIP->MERCH + CHR(34), ;
+                     "отсутствует в справочнике точек !", "(слип N "+CHR(;
+                     34) + ALLTRIM(STR(SLIP->NO_SLIP, 10)) + CHR(34)+")", ;
+                     "Пакет не принят !"}, {" Выход "})
+               LMORE := .F.
+
+            ENDIF
+
+            DBSKIP()
+
+         ENDDO
+
+         DBGOTOP()
+
+         DO WHILE  .NOT. EOF() .AND. LMORE
+
+            IF EF_SLIP->(DBSEEK(SLIP->CODE + DTOS(SLIP->TRAN_DATE) + SLIP->;
+                  MERCH + STR(SLIP->NO_SLIP, 10)))
+
+               IF SLIP->AMOUNT < -0.001 .AND. EF_SLIP->AMOUNT > 0.001
+
+                  IF Abs(SLIP->AMOUNT) <= EF_SLIP->AMOUNT + 0.001
+
+                  ELSE
+
+                     ERROR(NIL, NIL, {"@ Ошибка !", ;
+                           "Reversal на cлип c номером " + STR(SLIP->;
+                           NO_SLIP, 10), "от мерчанта " + SLIP->MERCH, ;
+                           "c датой транзакции " + DTOC(SLIP->TRAN_DATE), ;
+                           "имеет сумму больше основного слипа "}, {;
+                           " Продолжить "})
+                     DBSKIP()
+                     LOOP
+
+                  ENDIF
+
+               ENDIF
+
+               IF EF_SLIP->(DBSEEK(SLIP->CODE + DTOS(SLIP->TRAN_DATE) + SLIP->;
+                     MERCH + STR(SLIP->NO_SLIP, 10) + STR(SLIP->AMOUNT, 11, ;
+                     2)))
+
+                  DO WHILE .T.
+
+                     IF EF_SLIP->(RECLOCK(3))
+
+                        EXIT
+
+                     ENDIF
+
+                  ENDDO
+
+                  EF_SLIP->AMOUNT_PS := SLIP->AMOUNT_PS
+                  EF_SLIP->AMOUNT_V := SLIP->AMOUNT_V
+                  EF_SLIP->AMOUNT_FIL := SLIP->AMOUNT_FIL
+                  EF_SLIP->OPL_KEY := SLIP->OPL_KEY
+
+                  IF EMPTY(EF_SLIP->DAT_ACCPT)
+
+                     EF_SLIP->DAT_ACCPT := SLIP->DAT_ACCPT
+
+                  ENDIF
+
+                  IF EMPTY(EF_SLIP->DAT_A_OPL)
+
+                     EF_SLIP->DAT_A_OPL := SLIP->DAT_A_OPL
+
+                  ENDIF
+
+                  IF EMPTY(EF_SLIP->DAT_PAY)
+
+                     EF_SLIP->DAT_PAY := SLIP->DAT_PAY
+
+                  ENDIF
+
+                  IF EMPTY(EF_SLIP->PS_DATE)
+
+                     EF_SLIP->PS_DATE := SLIP->PS_DATE
+
+                  ENDIF
+
+               ELSE
+
+                  DO WHILE .T.
+
+                     IF EF_SLIP->(ADDREC(3))
+
+                        EXIT
+
+                     ENDIF
+
+                  ENDDO
+
+                  EF_SLIP->CODE := SLIP->CODE
+                  EF_SLIP->PR_DATE := SLIP->PR_DATE
+                  EF_SLIP->NO_SLIP := SLIP->NO_SLIP
+                  EF_SLIP->TRAN_DATE := SLIP->TRAN_DATE
+                  EF_SLIP->CH_NO := SLIP->CH_NO
+                  EF_SLIP->E_NAME := SLIP->E_NAME
+                  EF_SLIP->EXP_DATE := SLIP->EXP_DATE
+                  EF_SLIP->MERCH := SLIP->MERCH
+                  EF_SLIP->CURR := SLIP->CURR
+                  EF_SLIP->CURR_M := SLIP->CURR_M
+
+                  IF EF_SLIP->CODE == "CD"
+
+                     EF_SLIP->AMOUNT := -1 * SLIP->AMOUNT
+
+                  ELSE
+
+                     EF_SLIP->AMOUNT := SLIP->AMOUNT
+
+                  ENDIF
+
+                  EF_SLIP->AMOUNT_H := SLIP->AMOUNT_H
+                  EF_SLIP->AMOUNT_M := SLIP->AMOUNT_M
+                  EF_SLIP->AUTH_NO := SLIP->AUTH_NO
+                  EF_SLIP->FIO_OPER := SLIP->FIO_OPER
+                  EF_SLIP->DAT_ACCPT := SLIP->DAT_ACCPT
+                  EF_SLIP->IMPORTFILE := SLIP->IMPORTFILE
+                  EF_SLIP->EXPORTFILE := SLIP->EXPORTFILE
+                  EF_SLIP->SENDDATE := IF(EMPTY(SLIP->SENDDATE), DAT_OD__, ;
+                        SLIP->SENDDATE)
+                  EF_SLIP->DAT_A_OPL := SLIP->DAT_A_OPL
+                  EF_SLIP->AMOUNT_PS := SLIP->AMOUNT_PS
+                  EF_SLIP->AMOUNT_V := SLIP->AMOUNT_V
+                  EF_SLIP->AMOUNT_FIL := SLIP->AMOUNT_FIL
+                  EF_SLIP->AMOUNT_DPK := SLIP->AMOUNT_DPK
+                  EF_SLIP->DAT_PAY := SLIP->DAT_PAY
+                  EF_SLIP->PS_DATE := SLIP->PS_DATE
+                  EF_SLIP->WHOSE := "i"
+
+               ENDIF
+
+            ELSE
+
+               DO WHILE .T.
+
+                  IF EF_SLIP->(ADDREC(3))
+
+                     EXIT
+
+                  ENDIF
+
+               ENDDO
+
+               EF_SLIP->CODE := SLIP->CODE
+               EF_SLIP->PR_DATE := SLIP->PR_DATE
+               EF_SLIP->NO_SLIP := SLIP->NO_SLIP
+               EF_SLIP->TRAN_DATE := SLIP->TRAN_DATE
+               EF_SLIP->CH_NO := SLIP->CH_NO
+               EF_SLIP->E_NAME := SLIP->E_NAME
+               EF_SLIP->EXP_DATE := SLIP->EXP_DATE
+               EF_SLIP->MERCH := SLIP->MERCH
+               EF_SLIP->CURR := SLIP->CURR
+               EF_SLIP->CURR_M := SLIP->CURR_M
+
+               IF EF_SLIP->CODE == "CD"
+
+                  EF_SLIP->AMOUNT := -1 * SLIP->AMOUNT
+
+               ELSE
+
+                  EF_SLIP->AMOUNT := SLIP->AMOUNT
+
+               ENDIF
+
+               EF_SLIP->AMOUNT_H := SLIP->AMOUNT_H
+               EF_SLIP->AMOUNT_M := SLIP->AMOUNT_M
+               EF_SLIP->AUTH_NO := SLIP->AUTH_NO
+               EF_SLIP->FIO_OPER := SLIP->FIO_OPER
+               EF_SLIP->DAT_ACCPT := SLIP->DAT_ACCPT
+               EF_SLIP->IMPORTFILE := SLIP->IMPORTFILE
+               EF_SLIP->EXPORTFILE := SLIP->EXPORTFILE
+               EF_SLIP->SENDDATE := IF(EMPTY(SLIP->SENDDATE), DAT_OD__, SLIP->;
+                     SENDDATE)
+               EF_SLIP->DAT_A_OPL := SLIP->DAT_A_OPL
+               EF_SLIP->AMOUNT_PS := SLIP->AMOUNT_PS
+               EF_SLIP->AMOUNT_V := SLIP->AMOUNT_V
+               EF_SLIP->AMOUNT_FIL := SLIP->AMOUNT_FIL
+               EF_SLIP->AMOUNT_DPK := SLIP->AMOUNT_DPK
+               EF_SLIP->DAT_PAY := SLIP->DAT_PAY
+               EF_SLIP->PS_DATE := SLIP->PS_DATE
+               EF_SLIP->WHOSE := "i"
+
+            ENDIF
+
+            DBSKIP()
+
+         ENDDO
+
+         DBCOMMITAL()
+         DBSELECTAR("slip")
+         SLIP->(DBCLOSEARE())
+         FILEDELETE(("") + NAME_F)
+
+      ENDIF
+
+      IF FILE("b" + KOD_OTD__ + "*.*")
+
+         MEMVAR->NAME_F := FILESEEK("b" + KOD_OTD__ + "*.*")
+         DBUSEAREA(.T., NIL, ("") + NAME_F, "brak", .F., .F.)
+         DBGOTOP()
+         NF := REP_PATH__ + DTOS(DAT_OD__) + ".sbs"
+         SET(24, ("") + NF, .F.)
+         SET(20, "PRINTER")
+         MEMVAR->RW := PROW()
+         DEVPOS(RW + 0, 0)
+         DEVOUT(CHR(27)+"9")
+         DEVPOS(RW + 0, 0)
+         DEVOUT(CHR(27)+"@")
+         DEVPOS(RW + 0, 0)
+         DEVOUT(CHR(27)+"x" + CHR(0))
+         DEVPOS(RW + 0, 0)
+         DEVOUT(CHR(27)+"!"+CHR(4))
+         DEVPOS(RW + 0, 0)
+         DEVOUT(CHR(27)+"3"+CHR(27))
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT("                     РЕЕСТР ЗАБРАКОВАННЫХ СЛИПОВ")
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT("")
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT("")
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT("")
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT(;
+               "=========================================================================================================";
+               )
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT(;
+               "!      № карты      !Номер слипа ! Сумма слипа    !Код Merchant!Дата транз!  Коментарий               ";
+               )
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT(;
+               "!-------------------+------------+----------------!------------!----------!---------------------------";
+               )
+         SET(20, "SCREEN")
+
+         DO WHILE  .NOT. EOF()
+
+            IF EF_SLIP->(DBSEEK(BRAK->CODE + DTOS(BRAK->TRAN_DATE) + ALLTRIM(;
+                  BRAK->MERCH) + STR(BRAK->NO_SLIP, 10)))
+
+               IF EF_SLIP->(RECLOCK(3))
+
+                  EF_SLIP->DAT_ACCPT := CTOD("  .  .  ")
+                  EF_SLIP->SENDDATE := CTOD("  .  .  ")
+                  EF_SLIP->DAT_A_OPL := CTOD("  .  .  ")
+                  EF_SLIP->DAT_PAY := CTOD("  .  .  ")
+                  EF_SLIP->PS_DATE := CTOD("  .  .  ")
+                  EF_SLIP->DAT_OK := CTOD("  .  .  ")
+                  EF_SLIP->OPL_KEY := "Забракован"
+                  EF_SLIP->DC := .F.
+                  EF_SLIP->(DBUNLOCK())
+                  SET(20, "PRINTER")
+                  DEVPOS(++MEMVAR->RW, 2)
+                  DEVOUT("!" + EF_SLIP->CH_NO + "! " + STR(BRAK->NO_SLIP, 10);
+                         + " !" + STR(EF_SLIP->AMOUNT, 16, 2) + "!" + PADR(;
+                        ALLTRIM(BRAK->MERCH), 10) + "!" + DTOC(BRAK->;
+                        TRAN_DATE) + "!" + BRAK->REMARK)
+                  SET(20, "SCREEN")
+                  DIALOG(NIL, NIL, {"@ Внимание !", ;
+                        "Отбракован cлип c номером " + STR(BRAK->NO_SLIP, ;
+                        10), "от мерчанта " + BRAK->MERCH, ;
+                        "c датой транзакции " + DTOC(BRAK->TRAN_DATE), BRAK->;
+                        REMARK}, {" Продолжить "})
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Отбракованный cлип c номером " + STR(BRAK->NO_SLIP, ;
+                     10), "от мерчанта " + BRAK->MERCH, ;
+                     "c датой транзакции " + DTOC(BRAK->TRAN_DATE), ;
+                     "не найден в файле "+CHR(34)+"EF_SLIP"+CHR(34)+" "}, {;
+                     " Продолжить "})
+
+            ENDIF
+
+            DBSELECTAR("brak")
+            DBSKIP()
+
+         ENDDO
+
+         SET(20, "PRINTER")
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT(;
+               "!-------------------+------------+----------------!------------!----------!---------------------------";
+               )
+         SET(24, "")
+         SET(20, "SCREEN")
+         FILEVIEW(1, 0, 23, 79, NF, "@Реестр забракованных слипов : ", {||;
+               PRNCHEK(NF)}, {"~Esc~-выход", "~F2~-печать"})
+         DBCOMMITAL()
+         DBSELECTAR("brak")
+         BRAK->(DBCLOSEARE())
+         FILEDELETE(("") + NAME_F)
+
+      ENDIF
+
+      __COPYFILE(IN_PATH__ + NAME_ARC, CP_PATH__ + NAME_ARC)
+
+      IF FILE(CP_PATH__ + NAME_ARC)
+
+         FERASE(("") + IN_PATH__ + NAME_ARC)
+
+      ENDIF
+
+      IF EF_POST->(ADDREC(3))
+
+         EF_POST->NAM_FILE := NAME_ARC
+         EF_POST->DAT_POST := DAT_OD__
+         EF_POST->TIME_POST := TIME()
+         EF_POST->PR_V_I := .T.
+         EF_POST->(DBCOMMIT())
+         EF_POST->(DBUNLOCK())
+
+      ENDIF
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Файл "+CHR(34) + NAME_ARC + CHR(34), ;
+            "уже обрабатывался " + DTOC(EF_POST->DAT_POST) + " в " + ;
+            EF_POST->TIME_POST + " !"}, {" Выход "})
+      FERASE(("") + IN_PATH__ + NAME_ARC)
+
+   ENDIF
+
+   WINCLOSE(WIN2)
+   SETCOLOR(OLDC)
+   DBCLOSEALL()
+
+RETURN NIL
+

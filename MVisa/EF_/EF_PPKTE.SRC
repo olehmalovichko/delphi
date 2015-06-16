@@ -1,0 +1,433 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_PPKTE
+   Params: None.
+   Return: Nil
+  Example: EF_PPKTE()
+  ..........................................................................
+*/
+
+FUNCTION EF_PPKTE()
+
+   LOCAL OLDC := SETCOLOR(), KEY, LMORE := .F.
+   LOCAL WIN, WIN2, BL, HOST, NAME_ARC
+
+   IF  .NOT. AREA_OPEN({{"ef_bank"}, {"ef_head"}, {"ef_s_pr"}, {"ef_doc"}, ;
+         {"for_ved"}, {"ef_s_sc"}, {"ef_sys"}, {"ef_merch"}, {"ef_post"}, {;
+         "ef_slip"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. FILE(IN_PATH__ + "E" + KOD_OTD__ + "*.*")
+
+      TONE(125, 3)
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", "Не найден ни один пакет !"}, {;
+            " Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Выполнить прием пакета ?"}, {"  Нет ", " Да "};
+         , 1)
+
+   IF KEY = 1
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   EF_DOC->(DBSETORDER(2))
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   SETCOLOR("w+/w")
+   WIN2 := WIN(8, 20, 14, 60, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 5)
+   DEVOUT("    Принимаю файл ")
+   NAME_ARC := FILESEEK(IN_PATH__ + "E" + KOD_OTD__ + "*.*")
+   MEMVAR->QQQ := EF_POST->(DBSEEK(NAME_ARC))
+
+   IF  .NOT. QQQ .OR. QQQ .AND. YEAR(EF_POST->DAT_POST) < YEAR(DAT_OD__)
+
+      DEVPOS(3, 5)
+      DEVOUT(NAME_ARC)
+      HOST := "pkunzip -d " + IN_PATH__ + NAME_ARC
+      WSELECT(0)
+      WIN := SAVESCREEN(0, 0, 24, 79)
+      DISPBOX(0, 0, 24, 79, "         ", "W/N")
+      S_RUN(HOST, -1, .T.)
+      RESTSCREEN(0, 0, 24, 79, WIN)
+      WSELECT(WIN2)
+
+      IF FILE("e" + KOD_OTD__ + "*.*")
+
+         MEMVAR->NAME_F := FILESEEK("e" + KOD_OTD__ + "*.*")
+         DBUSEAREA(.T., NIL, ("") + NAME_F, "slip", .F., .F.)
+         DBGOTOP()
+         LMORE := .T.
+
+         DO WHILE  .NOT. EOF() .AND. LMORE
+
+            IF SLIP->CODE == "CD"
+
+               BL := {||EF_S_PR->(DBSEEK("пнк" + SLIP->MERCH))}
+               MEMVAR->ST := "пнк"
+
+            ELSEIF SLIP->CODE == "UP"
+
+               BL := {||EF_S_PR->(DBSEEK("кпк" + SLIP->MERCH))}
+               MEMVAR->ST := "кпк"
+
+            ELSEIF SLIP->CODE == "03"
+
+               BL := {||EF_S_PR->(DBSEEK("внл" + SLIP->MERCH))}
+               MEMVAR->ST := "внл"
+
+            ELSE
+
+               BL := {||.T.}
+               MEMVAR->ST := ""
+
+            ENDIF
+
+            IF EF_MERCH->(DBSEEK(SLIP->MERCH))
+
+               IF EF_HEAD->(DBSEEK(EF_MERCH->HO_CODE))
+
+                  IF EVAL(BL)
+
+                     IF EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + EF_MERCH->CURR))
+
+                        IF EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + EF_MERCH->CURR))
+
+                           IF EF_SLIP->(DBSEEK(SLIP->CODE + DTOS(SLIP->;
+                                 TRAN_DATE) + SLIP->MERCH + STR(SLIP->;
+                                 NO_SLIP, 10)))
+
+                              ERROR(NIL, NIL, {"@ Ошибка !", "Слип:", ;
+                                    "тип операции "+CHR(34) + SLIP->CODE + ;
+                                    CHR(34), "дата транзакции "+CHR(34) + ;
+                                    DTOC(SLIP->TRAN_DATE) + CHR(34), ;
+                                    "merch "+CHR(34) + SLIP->MERCH + CHR(34);
+                                    , "N слипа "+CHR(34) + STR(SLIP->;
+                                    NO_SLIP, 10) + CHR(34), ;
+                                    "уже есть в базе слипов(EF_SLIP.dbf) !";
+                                    , "Пакет не принят !"}, {" Выход "})
+                              LMORE := .F.
+
+                           ENDIF
+
+                        ELSE
+
+                           ERROR(NIL, NIL, {"@ Ошибка !", ;
+                                 "В справочнике счетов", ;
+                                 "не найден счет с кодом "+CHR(34) + ;
+                                 EF_S_PR->SC_DT + CHR(34), "и валютой "+CHR(;
+                                 34) + EF_MERCH->CURR + CHR(34)+" !", ;
+                                 "Пакет не принят !"}, {" Выход "})
+                           LMORE := .F.
+
+                        ENDIF
+
+                     ELSE
+
+                        ERROR(NIL, NIL, {"@ Ошибка !", ;
+                              "В справочнике счетов", ;
+                              "не найден счет с кодом "+CHR(34) + EF_S_PR->;
+                              SC_KT + CHR(34), "и валютой "+CHR(34) + ;
+                              EF_MERCH->CURR + CHR(34)+" !", ;
+                              "Пакет не принят !"}, {" Выход "})
+                        LMORE := .F.
+
+                     ENDIF
+
+                  ELSE
+
+                     ERROR(NIL, NIL, {"@ Ошибка !", ;
+                           "В справочнике проводок", ;
+                           "не найдена проводка с кодом " + ST, "и merch "+;
+                           CHR(34) + SLIP->MERCH + CHR(34)+" !", ;
+                           "Пакет не принят !"}, {" Выход "})
+                     LMORE := .F.
+
+                  ENDIF
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@ Ошибка !", "Фирма с кодом "+CHR(34) +;
+                         EF_MERCH->HO_CODE + CHR(34), ;
+                        "отсутствует в справочнике фирм !", "(слип N "+CHR(;
+                        34) + ALLTRIM(STR(SLIP->NO_SLIP, 10)) + CHR(34)+")",;
+                         "Пакет не принят !"}, {" Выход "})
+                  LMORE := .F.
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Точка с кодом "+CHR(34) + ;
+                     SLIP->MERCH + CHR(34), ;
+                     "отсутствует в справочнике точек !", "(слип N "+CHR(;
+                     34) + ALLTRIM(STR(SLIP->NO_SLIP, 10)) + CHR(34)+")", ;
+                     "Пакет не принят !"}, {" Выход "})
+               LMORE := .F.
+
+            ENDIF
+
+            DBSKIP()
+
+         ENDDO
+
+         DBGOTOP()
+
+         DO WHILE  .NOT. EOF() .AND. LMORE
+
+            EF_MERCH->(DBSEEK(SLIP->MERCH))
+            EF_HEAD->(DBSEEK(EF_MERCH->HO_CODE))
+
+            DO WHILE .T.
+
+               IF EF_SLIP->(ADDREC(3))
+
+                  EXIT
+
+               ENDIF
+
+            ENDDO
+
+            EF_SLIP->CODE := SLIP->CODE
+            EF_SLIP->PR_DATE := SLIP->PR_DATE
+            EF_SLIP->NO_SLIP := SLIP->NO_SLIP
+            EF_SLIP->TRAN_DATE := SLIP->TRAN_DATE
+            EF_SLIP->CH_NO := SLIP->CH_NO
+            EF_SLIP->E_NAME := SLIP->E_NAME
+            EF_SLIP->EXP_DATE := SLIP->EXP_DATE
+            EF_SLIP->MERCH := SLIP->MERCH
+            EF_SLIP->CURR := SLIP->CURR
+            EF_SLIP->CURR_M := SLIP->CURR_M
+            EF_SLIP->AMOUNT := SLIP->AMOUNT
+            EF_SLIP->AMOUNT_H := SLIP->AMOUNT_H
+            EF_SLIP->AMOUNT_M := SLIP->AMOUNT_M
+            EF_SLIP->AUTH_NO := SLIP->AUTH_NO
+            EF_SLIP->FIO_OPER := SLIP->FIO_OPER
+            EF_SLIP->DAT_ACCPT := SLIP->DAT_ACCPT
+            EF_SLIP->DAT_PAY := SLIP->DAT_PAY
+            EF_SLIP->IMPORTFILE := SLIP->IMPORTFILE
+            EF_SLIP->EXPORTFILE := SLIP->EXPORTFILE
+            EF_SLIP->SENDDATE := SLIP->SENDDATE
+            EF_SLIP->DAT_A_OPL := SLIP->DAT_A_OPL
+            EF_SLIP->PS_DATE := SLIP->PS_DATE
+            EF_SLIP->OPL_KEY := SLIP->OPL_KEY
+            EF_SLIP->AMOUNT_PS := SLIP->AMOUNT_PS
+            EF_SLIP->AMOUNT_V := SLIP->AMOUNT_V
+            EF_SLIP->AMOUNT_FIL := SLIP->AMOUNT_FIL
+            EF_SLIP->AMOUNT_DPK := SLIP->AMOUNT_DPK
+            EF_SLIP->MAGTRACKRD := SLIP->MAGTRACKRD
+            EF_SLIP->WHOSE := "i"
+            ADD_RTR()
+            DBSELECTAR("slip")
+            DBSKIP()
+
+         ENDDO
+
+         DBCOMMITAL()
+         DBSELECTAR("slip")
+         SLIP->(DBCLOSEARE())
+         FILEDELETE(("") + NAME_F)
+
+      ENDIF
+
+      IF LMORE
+
+         __COPYFILE(IN_PATH__ + NAME_ARC, CP_PATH__ + NAME_ARC)
+
+         IF FILE(CP_PATH__ + NAME_ARC)
+
+            FERASE(("") + IN_PATH__ + NAME_ARC)
+
+         ENDIF
+
+         IF EF_POST->(ADDREC(3))
+
+            EF_POST->NAM_FILE := NAME_ARC
+            EF_POST->DAT_POST := DAT_OD__
+            EF_POST->TIME_POST := TIME()
+            EF_POST->PR_V_I := .T.
+            EF_POST->(DBCOMMIT())
+            EF_POST->(DBUNLOCK())
+
+         ENDIF
+
+      ENDIF
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Файл "+CHR(34) + NAME_ARC + CHR(34), ;
+            "уже обрабатывался " + DTOC(EF_POST->DAT_POST) + " в " + ;
+            EF_POST->TIME_POST + " !"}, {" Выход "})
+      FERASE(("") + IN_PATH__ + NAME_ARC)
+
+   ENDIF
+
+   WINCLOSE(WIN2)
+   SETCOLOR(OLDC)
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADD_RTR
+   Params: None.
+   Return: Nil
+  Example: ADD_RTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION ADD_RTR()
+
+   LOCAL S_D, N_D, S_K, N_K, ST
+
+   IF EF_SLIP->CODE == "CD" .OR. EF_SLIP->CODE == "03" .OR. EF_SLIP->CODE == ;
+         "UP"
+
+      IF EF_SLIP->CODE == "CD"
+
+         ST := "пнк"
+
+      ELSEIF EF_SLIP->CODE == "UP"
+
+         ST := "кпк"
+
+      ELSEIF EF_SLIP->CODE == "03"
+
+         ST := "внл"
+
+      ENDIF
+
+      EF_S_PR->(DBSEEK(ST + EF_SLIP->MERCH))
+
+      IF EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + EF_MERCH->CURR))
+
+         S_K := IF(PR_NEWPL__, EF_S_SC->SC_NEW, EF_S_SC->SC)
+         MEMVAR->S_KN := EF_S_SC->SC_NEW
+         N_K := EF_S_SC->NAM_SC
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "В справочнике счетов", ;
+               "не найден счет с кодом "+CHR(34) + EF_S_PR->SC_KT + CHR(34),;
+                "и валютой "+CHR(34) + EF_MERCH->CURR + CHR(34)+" !"}, {;
+               " Выход "})
+         RETURN NIL
+
+      ENDIF
+
+      IF EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + EF_MERCH->CURR))
+
+         S_D := IF(PR_NEWPL__, EF_S_SC->SC_NEW, EF_S_SC->SC)
+         MEMVAR->S_DN := EF_S_SC->SC_NEW
+         N_D := EF_S_SC->NAM_SC
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "В справочнике счетов", ;
+               "не найден счет с кодом "+CHR(34) + EF_S_PR->SC_DT + CHR(34),;
+                "и валютой "+CHR(34) + EF_MERCH->CURR + CHR(34)+" !"}, {;
+               " Выход "})
+         RETURN NIL
+
+      ENDIF
+
+      IF EF_DOC->(DBSEEK(DTOS(DAT_OD__) + S_DN + PADR(ALLTRIM(KOD_B__), 9) +;
+             S_KN + PADR(ALLTRIM(KOD_B__), 9)))
+
+         IF FOR_VED->(ADDREC(3)) .AND. EF_DOC->(RECLOCK(3))
+
+            IF EF_SLIP->CODE == "CD"
+
+               EF_DOC->SUMMA := EF_DOC->SUMMA + EF_SLIP->AMOUNT
+
+            ELSEIF EF_SLIP->CODE == "UP"
+
+               EF_DOC->SUMMA := EF_DOC->SUMMA + EF_SLIP->AMOUNT
+
+            ELSEIF EF_SLIP->CODE == "03"
+
+               EF_DOC->SUMMA := EF_DOC->SUMMA + EF_SLIP->AMOUNT_H
+
+            ENDIF
+
+            FOR_VED->TIP := "3"
+            FOR_VED->CODE := EF_SLIP->CODE
+            FOR_VED->DAT_BANK := DAT_OD__
+            FOR_VED->N_PP := EF_DOC->NUM_DOC
+            FOR_VED->NO_SLIP := EF_SLIP->NO_SLIP
+            FOR_VED->TRAN_DATE := EF_SLIP->TRAN_DATE
+            FOR_VED->CH_NO := EF_SLIP->CH_NO
+            FOR_VED->MERCH := EF_SLIP->MERCH
+            DBCOMMITAL()
+            DBUNLOCKAL()
+
+         ENDIF
+
+      ELSEIF FOR_VED->(ADDREC(3)) .AND. (EF_DOC->(ADDREC(3)) .AND. EF_SYS->(;
+            RECLOCK(3)))
+
+         EF_DOC->VID_OP := "06"
+         EF_DOC->TIP_DOC := "м"
+         EF_DOC->NUM_DOC := EF_SYS->N_PP + 1
+         EF_DOC->KOD_V := EF_MERCH->CURR_M
+         EF_DOC->DAT_KL := DAT_OD__
+         EF_DOC->DAT_BANK := DAT_OD__
+
+         IF EF_SLIP->CODE == "CD"
+
+            EF_DOC->SUMMA := EF_DOC->SUMMA + EF_SLIP->AMOUNT
+
+         ELSEIF EF_SLIP->CODE == "UP"
+
+            EF_DOC->SUMMA := EF_DOC->SUMMA + EF_SLIP->AMOUNT
+
+         ELSEIF EF_SLIP->CODE == "03"
+
+            EF_DOC->SUMMA := EF_DOC->SUMMA + EF_SLIP->AMOUNT_H
+
+         ENDIF
+
+         EF_DOC->NAM_DT := N_D
+         EF_DOC->BANK_DT := NAM_B__
+         EF_DOC->MFO_DT := PADR(ALLTRIM(KOD_B__), 9)
+         EF_DOC->SC_DT := S_DN
+         EF_DOC->INDEX_DT := STR(POST_IND__, 6)
+         EF_DOC->OKPO_DT := KOD_OKPO__
+         EF_DOC->NAM_KT := N_K
+         EF_DOC->BANK_KT := NAM_B__
+         EF_DOC->MFO_KT := PADR(ALLTRIM(KOD_B__), 9)
+         EF_DOC->SC_KT := S_KN
+         EF_DOC->OKPO_KT := KOD_OKPO__
+         EF_DOC->INDEX_KT := STR(POST_IND__, 6)
+         EF_DOC->OSN := "Возмещение кассовых авансов "
+         EF_DOC->FIO_OP := FIO_OP__
+         FOR_VED->CODE := EF_SLIP->CODE
+         FOR_VED->TIP := "3"
+         FOR_VED->DAT_BANK := DAT_OD__
+         FOR_VED->N_PP := EF_SYS->N_PP + 1
+         FOR_VED->NO_SLIP := EF_SLIP->NO_SLIP
+         FOR_VED->TRAN_DATE := EF_SLIP->TRAN_DATE
+         FOR_VED->CH_NO := EF_SLIP->CH_NO
+         FOR_VED->MERCH := EF_SLIP->MERCH
+         ++EF_SYS->N_PP
+         DBCOMMITAL()
+         DBUNLOCKAL()
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN NIL
+

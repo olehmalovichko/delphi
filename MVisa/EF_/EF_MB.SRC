@@ -1,0 +1,1077 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: IPD_TO_MAI
+   Params: FLAG
+   Return: Logical
+  Example: IPD_TO_MAI(FLAG)
+  ..........................................................................
+*/
+
+FUNCTION IPD_TO_MAI(FLAG)
+
+   IF EF_BANK->OD_NAC = "1"
+
+      IPD_SB_MAI()
+
+   ELSEIF EF_BANK->OD_NAC = "2"
+
+      IPD_2_BK(FLAG)
+
+   ELSEIF EF_BANK->OD_NAC = "9"
+
+      TONE(185, 3)
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PROV_MB
+   Params: None.
+   Return: Nil
+  Example: PROV_MB()
+  ..........................................................................
+*/
+
+FUNCTION PROV_MB()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, DESKTOP, ABROWSE
+
+   PRIVATE BROWSE, COLUMN
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := SPACE(10), IKEY_BOT := "9999999999"
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~F8-~отправить в почту", ;
+         "~F9-~реестр пополнений", "~F10-~печать"}
+   PRIVATE BOTIO_3 := {"~Esc-~выход", "~F9-~реестр пополнений", ;
+         "~F10-~печать"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+   DBSELECTAR("for_mb")
+   MEMVAR->CFL := {"n_d", "count_a", "count_b", "summa"}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "for_mb->")
+   MEMVAR->SEP := {"", "  ", "  ", "  ", "  "}
+   ABROWSE := CREATTBROW(3, 11, 8, 65, "n_d", {||CREATSTR(CAL, CFL, SEP)})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := ""
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " Ведомость проводок в ОДБ ")
+   SCRIO_1()
+
+   IF EF_BANK->OD_NAC = "9"
+
+      STATUSLINE(BOTIO_3)
+
+   ELSE
+
+      STATUSLINE(BOTIO_1)
+
+   ENDIF
+
+   DBGOTOP()
+   OBRIO_1()
+   WINCLOSE(DESKTOP)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRINTSLD
+   Params: None.
+   Return: Number
+  Example: PRINTSLD()
+  ..........................................................................
+*/
+
+FUNCTION PRINTSLD()
+
+   IF SCANCODE() = -1
+
+      IF PRINTYES()
+
+         PRINTFILE(FVIEWFILE, .T.)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NBU_DAT
+   Params: MD
+   Return: Variable
+  Example: NBU_DAT(MD)
+  ..........................................................................
+*/
+
+FUNCTION NBU_DAT(MD)
+
+   MEMVAR->LITERA := {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B",;
+          "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", ;
+         "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0"}
+   MEMVAR->M := VAL(SUBSTR(DTOS(MD), 5, 2))
+   MEMVAR->D := VAL(SUBSTR(DTOS(MD), 7, 2))
+   MEMVAR->MORD := MEMVAR->LITERA[M] + MEMVAR->LITERA[D]
+
+RETURN MORD
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: IPD_SB_MAI
+   Params: None.
+   Return: Variable
+  Example: IPD_SB_MAI()
+  ..........................................................................
+*/
+
+STATIC FUNCTION IPD_SB_MAI()
+
+   LOCAL IMPORT, IMPORT__, J := 0
+   LOCAL MS := ARRAY(0), VP__ := "", N_P__ := ""
+   LOCAL MBDIR := DIRECTORY(SUBSTR(MB_PATH__, 1, LEN(MB_PATH__) - 1), ;
+         "D")
+
+   IMPORT__ := "@ef" + EF_BANK->BRANCH + NBU_DAT(DAT_OD__) + "." + IF(EMPTY(;
+         EF_BANK->KOD_PVN), "000", ALLTRIM(EF_BANK->KOD_PVN))
+   IMPORT := MB_PATH__ + IMPORT__
+
+   IF EMPTY(MB_PATH__)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Директория для отправки в SYBRIDGE", ;
+            "не определена !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(MBDIR)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "НЕТ директории " + MB_PATH__, ;
+            "для отправки в SYBRIDGE !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_SYS->FL_IPD_N
+
+      DIALOG(NIL, NIL, {"ИТОГОВЫЕ ПРОВОДКИ ", ;
+            "уже сформированы и отправлены в ОДБ!"}, {" Продолжить "})
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("for_mb")
+   MEMVAR->REC := FOR_MB->(RECNO())
+   DBGOTOP()
+   J := 0
+
+   DO WHILE  .NOT. EOF()
+
+      IF  .NOT. FOR_MB->PR_INF
+
+         ++J
+         MEMVAR->TR := "e" + IF(EMPTY(EF_BANK->KOD_PVN), "000", PADL(ALLTRIM(;
+               EF_BANK->KOD_PVN), 3, "0")) + NBU_DAT(DAT_OD__) + ZERO_STR(J,;
+                3) + SUBSTR(TIME(), 1, 2) + SUBSTR(TIME(), 4, 2) + SUBSTR(;
+               TIME(), 7, 2)
+
+         IF FOR_MB->TIP = 6
+
+            VP__ := "м"
+
+         ELSEIF FOR_MB->TIP = 4
+
+            VP__ := "р"
+
+         ELSEIF FOR_MB->TIP = 3
+
+            VP__ := "о"
+
+         ELSE
+
+            VP__ := "м"
+
+         ENDIF
+
+         MEMVAR->DT_KT := "1"
+
+         IF FOR_MB->SKP == EF_BANK->CH_KPL_K .AND. FOR_MB->TIP = 3
+
+            FOR PP := 1 TO LEN(ARR_CH)
+
+               AADD(MS, {STR(FOR_MB->MFO_A, 9), STR(FOR_MB->COUNT_A, 16), ;
+                     STR(FOR_MB->MFO_B, 9), STR(FOR_MB->COUNT_B, 16), STR(;
+                     MEMVAR->ARR_CH[PP, 2] * 100, 19), VP__, STR(FOR_MB->N_D,;
+                      10), ALLTRIM(FOR_MB->NAME_A), ALLTRIM(FOR_MB->NAME_B), ;
+                     SUBSTR(FOR_MB->N_P, 1, 160), DTOS(DAT_OD__), MEMVAR->;
+                     ARR_CH[PP, 1], TR, ALLTRIM(FOR_MB->VAL), EF_BANK->ID, ;
+                     DT_KT, STR(FOR_MB->OKPO_A, 10), STR(FOR_MB->OKPO_B, 10),;
+                      NIL})
+
+            NEXT
+
+         ELSE
+
+            AADD(MS, {STR(FOR_MB->MFO_A, 9), STR(FOR_MB->COUNT_A, 16), STR(;
+                  FOR_MB->MFO_B, 9), STR(FOR_MB->COUNT_B, 16), STR(FOR_MB->;
+                  SUMMA * 100, 19), VP__, STR(FOR_MB->N_D, 10), ALLTRIM(;
+                  FOR_MB->NAME_A), ALLTRIM(FOR_MB->NAME_B), SUBSTR(FOR_MB->;
+                  N_P, 1, 160), DTOS(DAT_OD__), FOR_MB->SKP, TR, ALLTRIM(;
+                  FOR_MB->VAL), EF_BANK->ID, DT_KT, STR(FOR_MB->OKPO_A, 10), ;
+                  STR(FOR_MB->OKPO_B, 10), NIL})
+
+         ENDIF
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   SET(24, IMPORT, .F.)
+   SET(25, 0)
+   SET(20, "PRINTER")
+   SETPRC(0, 0)
+   MEMVAR->RR := PROW()
+   DEVPOS(RR, 0)
+   DEVOUT(SPACE(100))
+   DEVPOS(++MEMVAR->RR, 0)
+   DEVOUT(PADR(IMPORT__, 12))
+   DEVPOS(RR, 12)
+   DEVOUT(SUBSTR(DTOS(DATE()), 5, 4) + SUBSTR(TIME(), 1, 2) + SUBSTR(TIME();
+         , 4, 2))
+   DEVPOS(RR, 20)
+   DEVOUT(STR(LEN(MS), 6))
+   DEVPOS(RR, 181)
+   DEVOUT("")
+
+   FOR I := 1 TO LEN(MS)
+
+      DEVPOS(++MEMVAR->RR, 0)
+      DEVOUT(MS[I, 1])
+      DEVPOS(RR, 9)
+      DEVOUT(MS[I, 2])
+      DEVPOS(RR, 25)
+      DEVOUT(MS[I, 3])
+      DEVPOS(RR, 34)
+      DEVOUT(MS[I, 4])
+      DEVPOS(RR, 50)
+      DEVOUT(MS[I, 16])
+      DEVPOS(RR, 51)
+      DEVOUT(MS[I, 5])
+      DEVPOS(RR, 71)
+      DEVOUT(MS[I, 6])
+      DEVPOS(RR, 72)
+      DEVOUT(MS[I, 7])
+      DEVPOS(RR, 82)
+      DEVOUT("H")
+      DEVPOS(RR, 83)
+      DEVOUT(MS[I, 8])
+      DEVPOS(RR, 123)
+      DEVOUT(MS[I, 9])
+      DEVPOS(RR, 163)
+      DEVOUT(MS[I, 10])
+      DEVPOS(RR, 323)
+      DEVOUT(MS[I, 11])
+      DEVPOS(RR, 501)
+      DEVOUT(MS[I, 17])
+      DEVPOS(RR, 511)
+      DEVOUT(MS[I, 18])
+      DEVPOS(RR, 545)
+      DEVOUT(MS[I, 12])
+      DEVPOS(RR, 553)
+      DEVOUT(MS[I, 13])
+      DEVPOS(RR, 569)
+      DEVOUT(MS[I, 14])
+      DEVPOS(RR, 572)
+      DEVOUT(MS[I, 15])
+      DEVPOS(RR, 576)
+      DEVOUT("      ")
+
+   NEXT
+
+   DEVPOS(++MEMVAR->RR, 0)
+   DEVOUT("")
+   SET(24, "")
+   SET(23, "OFF")
+   SET(20, "SCREEN")
+
+   IF FILE(IMPORT)
+
+      IF EF_SYS->(RECLOCK(3))
+
+         EF_SYS->FL_IPD_N := .T.
+         ++EF_SYS->N_PKT
+
+      ENDIF
+
+      EF_SYS->(DBCOMMIT())
+      EF_SYS->(DBUNLOCK())
+      DIALOG(NIL, NIL, {"@ Внимание !", "ПРОВОДКИ В 'SYBRIDGE' !", ;
+            "отправлены в почту"}, {" Продолжить "})
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Внимание !", "ПРОВОДКИ В 'SYBRIDGE' !", ;
+            "не удалось отправить в почту", "(не создался файл " + IMPORT +;
+             " !)", "попробуйте еще раз"}, {" Выход "})
+
+   ENDIF
+
+   DBSELECTAR("for_mb")
+   DBGOTO(REC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: IPD_2_BK
+   Params: FLAG
+   Return: Nil
+  Example: IPD_2_BK(FLAG)
+  ..........................................................................
+*/
+
+STATIC FUNCTION IPD_2_BK(FLAG)
+
+   LOCAL F_IN := "for_mb.dbf"
+   LOCAL MBDIR := DIRECTORY(SUBSTR(MB_PATH__, 1, LEN(MB_PATH__) - 1), ;
+         "D")
+
+   IF EMPTY(MB_PATH__)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", ;
+            "Директория для отправки в Банк-клиент", "не определена !"}, {;
+            " Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(MBDIR)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "НЕТ директории " + MB_PATH__, ;
+            "для отправки в Банк-клиент !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_SYS->FL_IPD_N
+
+      DIALOG(NIL, NIL, {"ИТОГОВЫЕ ПРОВОДКИ ", ;
+            "уже сформированы и отправлены в ОДБ!"}, {" Продолжить "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. BASEOPEN("import", .T., 3, MB_PATH__)
+
+      ERROR(NIL, NIL, {"База данных экспорта проводок", ;
+            "занята другим комплексом !", "Попробуйте еще раз !"}, {;
+            " Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("for_mb")
+   MEMVAR->REC := FOR_MB->(RECNO())
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF  .NOT. FOR_MB->PR_INF
+
+         DBSELECTAR("import")
+         DBAPPEND()
+         IMPORT->TIP := FOR_MB->TIP
+         IMPORT->N_D := FOR_MB->N_D
+         IMPORT->DATE := FOR_MB->DATE
+         IMPORT->SUMMA := FOR_MB->SUMMA
+         IMPORT->NAME_A := FOR_MB->NAME_A
+         IMPORT->COUNT_A := FOR_MB->COUNT_A
+         IMPORT->MFO_A := FOR_MB->MFO_A
+         IMPORT->BANK_A := FOR_MB->BANK_A
+         IMPORT->NAME_B := FOR_MB->NAME_B
+         IMPORT->MFO_B := FOR_MB->MFO_B
+         IMPORT->COUNT_B := FOR_MB->COUNT_B
+         IMPORT->BANK_B := FOR_MB->BANK_B
+         IMPORT->N_P := FOR_MB->N_P
+         IMPORT->USER := FOR_MB->USER
+         IMPORT->VAL := FOR_MB->VAL
+         IMPORT->SKP := FOR_MB->SKP
+         IMPORT->OKPO_A := FOR_MB->OKPO_A
+         IMPORT->OKPO_B := FOR_MB->OKPO_B
+
+      ENDIF
+
+      DBSELECTAR("for_mb")
+      DBSKIP()
+
+   ENDDO
+
+   IMPORT->(DBCLOSEARE())
+
+   IF EF_SYS->(RECLOCK(3))
+
+      EF_SYS->FL_IPD_N := FLAG
+      ++EF_SYS->N_PKT
+
+   ENDIF
+
+   EF_SYS->(DBCOMMIT())
+   EF_SYS->(DBUNLOCK())
+   DIALOG(NIL, NIL, {"ИТОГОВЫЕ ПРОВОДКИ ", "отправлены в Банк-клиент"}, {;
+         " Продолжить "})
+   DBSELECTAR("for_mb")
+   DBGOTO(REC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Logical
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR(), I := 14
+   LOCAL OSN := SPLIT(FOR_MB->N_P, 53)
+
+   DEVPOS(10, 24)
+   DEVOUT(FOR_MB->NAME_A)
+   DEVPOS(11, 24)
+   DEVOUT(FOR_MB->BANK_A)
+   DEVPOS(12, 24)
+   DEVOUT(FOR_MB->MFO_A)
+   DEVPOS(14, 24)
+   DEVOUT(FOR_MB->NAME_B)
+   DEVPOS(15, 24)
+   DEVOUT(FOR_MB->BANK_B)
+   DEVPOS(16, 24)
+   DEVOUT(FOR_MB->MFO_B)
+   DEVPOS(18, 24)
+   DEVOUT(IF(LEN(OSN) > 0, PADR(OSN[1], 53), SPACE(53)))
+   DEVPOS(19, 24)
+   DEVOUT(IF(LEN(OSN) > 1, PADR(OSN[2], 53), SPACE(53)))
+   DEVPOS(20, 24)
+   DEVOUT(IF(LEN(OSN) > 2, PADR(OSN[3], 53), SPACE(53)))
+   DEVPOS(21, 24)
+   DEVOUT(FOR_MB->USER)
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(2, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 11)
+   DEVOUT("N док.    ДЕБЕТ         КРЕДИТ               Сумма")
+   SAYS(9, 0, "╟" + REPLICATE("─", 78) + "╢", "w+/w")
+   SAYS(9, 3, " Дебет ", "gr+/w")
+   DEVPOS(10, 2)
+   DEVOUT("Наименование счета :")
+   DEVPOS(11, 2)
+   DEVOUT("Наименование банка :")
+   DEVPOS(12, 2)
+   DEVOUT("МФО банка          :")
+   SAYS(13, 0, "╟" + REPLICATE("─", 78) + "╢", "w+/w")
+   SAYS(13, 3, " Кредит ", "gr+/w")
+   DEVPOS(14, 2)
+   DEVOUT("Наименование счета :")
+   DEVPOS(15, 2)
+   DEVOUT("Наименование банка :")
+   DEVPOS(16, 2)
+   DEVOUT("МФО банка          :")
+   SAYS(17, 0, "╟" + REPLICATE("─", 78) + "╢", "w+/w")
+   SAYS(17, 3, " Назначение ", "gr+/w")
+   DEVPOS(18, 2)
+   DEVOUT("Основание платежа  :")
+   DEVPOS(21, 2)
+   DEVOUT("Оформил            :")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -7
+
+            IPD_TO_MAI(.T.)
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -8
+
+            IF FILE(("") + FNAME)
+
+               FILEVIEW(1, 0, 23, 79, FNAME, "@Реестр пополнений : ", {||;
+                     PRINTSLD(FNAME)}, {"~Esc~-выход", "~F2~-печать"})
+
+            ENDIF
+
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -9
+
+            PRN_MB()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRN_MB
+   Params: None.
+   Return: Variable
+  Example: PRN_MB()
+  ..........................................................................
+*/
+
+STATIC FUNCTION PRN_MB()
+
+   LOCAL WIN, RW, I, J, REC, SUMNAT := 0, CL, JJ := 0
+
+   IF  .NOT. PRINTYES()
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(24, "")
+   SET(25, 3)
+   SET(20, "PRINTER")
+
+   DO WHILE .T.
+
+      SET(20, "PRINTER")
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(25))
+
+      FOR J := 1 TO 2
+
+         SUMNAT := 0
+         JJ := 0
+         RW := RW + 3
+         DEVPOS(RW + 0, 58)
+         DEVOUT("")
+         DEVPOS(RW + 1, 20)
+         DEVOUT("ВIДОМIСТЬ  ПРОВОДОК  В  ОДБ")
+         CL := INT((80 - LEN("за " + ZERO_STR(DAY(DAT_OD__), 2) + " " + ;
+               CMONTHUI(DAT_OD__) + " " + STR(YEAR(DAT_OD__), 4) + " р.")) ;
+               / 2)
+         DEVPOS(RW + 2, CL)
+         DEVOUT("на " + ZERO_STR(DAY(DAT_OD__), 2) + " " + CMONTHUI(;
+               DAT_OD__) + " " + STR(YEAR(DAT_OD__), 4) + " р.")
+         DEVPOS(RW + 4, 3)
+         DEVOUT("Д Е Б Е Т        К Р Е Д И Т          Сума(" + IF(J = 1, ;
+               KOD_VUAH__, "USD") + ")        Примiтки")
+         DEVPOS(RW + 5, 1)
+         DEVOUT(;
+               "============================================================================";
+               )
+         DBSELECTAR("for_mb")
+         REC := RECNO()
+         DBGOTOP()
+
+         DO WHILE  .NOT. EOF()
+
+            IF FOR_MB->TIP <> 3 .AND. FOR_MB->TIP <> 4 .AND. ALLTRIM(FOR_MB->;
+                  VAL) == IF(J = 1, KOD_VUAH__, "USD")
+
+               ++JJ
+               DEVPOS(RW + 6 + (JJ - 1) * 3 + 1, 1)
+               DEVOUT(ZERO_STR(FOR_MB->COUNT_A, 14) + "   " + ZERO_STR(;
+                     FOR_MB->COUNT_B, 14) + "   " + STR(FOR_MB->SUMMA, 16, 2);
+                     )
+               DEVPOS(RW + 6 + JJ * 3, 1)
+               DEVOUT(;
+                     "----------------------------------------------------------------------------";
+                     )
+               SUMNAT := SUMNAT + FOR_MB->SUMMA
+
+            ENDIF
+
+            DBSKIP()
+
+         ENDDO
+
+         DBGOTO(REC)
+         DEVPOS(RW + 7 + JJ * 3, 3)
+         DEVOUT("Разом проводок " + STR(JJ, 2) + "   Сума        " + STR(;
+               SUMNAT, 16, 2))
+         DEVPOS(RW + 8 + JJ * 3, 1)
+         DEVOUT(;
+               "============================================================================";
+               )
+         DEVPOS(RW + 10 + JJ * 3, 3)
+         DEVOUT("Бухгалтер - операцiонiст")
+         DEVPOS(RW + 11 + JJ * 3, 3)
+         DEVOUT("")
+         DEVPOS(RW + 12 + JJ * 3, 3)
+         DEVOUT("")
+         DEVPOS(RW + 13 + JJ * 3, 3)
+         DEVOUT("")
+         DEVPOS(RW + 14 + JJ * 3, 3)
+         DEVOUT("")
+         RW := PROW()
+
+      NEXT
+
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      SET(20, "SCREEN")
+
+      IF  .NOT. PRINTYES(3, .T.)
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: IPD_2_MB
+   Params: K_VV, FLAG
+   Return: Nil
+  Example: IPD_2_MB(K_VV, FLAG)
+  ..........................................................................
+*/
+
+STATIC FUNCTION IPD_2_MB(K_VV, FLAG)
+
+   LOCAL F_IN := "j_u.dbf"
+   LOCAL MBDIR := IF(K_VV == KOD_VUAH__, DIRECTORY(SUBSTR(MB_PATH__, 1, ;
+         LEN(MB_PATH__) - 1), "D"), DIRECTORY(SUBSTR(MB_PATH__, 1, LEN(;
+         VL_PATH__) - 1), "D"))
+
+   PRIVATE NTXSTR := ARRAY(0), BASESTR := ARRAY(0), INITSTR := ARRAY(0)
+   PRIVATE KURS_K := ROUND(EF_SYS->KURS, 4)
+   AADD(NTXSTR, {{"j_u.ntx", NIL}})
+
+   IF EMPTY(MB_PATH__)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Директория для отправки в МикроБанк",;
+             "не определена !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(MBDIR)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "НЕТ директории " + MB_PATH__, ;
+            "для отправки в МикроБанк !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. BASEOPEN("j_u", .F., 3, MB_PATH__)
+
+      ERROR(NIL, NIL, {"База данных экспорта проводок", ;
+            "занята другим комплексом или", "нет базы "+CHR(34)+"j_u.dbf"+;
+            CHR(34)+" или ее индекса "+CHR(34)+"j_u.ntx"+CHR(34), ;
+            "по пути "+CHR(34) + MB_PATH__ + CHR(34), ;
+            "Попробуйте еще раз !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. AREA_OPEN({{"spr_valt", .F., 3, DIR_AK__}})
+
+      RETURN NIL
+
+   ENDIF
+
+   IF K_VV == KOD_VUAH__
+
+      MEMVAR->K_V := EF_BANK->KOD_NACN
+
+   ELSE
+
+      MEMVAR->K_V := EF_BANK->KOD_VALTN
+
+   ENDIF
+
+   IF EMPTY(EF_SYS->KURS) .AND. K_VV <> KOD_VUAH__
+
+      DO WHILE .T.
+
+         MEMVAR->KEY := GETWIN(NIL, NIL, {"@ Сохранить ", " "}, {;
+               " Курс Нац. банка", "kurs_k", "99.9999", 7}, {"F10", -9, ;
+               " Запомнить ", "Esc", 27, "Отменить"})
+
+         IF KEY = 0 .OR. KEY = 2
+
+         ELSE
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+   ENDIF
+
+   DBSELECTAR("for_mb")
+   MEMVAR->REC := FOR_MB->(RECNO())
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF ALLTRIM(FOR_MB->VAL) == K_VV .AND. .NOT. FOR_MB->PR_INF
+
+         DBSELECTAR("j_u")
+         DBAPPEND()
+         J_U->J_CS := ZERO_STR(FOR_MB->COUNT_A, 14)
+         J_U->J_CR := ZERO_STR(FOR_MB->COUNT_B, 14)
+
+         IF K_VV == KOD_VUAH__
+
+            J_U->J_S := FOR_MB->SUMMA
+
+         ELSE
+
+            J_U->J_S := ROUND(FOR_MB->SUMMA * KURS_K, 2)
+            J_U->J_CURR := KURS_K
+            J_U->J_SV := FOR_MB->SUMMA
+
+         ENDIF
+
+         J_U->J_VAL := K_V
+
+         IF VALTYPE(J_U->J_N) == "N"
+
+            J_U->J_N := FOR_MB->N_D
+
+         ELSE
+
+            J_U->J_N := STR(FOR_MB->N_D, 4)
+
+         ENDIF
+
+         IF FOR_MB->TIP = 6
+
+            J_U->J_D := 5
+            J_U->J_RO := 6
+            J_U->J_MFO := 6
+
+         ELSE
+
+            J_U->J_D := 1
+            J_U->J_RO := 3
+            J_U->J_MFO := 0
+
+         ENDIF
+
+         J_U->J_DI := 1
+         J_U->J_DK := 1
+         J_U->J_FIL := STR(FOR_MB->MFO_B, 9)
+         J_U->J_REKV := "#O" + ALLTRIM(STR(FOR_MB->OKPO_A, 10)) + "#o" + ;
+               ALLTRIM(STR(FOR_MB->OKPO_B, 10)) + "#"
+         J_U->J_OI := EF_BANK->OI
+         J_U->J_RFIL := FOR_MB->BANK_B
+         J_U->J_SFIL := FOR_MB->BANK_A
+         J_U->J_SNAME := FOR_MB->NAME_A
+         J_U->J_RNAME1 := FOR_MB->NAME_B
+         J_U->J_WHATF1 := SUBSTR(FOR_MB->N_P, 1, 74)
+         J_U->J_WHATF2 := SUBSTR(FOR_MB->N_P, 75, 74)
+         J_U->J_WHATF3 := SUBSTR(FOR_MB->N_P, 149)
+         J_U->J_DDOC := FOR_MB->DATE
+         J_U->J_BDOC := FOR_MB->DATE
+         J_U->J_MFOS := 0
+         J_U->J_NP := 900
+
+      ENDIF
+
+      DBSELECTAR("for_mb")
+      DBSKIP()
+
+   ENDDO
+
+   J_U->(DBCLOSEARE())
+
+   IF EF_SYS->(RECLOCK(3))
+
+      IF KOD_VUSD__ == K_VV
+
+         EF_SYS->FL_IPD_V := FLAG
+
+      ELSE
+
+         EF_SYS->FL_IPD_N := FLAG
+
+      ENDIF
+
+      ++EF_SYS->N_PKT
+      EF_SYS->KURS := KURS_K
+
+   ENDIF
+
+   EF_SYS->(DBCOMMIT())
+   EF_SYS->(DBUNLOCK())
+
+   IF KOD_VUAH__ == K_VV
+
+      DIALOG(NIL, NIL, {"ГРИВНЕВЫЕ ПРОВОДКИ ", "отправлены в Банк-клиент"},;
+             {" Продолжить "})
+
+   ELSE
+
+      DIALOG(NIL, NIL, {"ВАЛЮТНЫЕ ПРОВОДКИ ", "отправлены в Банк-клиент"}, ;
+            {" Продолжить "})
+
+   ENDIF
+
+   DBSELECTAR("for_mb")
+   DBGOTO(REC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: IPD_2_VL
+   Params: None.
+   Return: Nil
+  Example: IPD_2_VL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION IPD_2_VL()
+
+   LOCAL F_IN := "for_vl.dbf"
+   LOCAL K_V, REC, MBDIR := DIRECTORY(SUBSTR(VL_PATH__, 1, LEN(;
+         VL_PATH__) - 1), "D")
+   LOCAL F_OUT_C := ALLTRIM(VL_PATH__) + RIGHT("000" + KOD_OTD__, ;
+         3) + "CF" + ZERO_STR(EF_SYS->N_PKT, 3) + ".DBF"
+
+   IF EMPTY(VL_PATH__)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Директория для отправки в VL", ;
+            "не определена !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(MBDIR)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "НЕТ директории " + VL_PATH__, ;
+            "для отправки в VL !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_SYS->FL_IPD_V
+
+      DIALOG(NIL, NIL, {"ВАЛЮТНЫЕ ПРОВОДКИ ", ;
+            "уже сформированы и отправлены в ОДБ!"}, {" Продолжить "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. AREA_OPEN({{"spr_valt", .F., 3, DIR_AK__}, {"for_vl", .T.}})
+
+      RETURN NIL
+
+   ENDIF
+
+   SPR_VALT->(DBSETORDER(4))
+   SPR_VALT->(DBSEEK(KOD_VUSD__))
+   K_V := SPR_VALT->KOD_V
+   DBSELECTAR("for_mb")
+   REC := FOR_MB->(RECNO())
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF ALLTRIM(FOR_MB->VAL) == KOD_VUSD__
+
+         DBSELECTAR("for_vl")
+         DBAPPEND()
+         FOR_VL->KOD_V := K_V
+         FOR_VL->TIP_DOC := "06"
+         FOR_VL->NUM_DOC := ALLTRIM(STR(FOR_MB->N_D, 10))
+         FOR_VL->DAT_BANK := FOR_MB->DATE
+         FOR_VL->SUMMA := FOR_MB->SUMMA
+         FOR_VL->NAM_DT := FOR_MB->NAME_A
+         FOR_VL->BANK_DT := FOR_MB->BANK_A
+         FOR_VL->MFO_DT := STR(FOR_MB->MFO_A, 6)
+         FOR_VL->SC_DT := ZERO_STR(FOR_MB->COUNT_A, 10)
+         FOR_VL->INDEX_DT := STR(POST_IND__, 6)
+         FOR_VL->NAM_KT := FOR_MB->NAME_B
+         FOR_VL->BANK_KT := FOR_MB->BANK_B
+         FOR_VL->SC_KT := ZERO_STR(FOR_MB->COUNT_B, 10)
+         FOR_VL->MFO_KT := STR(FOR_MB->MFO_B, 6)
+         FOR_VL->INDEX_KT := STR(POST_IND__, 6)
+         FOR_VL->OSN := FOR_MB->N_P
+
+      ENDIF
+
+      DBSELECTAR("for_mb")
+      DBSKIP()
+
+   ENDDO
+
+   FOR_VL->(DBCLOSEARE())
+   SPR_VALT->(DBCLOSEARE())
+   __COPYFILE(F_IN, F_OUT_C)
+
+   IF FILE(F_OUT_C)
+
+      IF EF_SYS->(RECLOCK(3))
+
+         EF_SYS->FL_IPD_V := .T.
+         ++EF_SYS->N_PKT
+
+      ENDIF
+
+      EF_SYS->(DBCOMMIT())
+      EF_SYS->(DBUNLOCK())
+      FERASE("for_vl.dbf")
+      DIALOG(NIL, NIL, {"ВАЛЮТНЫЕ ПРОВОДКИ ", "отправлены в VL"}, {;
+            " Продолжить "})
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "ПРОВОДКИ В VL", ;
+            "не удалось отправить в почту", "( не создался файл "+CHR(34) +;
+             ALLTRIM(UPPER(F_OUT_C)) + CHR(34)+" )", ;
+            "попробуйте еще раз ..."}, {" Продолжить "})
+
+   ENDIF
+
+   DBSELECTAR("for_mb")
+   DBGOTO(REC)
+
+RETURN NIL
+

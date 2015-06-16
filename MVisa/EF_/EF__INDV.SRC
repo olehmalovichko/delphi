@@ -1,0 +1,498 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADMMYINDEX
+   Params: None.
+   Return: Nil
+  Example: ADMMYINDEX()
+  ..........................................................................
+*/
+
+FUNCTION ADMMYINDEX()
+
+   LOCAL WIN, OLDC := SETCOLOR()
+   LOCAL I, BUT, WIN_COM, WIN_, COM := {"~Esc-~выход", ;
+         "~Ins-~пометить БД", "~Enter-~индексация БД", ;
+         "~Tab-~выборка по индексам БД"}
+
+   PRIVATE MAS_PRC, MAS_PRCI, CHAK := 0, NUM_IND := 0
+   PRIVATE CHOISE, MAS_GROUP := ARRAY(0), MAS_REAL := ARRAY(0)
+   PRIVATE ABASE := ARRAY(0)
+   WIN_COM := WSTATUSLIN(COM)
+   SETCOLOR("n/w")
+   WIN := WIN(3, 19, 21, 60, "d", "t")
+   CENTR(NIL, 0, " Переиндексация ", "w+/w")
+   MEMVAR->ABASE := DBASESTR(.T.)
+   DISPBOX(2, 2, 17, 20, DOUBLE, "w+/bg")
+   DISPBOX(2, 21, 17, 39, FULLSINGLE, "w+/bg")
+   SAYS(2, 6, "База данных", "gr+/bg")
+   SAYS(2, 25, "Индексы БД", "gr+/bg")
+   SETCOLOR(MEMVAR->COLORS[51])
+   SAYS(3, 38, CHR(30))
+   SAYS(16, 38, CHR(31))
+
+   FOR I := 1 TO 12
+
+      SAYS(3 + I, 38, "▓")
+
+   NEXT
+
+   SAYS(4, 38, "■", MEMVAR->COLORS[51])
+   MYINDEX(1)
+   MEMVAR->CHOISE := BROWSER2(3, 3, 16, 14, DBFEXT(ABASE), "MyIndex")
+
+   IF VALTYPE(CHOISE) == "L"
+
+      WINCLOSE(WIN)
+      WINCLOSE(WIN_COM)
+      SETCOLOR(OLDC)
+      RETURN NIL
+
+   ENDIF
+
+   MEMVAR->MAS_GROUP := ACLONE(MEMVAR->CHOISE[1])
+
+   FOR I := 1 TO LEN(MAS_GROUP)
+
+      IF MEMVAR->MAS_GROUP[I, 2]
+
+         AADD(MAS_REAL, MEMVAR->ABASE[I])
+
+      ENDIF
+
+   NEXT
+
+   WINCLOSE(WIN)
+   WINCLOSE(WIN_COM)
+   SETCOLOR(OLDC)
+
+   IF LEN(MAS_REAL) = 0
+
+      AADD(MAS_REAL, MEMVAR->ABASE[MEMVAR->CHOISE[2]])
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WIN := WIN(8, 20, 16, 59, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 9)
+   DEVOUT("Идет переиндексация БД")
+   MEMVAR->MAS_PRC := LINER(5, 2, 30, LEN(MAS_REAL))
+   MEMVAR->MAS_PRCI := LINER(5, 5, 30, 1)
+   DBCLOSEALL()
+
+   FOR I := 1 TO LEN(MAS_REAL)
+
+      IF  .NOT. RENTX(MEMVAR->MAS_REAL[I], ++MEMVAR->CHAK)
+
+         DBCLOSEALL()
+         WINCLOSE(WIN)
+         SETCOLOR(OLDC)
+         RETURN NIL
+
+      ENDIF
+
+   NEXT
+
+   SETCOLOR("n/w")
+   DISPBOX(3, 1, 6, 38, "         ")
+   SAYS(1, 1, SPACE(38))
+   CENTR(NIL, 4, "Индексация завершена !")
+   BUT := BUTTONS(NIL, 6, {"  OK  "})
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MYINDEX
+   Params: ACT, INWIN, OPT, MODE
+   Return: Nil
+  Example: MYINDEX(ACT, INWIN, OPT, MODE)
+  ..........................................................................
+*/
+
+FUNCTION MYINDEX(ACT, INWIN, OPT, MODE)
+
+   LOCAL WIN_ := WSELECT()
+   LOCAL I, KEY, WCOMM, WOLD
+
+   PRIVATE NTXSTR := ARRAY(0), INITSTR := ARRAY(0), BASESTR := ARRAY(0), ;
+         CDATABASE
+
+   IF MODE = NIL .OR. MODE = 1
+
+      MEMVAR->CDATABASE := MEMVAR->ABASE[ACT]
+      DBASESTR()
+      KEY := LASTKEY()
+
+      IF LEN(NTXSTR) > 0
+
+         FOR I := 1 TO 14
+
+            IF I > LEN(MEMVAR->NTXSTR[1])
+
+               SAYS(2 + I, 22, SPACE(15), "n/bg")
+
+            ELSE
+
+               SAYS(2 + I, 22, PADR("  " + UPPER(MEMVAR->NTXSTR[1, I, 1]), ;
+                     15), "n/bg")
+
+            ENDIF
+
+         NEXT
+
+      ELSE
+
+         FOR I := 1 TO 14
+
+            SAYS(2 + I, 22, SPACE(15), "n/bg")
+
+         NEXT
+
+      ENDIF
+
+   ENDIF
+
+   IF (MODE = NIL .OR. MODE = 1) .AND. KEY = 9
+
+      DISPBOX(2, 2, 17, 20, SINGLE, "w+/bg")
+      DISPBOX(2, 21, 17, 39, DOUBLE, "w+/bg")
+      COLORWIN2(2 + INWIN, 4, 2 + INWIN, 18, "n/g")
+      SAYS(2, 6, "База данных", "gr+/bg")
+      SAYS(2, 25, "Индексы БД", "gr+/bg")
+      WOLD := WSELECT()
+      WCOMM := WSTATUSLIN({"~Esc-~возврат", "~Ins-~выбрать индекс", ;
+            "~Enter-~перестройка указанных индексов"})
+      WSELECT(WOLD)
+      NTXPOINT(MEMVAR->ABASE[ACT])
+      WINCLOSE(WCOMM)
+      WSELECT(WOLD)
+      COLORWIN2(2 + INWIN, 4, 2 + INWIN, 18, "bg+/g")
+      DISPBOX(2, 2, 17, 20, DOUBLE, "w+/bg")
+      DISPBOX(2, 21, 17, 39, SINGLE, "w+/bg")
+      SAYS(2, 6, "База данных", "gr+/bg")
+      SAYS(2, 25, "Индексы БД", "gr+/bg")
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TAB
+   Params: ACT, INWIN, OPT, MODE
+   Return: Variable
+  Example: TAB(ACT, INWIN, OPT, MODE)
+  ..........................................................................
+*/
+
+FUNCTION TAB(ACT, INWIN, OPT, MODE)
+
+   LOCAL KEY := LASTKEY()
+
+   IF (MODE = NIL .OR. MODE = 1) .AND. KEY = 9
+
+      RETURN 0
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DBFEXT
+   Params: FNAMES
+   Return: Undefined
+  Example: DBFEXT(FNAMES)
+  ..........................................................................
+*/
+
+STATIC FUNCTION DBFEXT(FNAMES)
+
+   LOCAL I, MS := ARRAY(0)
+
+   FOR I := 1 TO LEN(FNAMES)
+
+      AADD(MS, FNAMES[I] + ".DBF")
+
+   NEXT
+
+
+RETURN MS
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RENTX
+   Params: CFNAME, NNUM
+   Return: Logical
+  Example: RENTX(CFNAME, NNUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION RENTX(CFNAME, NNUM)
+
+   LOCAL MES, NTXFAIL
+
+   PRIVATE ERRNTX := ""
+   DEVPOS(3, 15)
+   DEVOUT(UPPER(ALLTRIM(CFNAME) + ".dbf   "), "gr+/w")
+
+   IF BASEOPEN(CFNAME, .T., 3, NIL, NIL, .F.)
+
+      IF DELASSOCIA(CFNAME, NTXFAIL)
+
+         DBCLOSEARE()
+
+         IF  .NOT. BASEOPEN(CFNAME, .T., 3, NIL, NIL, NIL, NIL, NIL, NIL, {;
+               |LMODE,CFNAME|SEE2(LMODE, CFNAME)})
+
+            DBCLOSEALL()
+
+            IF LEN(ERRNTX) > 0
+
+               MES := ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть индекс " + UPPER(ALLTRIM(ERRNTX)), ;
+                     "в монопольном режиме"}, {" Игнорировать ", ;
+                     "    Выйти     "})
+
+            ELSE
+
+               MES := ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть файл " + UPPER(ALLTRIM(CFNAME) + ;
+                     ".DBF"), "в монопольном режиме"}, {" Игнорировать ", ;
+                     "    Выйти     "})
+
+            ENDIF
+
+            IF MES = 2
+
+               RETURN .F.
+
+            ENDIF
+
+         ENDIF
+
+      ELSE
+
+         MES := ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть индекс " + ;
+               UPPER(ALLTRIM(NTXFAIL)), ;
+               "в монопольном режиме для удаления"}, {" Игнорировать ", ;
+               "    Выйти     "})
+
+         IF MES = 2
+
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+   ELSE
+
+      MES := ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть базу данных " ;
+            + UPPER(ALLTRIM(CFNAME) + ".DBF"), "в монопольном режиме"}, {;
+            " Игнорировать ", "    Выйти     "})
+
+      IF MES = 2
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   DBCLOSEALL()
+   LINER(MAS_PRC, NNUM)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NTXPOINT
+   Params: CFNAME
+   Return: Nil
+  Example: NTXPOINT(CFNAME)
+  ..........................................................................
+*/
+
+STATIC FUNCTION NTXPOINT(CFNAME)
+
+   LOCAL I, RES, OLDC := SETCOLOR(), MES, WINS, OLDS := SAVESCREEN(0, 0, ;
+         24, 79)
+   LOCAL ANTX := ARRAY(0)
+
+   PRIVATE MAS_GR := ARRAY(0), MAS_RL := ARRAY(0), MAS_PC := ARRAY(0)
+   PRIVATE CHAK := 1
+
+   IF LEN(NTXSTR) = 0
+
+      TONE(125, 1)
+      RETURN NIL
+
+   ENDIF
+
+   FOR I := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+      AADD(ANTX, UPPER(MEMVAR->NTXSTR[1, I, 1]))
+
+   NEXT
+
+   RES := BROWSER2(22, 3, 16, 14, ANTX, "Tab")
+
+   IF VALTYPE(RES) == "L"
+
+      RESTSCREEN(0, 0, 24, 79, OLDS)
+      RETURN NIL
+
+   ENDIF
+
+   MEMVAR->MAS_GR := ACLONE(RES[1])
+
+   FOR I := 1 TO LEN(MAS_GR)
+
+      IF MEMVAR->MAS_GR[I, 2]
+
+         AADD(MAS_RL, {ANTX[I], MEMVAR->NTXSTR[1, I, 2]})
+
+      ENDIF
+
+   NEXT
+
+   IF LEN(MAS_RL) = 0
+
+      AADD(MAS_RL, {ANTX[RES[2]], MEMVAR->NTXSTR[1, RES[2], 2]})
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WINS := WIN(8, 20, 14, 59, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 9)
+   DEVOUT("Идет переиндексация БД")
+   MEMVAR->MAS_PC := LINER(5, 2, 30, LEN(MAS_RL))
+   DBCLOSEALL()
+
+   FOR I := 1 TO LEN(MAS_RL)
+
+      DEVPOS(3, 15)
+      DEVOUT(UPPER(ALLTRIM(MEMVAR->MAS_RL[I, 1])), "gr+/w")
+
+      IF BASEOPEN(CFNAME, .T., 3, NIL, NIL, .F.)
+
+         IF MEMVAR->MAS_RL[I, 2] <> NIL
+
+            IF DELFILE(MEMVAR->MAS_RL[I, 1])
+
+               DBCREATEIN(MEMVAR->MAS_RL[I, 1], MEMVAR->MAS_RL[I, 2], {||(&(;
+                     MAS_RL[I, 2]))}, NIL)
+
+            ELSE
+
+               MES := ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не могу открыть индекс " + UPPER(ALLTRIM(NTXFAIL)), ;
+                     "в монопольном режиме для удаления"}, {" Продолжить "};
+                     )
+
+            ENDIF
+
+         ENDIF
+
+         LINER(MAS_PC, MEMVAR->CHAK++)
+
+      ELSE
+
+         MES := ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть файл " + ;
+               UPPER(ALLTRIM(CFNAME) + ".DBF"), "в монопольном режиме"}, {;
+               " Выйти  "})
+         WINCLOSE(WINS)
+         SETCOLOR(OLDC)
+         RESTSCREEN(0, 0, 24, 79, OLDS)
+         RETURN NIL
+
+      ENDIF
+
+   NEXT
+
+   DBCLOSEALL()
+   SETCOLOR("n/w")
+   DISPBOX(3, 1, 5, 38, "         ")
+   SAYS(1, 1, SPACE(38))
+   CENTR(NIL, 1, "Индексация завершена !")
+   MEMVAR->BUT := BUTTONS(NIL, 4, {"  OK  "})
+   WINCLOSE(WINS)
+   SETCOLOR(OLDC)
+   RESTSCREEN(0, 0, 24, 79, OLDS)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DELASSOCIA
+   Params: FNAME, NTXFAILURE
+   Return: Logical
+  Example: DELASSOCIA(FNAME, NTXFAILURE)
+  ..........................................................................
+*/
+
+STATIC FUNCTION DELASSOCIA(FNAME, NTXFAILURE)
+
+   LOCAL I, J
+
+   PRIVATE NTXSTR := ARRAY(0), INITSTR := ARRAY(0), BASESTR := ARRAY(0), ;
+         CDATABASE
+   MEMVAR->CDATABASE := FNAME
+   DBASESTR()
+
+   IF LEN(NTXSTR) > 0
+
+      FOR I := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+         IF MEMVAR->NTXSTR[1, I, 2] <> NIL .AND. .NOT. DELFILE(MEMVAR->;
+               NTXSTR[1, I, 1])
+
+            NTXFAILURE := MEMVAR->NTXSTR[1, I, 1]
+            RETURN .F.
+
+         ENDIF
+
+      NEXT
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SEE2
+   Params: LMODE, CFNAME
+   Return: Nil
+  Example: SEE2(LMODE, CFNAME)
+  ..........................................................................
+*/
+
+STATIC FUNCTION SEE2(LMODE, CFNAME)
+
+   LOCAL OLDC45 := MEMVAR->COLORS[45], OLDC46 := MEMVAR->COLORS[46]
+
+   MEMVAR->COLORS[45] := "w/n"
+   MEMVAR->COLORS[46] := "w+/r"
+
+   IF LMODE = 0
+
+      MEMVAR->NUM_IND := 0
+      MEMVAR->MAS_PRCI := LINER(5, 5, 30, CFNAME)
+
+   ELSEIF LMODE = 1
+
+      LINER(MAS_PRCI, ++MEMVAR->NUM_IND)
+      DEVPOS(6, 15)
+      DEVOUT(PADR(UPPER(ALLTRIM(CFNAME)), 13), "gr+/w")
+
+   ELSEIF LMODE = 2
+
+      MEMVAR->ERRNTX := ALLTRIM(CFNAME)
+
+   ENDIF
+
+   MEMVAR->COLORS[45] := OLDC45
+   MEMVAR->COLORS[46] := OLDC46
+
+RETURN NIL
+

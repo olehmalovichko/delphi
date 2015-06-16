@@ -1,0 +1,618 @@
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RECLOCK
+   Params: NSECONDS, ALIASBAZ
+   Return: Logical
+  Example: RECLOCK(NSECONDS, ALIASBAZ)
+  ..........................................................................
+*/
+
+FUNCTION RECLOCK(NSECONDS, ALIASBAZ)
+
+   LOCAL LFOREVER, OLDCOLOR, WIN, CL, OLDALIAS, C1, C2, C3
+
+   IF ALIASBAZ == NIL
+
+      IF LOCK()
+
+         RETURN .T.
+
+      ENDIF
+
+   ELSE
+
+      OLDALIAS := ALIAS()
+      DBSELECTAR(ALIASBAZ)
+
+      IF LOCK()
+
+         DBSELECTAR(OLDALIAS)
+         RETURN .T.
+
+      ENDIF
+
+      DBSELECTAR(OLDALIAS)
+
+   ENDIF
+
+   LFOREVER := NSECONDS == 0
+
+   DO WHILE LFOREVER .OR. NSECONDS > 0
+
+      IF ALIASBAZ == NIL
+
+         IF LOCK()
+
+            RETURN .T.
+
+         ENDIF
+
+      ELSE
+
+         DBSELECTAR(ALIASBAZ)
+
+         IF LOCK()
+
+            RETURN .T.
+            DBSELECTAR(OLDALIAS)
+
+         ENDIF
+
+         DBSELECTAR(OLDALIAS)
+
+      ENDIF
+
+      INKEY(0.5)
+      NSECONDS := NSECONDS - 0.5
+
+   ENDDO
+
+   C1 := MEMVAR->COLORS[2]
+   C2 := MEMVAR->COLORS[3]
+   C3 := MEMVAR->COLORS[4]
+   MEMVAR->COLORS[2] := "w*/r"
+   MEMVAR->COLORS[3] := "w+/r"
+   MEMVAR->COLORS[4] := "w+/r"
+   IF(ALIASBAZ == NIL, MEMVAR->ST := UPPER(ALIAS() + ".DBF"), MEMVAR->ST := ;
+         UPPER(ALIASBAZ + ".DBF"))
+   WIN := MESS(NIL, NIL, {"@ Ошибка ! ", "! " + ST + " ", ;
+         "Ошибка блокирования записи - файл в монопольном режиме !!!", ;
+         REPLICATE("─", 60), "Для прервания попыток создания записи", ;
+         "нажмите клавишу "+CHR(34)+"Esc"+CHR(34)})
+   MEMVAR->COLORS[2] := C1
+   MEMVAR->COLORS[3] := C2
+   MEMVAR->COLORS[4] := C3
+   __KEYBOARD()
+
+   DO WHILE LASTKEY() <> 27
+
+      IF ALIASBAZ == NIL
+
+         IF LOCK()
+
+            WINCLOSE(WIN)
+            RETURN .T.
+
+         ENDIF
+
+      ELSE
+
+         DBSELECTAR(ALIASBAZ)
+
+         IF LOCK()
+
+            DBSELECTAR(OLDALIAS)
+            WINCLOSE(WIN)
+            RETURN .T.
+
+         ENDIF
+
+         DBSELECTAR(OLDALIAS)
+
+      ENDIF
+
+      INKEY(0.5)
+
+   ENDDO
+
+   WINCLOSE(WIN)
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADDREC
+   Params: NWAITSECON, ALIASBAZ
+   Return: Logical
+  Example: ADDREC(NWAITSECON, ALIASBAZ)
+  ..........................................................................
+*/
+
+FUNCTION ADDREC(NWAITSECON, ALIASBAZ)
+
+   LOCAL LFOREVER, OLDCOLOR, WIN, OLDALIAS, ST, C1, C2, C3
+
+   IF ALIASBAZ == NIL
+
+      DBAPPEND()
+
+   ELSE
+
+      OLDALIAS := ALIAS()
+      DBSELECTAR(ALIASBAZ)
+      DBAPPEND()
+      DBSELECTAR(OLDALIAS)
+
+   ENDIF
+
+   IF  .NOT. NETERR()
+
+      RETURN .T.
+
+   ENDIF
+
+   LFOREVER := NWAITSECON == 0
+
+   DO WHILE LFOREVER .OR. NWAITSECON > 0
+
+      IF ALIASBAZ == NIL
+
+         DBAPPEND()
+
+      ELSE
+
+         DBSELECTAR(ALIASBAZ)
+         DBAPPEND()
+         DBSELECTAR(OLDALIAS)
+
+      ENDIF
+
+      IF  .NOT. NETERR()
+
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(0.5)
+      NWAITSECON := NWAITSECON - 0.5
+
+   ENDDO
+
+   C1 := MEMVAR->COLORS[2]
+   C2 := MEMVAR->COLORS[3]
+   C3 := MEMVAR->COLORS[4]
+   MEMVAR->COLORS[2] := "w*/r"
+   MEMVAR->COLORS[3] := "w+/r"
+   MEMVAR->COLORS[4] := "w+/r"
+   IF(ALIASBAZ == NIL, ST := UPPER(ALIAS()) + ".DBF", ST := ALIASBAZ + ;
+         ".DBF")
+   WIN := MESS(NIL, NIL, {"@ Ошибка ! ", "! " + ST + " ", ;
+         "Невозможно добавить запись - файл в монопольном режиме !!!", ;
+         REPLICATE("─", 60), "Для прервания попыток создания записи", ;
+         "нажмите клавишу "+CHR(34)+"Esc"+CHR(34)})
+   MEMVAR->COLORS[2] := C1
+   MEMVAR->COLORS[3] := C2
+   MEMVAR->COLORS[4] := C3
+   __KEYBOARD()
+
+   DO WHILE LASTKEY() <> 27
+
+      IF ALIASBAZ == NIL
+
+         DBAPPEND()
+
+      ELSE
+
+         DBSELECTAR(ALIASBAZ)
+         DBAPPEND()
+         DBSELECTAR(OLDALIAS)
+
+      ENDIF
+
+      IF  .NOT. NETERR()
+
+         WINCLOSE(WIN)
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(0.5)
+
+   ENDDO
+
+   WINCLOSE(WIN)
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DELFILE
+   Params: CNAMEFILE, NSECONDS
+   Return: Logical
+  Example: DELFILE(CNAMEFILE, NSECONDS)
+  ..........................................................................
+*/
+
+FUNCTION DELFILE(CNAMEFILE, NSECONDS)
+
+   LOCAL LFOREVER, OLDCOLOR, WIN, CL, C1, C2, C3
+
+   IF  .NOT. FILE(CNAMEFILE)
+
+      RETURN .T.
+
+   ENDIF
+
+   IF FERASE(CNAMEFILE) = 0
+
+      RETURN .T.
+
+   ENDIF
+
+   LFOREVER := NSECONDS == 0
+
+   DO WHILE LFOREVER .OR. NSECONDS > 0
+
+      IF FERASE(CNAMEFILE) = 0
+
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(1)
+      --NSECONDS
+
+   ENDDO
+
+   C1 := MEMVAR->COLORS[2]
+   C2 := MEMVAR->COLORS[3]
+   C3 := MEMVAR->COLORS[4]
+   MEMVAR->COLORS[2] := "w*/r"
+   MEMVAR->COLORS[3] := "w+/r"
+   MEMVAR->COLORS[4] := "w+/r"
+   MEMVAR->ST := UPPER(ALLTRIM(CNAMEFILE))
+   WIN := MESS(NIL, NIL, {"@ Ошибка ! ", "! " + ST + " ", ;
+         "Ошибка удаления файла - файл в монопольном режиме !!!", ;
+         REPLICATE("─", 60), "Для прервания попыток создания записи", ;
+         "нажмите клавишу "+CHR(34)+"Esc"+CHR(34)})
+   MEMVAR->COLORS[2] := C1
+   MEMVAR->COLORS[3] := C2
+   MEMVAR->COLORS[4] := C3
+   __KEYBOARD()
+
+   DO WHILE LASTKEY() <> 27
+
+      IF LOCK()
+
+         WINCLOSE(WIN)
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(1)
+
+   ENDDO
+
+   WINCLOSE(WIN)
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NETUSE
+   Params: CDATABASE, LOPENMODE, NSECONDS, ALIA, LREADONLY
+   Return: Logical
+  Example: NETUSE(CDATABASE, LOPENMODE, NSECONDS, ALIA, LREADONLY)
+  ..........................................................................
+*/
+
+FUNCTION NETUSE(CDATABASE, LOPENMODE, NSECONDS, ALIA, LREADONLY)
+
+   LOCAL LFOREVER, OLDCOLOR, WIN, CL, C1, C2, C3
+
+   IF(NSECONDS = NIL, NSECONDS := 2, "")
+
+   IF ALIA = NIL
+
+      IF LEN(CDATABASE) > 8
+
+         ALIA := FILENAME(CDATABASE)
+
+         IF LEN(ALIA) < 1 .OR. LEN(ALIA) > 8
+
+            ALIA := SUBSTR(CDATABASE, LEN(CDATABASE) - 7, 8)
+
+         ENDIF
+
+      ELSE
+
+         ALIA := CDATABASE
+
+      ENDIF
+
+   ENDIF
+
+   IF(LOPENMODE = NIL, LOPENMODE := .F., "")
+   LFOREVER := NSECONDS == 0
+
+   DO WHILE LFOREVER .OR. NSECONDS > 0
+
+      IF LREADONLY <> NIL .AND. LREADONLY
+
+         IF LOPENMODE
+
+            DBUSEAREA(.T., NIL, CDATABASE, ALIA, .F., .T.)
+
+         ELSE
+
+            DBUSEAREA(.T., NIL, CDATABASE, ALIA, .T., .T.)
+
+         ENDIF
+
+      ELSEIF LOPENMODE
+
+         DBUSEAREA(.T., NIL, CDATABASE, ALIA, .F., .F.)
+
+      ELSE
+
+         DBUSEAREA(.T., NIL, CDATABASE, ALIA, .T., .F.)
+
+      ENDIF
+
+      IF  .NOT. NETERR()
+
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(1)
+      --NSECONDS
+
+   ENDDO
+
+   C1 := MEMVAR->COLORS[2]
+   C2 := MEMVAR->COLORS[3]
+   C3 := MEMVAR->COLORS[4]
+   MEMVAR->COLORS[2] := "w*/r"
+   MEMVAR->COLORS[3] := "w+/r"
+   MEMVAR->COLORS[4] := "w+/r"
+   MEMVAR->ST := CDATABASE + ".DBF"
+   WIN := MESS(NIL, NIL, {"@ Ошибка ! ", "! " + ST + " ", ;
+         "Ошибка открытия файла - файл в монопольном режиме !!!", ;
+         REPLICATE("─", 60), "Для прервания попыток создания записи", ;
+         "нажмите клавишу "+CHR(34)+"Esc"+CHR(34)})
+   MEMVAR->COLORS[2] := C1
+   MEMVAR->COLORS[3] := C2
+   MEMVAR->COLORS[4] := C3
+   __KEYBOARD()
+
+   DO WHILE LASTKEY() <> 27
+
+      IF LOPENMODE
+
+         DBUSEAREA(.T., NIL, CDATABASE, "Alia", .F., .F.)
+
+      ELSE
+
+         DBUSEAREA(.T., NIL, CDATABASE, "Alia", .T., .F.)
+
+      ENDIF
+
+      IF  .NOT. NETERR()
+
+         WINCLOSE(WIN)
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(1)
+
+   ENDDO
+
+   WINCLOSE(WIN)
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FILLOCK
+   Params: NSECONDS
+   Return: Logical
+  Example: FILLOCK(NSECONDS)
+  ..........................................................................
+*/
+
+FUNCTION FILLOCK(NSECONDS)
+
+   LOCAL LFOREVER, OLDCOLOR, WIN, CL, C1, C2, C3
+
+   IF FLOCK()
+
+      RETURN .T.
+
+   ENDIF
+
+   LFOREVER := NSECONDS == 0
+
+   DO WHILE LFOREVER .OR. NSECONDS > 0
+
+      INKEY(0.5)
+      NSECONDS := NSECONDS - 0.5
+
+      IF FLOCK()
+
+         RETURN .T.
+
+      ENDIF
+
+   ENDDO
+
+   C1 := MEMVAR->COLORS[2]
+   C2 := MEMVAR->COLORS[3]
+   C3 := MEMVAR->COLORS[4]
+   MEMVAR->COLORS[2] := "w*/r"
+   MEMVAR->COLORS[3] := "w+/r"
+   MEMVAR->COLORS[4] := "w+/r"
+   MEMVAR->ST := UPPER(ALIAS()) + ".DBF"
+   WIN := MESS(NIL, NIL, {"@ Ошибка ! ", "! " + ST + " ", ;
+         "Ошибка блокирования файла - файл в монопольном режиме !!!", ;
+         REPLICATE("─", 60), "Для прервания попыток создания записи", ;
+         "нажмите клавишу "+CHR(34)+"Esc"+CHR(34)})
+   MEMVAR->COLORS[2] := C1
+   MEMVAR->COLORS[3] := C2
+   MEMVAR->COLORS[4] := C3
+   __KEYBOARD()
+
+   DO WHILE LASTKEY() <> 27
+
+      IF FLOCK()
+
+         WINCLOSE(WIN)
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(0.5)
+
+   ENDDO
+
+   WINCLOSE(WIN)
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FLCOPY
+   Params: INFILE, OUTFILE, NSECONDS
+   Return: Logical
+  Example: FLCOPY(INFILE, OUTFILE, NSECONDS)
+  ..........................................................................
+*/
+
+FUNCTION FLCOPY(INFILE, OUTFILE, NSECONDS)
+
+   LOCAL LFOREVER, OLDCOLOR, WIN, CL, C1, C2, C3
+
+   IF FILECOPY(INFILE, OUTFILE) <> 0
+
+      RETURN .T.
+
+   ENDIF
+
+   LFOREVER := NSECONDS == 0
+
+   DO WHILE LFOREVER .OR. NSECONDS > 0
+
+      INKEY(0.5)
+      NSECONDS := NSECONDS - 0.5
+
+      IF FILECOPY(INFILE, OUTFILE) <> 0
+
+         RETURN .T.
+
+      ENDIF
+
+   ENDDO
+
+   C1 := MEMVAR->COLORS[2]
+   C2 := MEMVAR->COLORS[3]
+   C3 := MEMVAR->COLORS[4]
+   MEMVAR->COLORS[2] := "w*/r"
+   MEMVAR->COLORS[3] := "w+/r"
+   MEMVAR->COLORS[4] := "w+/r"
+   MEMVAR->ST := UPPER(ALLTRIM(INFILE))
+   WIN := MESS(NIL, NIL, {"@ Ошибка ! ", "! " + ST + " ", ;
+         "Ошибка копирования файла - файл в монопольном режиме !!!", ;
+         REPLICATE("─", 60), "Для прервания попыток создания записи", ;
+         "нажмите клавишу "+CHR(34)+"Esc"+CHR(34)})
+   MEMVAR->COLORS[2] := C1
+   MEMVAR->COLORS[3] := C2
+   MEMVAR->COLORS[4] := C3
+   __KEYBOARD(" ")
+   INKEY()
+
+   DO WHILE LASTKEY() <> 27
+
+      IF FILECOPY(INFILE, OUTFILE) <> 0
+
+         WINCLOSE(WIN)
+         RETURN .T.
+
+      ENDIF
+
+      INKEY(0.5)
+
+   ENDDO
+
+   WINCLOSE(WIN)
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TTSBEG
+   Params: None.
+   Return: Nil
+  Example: TTSBEG()
+  ..........................................................................
+*/
+
+FUNCTION TTSBEG()
+
+   IF  .NOT. NNETTTSBEG()
+
+      ERROR(NIL, NIL, {"@ Внимание ! ", ;
+            "Произошла ошибка начала транзакции", ;
+            "Дальнейшая работа невозможна до выяснения причины"}, {;
+            " Выход из комплекса "})
+      DBCLOSEALL()
+      __QUIT()
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: TTSAB
+   Params: None.
+   Return: Nil
+  Example: TTSAB()
+  ..........................................................................
+*/
+
+FUNCTION TTSAB()
+
+   IF  .NOT. NNETTTSAB()
+
+      ERROR(NIL, NIL, {"@ Внимание ! ", ;
+            "Произошла ошибка прерывания транзакции", ;
+            "Дальнейшая работа невозможна до выяснения причины"}, {;
+            " Выход из комплекса "})
+      DBCLOSEALL()
+      __QUIT()
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCR_TTS
+   Params: FL
+   Return: Nil
+  Example: SCR_TTS(FL)
+  ..........................................................................
+*/
+
+FUNCTION SCR_TTS(FL)
+
+   STATIC WIN_TTS
+
+   IF FL
+
+      WIN_TTS := MESS(NIL, NIL, {" Минутку ... "})
+
+   ELSE
+
+      WINCLOSE(WIN_TTS)
+
+   ENDIF
+
+
+RETURN NIL
+

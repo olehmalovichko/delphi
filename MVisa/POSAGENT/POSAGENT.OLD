@@ -1,0 +1,16 @@
+[Settings]
+HostCount=2
+ScanPath=l:\mail\visapost
+ScanTime=1
+WaitConf=5
+TPDUId=96
+NII=1
+IIT=0
+
+
+[Host1]
+Address=10.1.11.152
+Port=5020
+
+
+

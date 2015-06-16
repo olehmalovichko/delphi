@@ -1,0 +1,182 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADMREINDEX
+   Params: None.
+   Return: Nil
+  Example: ADMREINDEX()
+  ..........................................................................
+*/
+
+FUNCTION ADMREINDEX()
+
+   LOCAL WIN, OLDCOLOR := SETCOLOR()
+   LOCAL I, J, BUT
+
+   PRIVATE MAS_PRC, MAS_PRCI, CHAK := 0, NUM_IND := 0
+   PRIVATE ABASE := ARRAY(0), CDATABASE := ""
+   PRIVATE BASESTR := ARRAY(0), NTXSTR := ARRAY(0), INITSTR := ARRAY(0)
+
+   IF 2 <> DIALOG(NIL, NIL, {"Вы действительно хотите", ;
+         "переиндексировать БД ?"}, {" Нет ", " Да  "})
+
+      RETURN NIL
+
+   ENDIF
+
+   IF USERS()
+
+      RETURN NIL
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WIN := WIN(8, 20, 16, 59, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 9)
+   DEVOUT("Идет переиндексация БД")
+   MEMVAR->ABASE := DBASESTR(.T.)
+   MEMVAR->MAS_PRC := LINER(5, 2, 30, LEN(ABASE))
+   MEMVAR->MAS_PRCI := LINER(5, 5, 30, 1)
+   DBCLOSEALL()
+
+   FOR I := 1 TO LEN(ABASE)
+
+      MEMVAR->CDATABASE := MEMVAR->ABASE[I]
+      MEMVAR->BASESTR := ARRAY(0)
+      MEMVAR->NTXSTR := ARRAY(0)
+      MEMVAR->INITSTR := ARRAY(0)
+      DBASESTR()
+
+      IF LEN(NTXSTR) > 0
+
+         FOR J := 1 TO LEN(MEMVAR->NTXSTR[1])
+
+            IF(MEMVAR->NTXSTR[1, J, 2] <> NIL, FILEDELETE(MEMVAR->NTXSTR[1, ;
+                  J, 1]), "")
+
+         NEXT
+
+         IF  .NOT. RENTX(MEMVAR->ABASE[I], ++MEMVAR->CHAK)
+
+            DBCLOSEALL()
+            WINCLOSE(WIN)
+            SETCOLOR(OLDCOLOR)
+            RETURN NIL
+
+         ENDIF
+
+      ELSE
+
+         LINER(MAS_PRC, ++MEMVAR->CHAK)
+         COLORWIN2(5, 5, 5, 34, "w+/r")
+         SAYS(5, 18, "100%", "w+/r")
+         DEVPOS(3, 15)
+         DEVOUT(UPPER(ALLTRIM(MEMVAR->ABASE[I]) + ".dbf   "), "gr+/w")
+         DEVPOS(6, 15)
+         DEVOUT(PADR(UPPER(ALLTRIM("НЕТ ИНДЕКСОВ")), 13), "gr+/w")
+
+      ENDIF
+
+   NEXT
+
+   INKEY(0.2)
+   SETCOLOR("n/w")
+   DISPBOX(3, 1, 6, 38, "         ")
+   SAYS(1, 1, SPACE(38))
+   CENTR(NIL, 4, "Индексация завершена !")
+   BUT := BUTTONS(NIL, 6, {"  OK  "})
+   WINCLOSE(WIN)
+   SETCOLOR(OLDCOLOR)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SEE
+   Params: LMODE, CFNAME
+   Return: Nil
+  Example: SEE(LMODE, CFNAME)
+  ..........................................................................
+*/
+
+FUNCTION SEE(LMODE, CFNAME)
+
+   LOCAL OLDC45 := MEMVAR->COLORS[45], OLDC46 := MEMVAR->COLORS[46]
+
+   MEMVAR->COLORS[45] := "w/n"
+   MEMVAR->COLORS[46] := "w+/r"
+
+   IF LMODE = 0
+
+      MEMVAR->NUM_IND := 0
+      MEMVAR->MAS_PRCI := LINER(5, 5, 30, CFNAME)
+
+   ELSEIF LMODE = 1
+
+      LINER(MAS_PRCI, ++MEMVAR->NUM_IND)
+      DEVPOS(6, 15)
+      DEVOUT(PADR(UPPER(ALLTRIM(CFNAME)), 13), "gr+/w")
+
+   ELSEIF LMODE = 2
+
+      MEMVAR->ERRNTX := ALLTRIM(CFNAME)
+
+   ELSEIF LMODE = 3
+
+      LINER(MAS_PRCI, ++MEMVAR->NUM_IND)
+      DEVPOS(6, 15)
+      DEVOUT(PADR(UPPER(ALLTRIM(CFNAME)), 13), "gr+/w")
+
+   ENDIF
+
+   MEMVAR->COLORS[45] := OLDC45
+   MEMVAR->COLORS[46] := OLDC46
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RENTX
+   Params: CFNAME, NNUM
+   Return: Logical
+  Example: RENTX(CFNAME, NNUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION RENTX(CFNAME, NNUM)
+
+   LOCAL MES
+
+   PRIVATE ERRNTX := ""
+   DEVPOS(3, 15)
+   DEVOUT(UPPER(ALLTRIM(CFNAME) + ".dbf   "), "gr+/w")
+
+   IF  .NOT. BASEOPEN(CFNAME, .T., 3, NIL, NIL, NIL, NIL, NIL, NIL, {|;
+         LMODE,CFNAME|SEE(LMODE, CFNAME)})
+
+      DBCLOSEALL()
+
+      IF LEN(ERRNTX) > 0
+
+         MES := ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть индекс " + ;
+               UPPER(ALLTRIM(ERRNTX)), "для базы данных " + UPPER(ALLTRIM(;
+               CFNAME) + ".DBF")}, {" Пропустить БД ", "    Выйти     "})
+
+      ELSE
+
+         MES := ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть файл " + ;
+               UPPER(ALLTRIM(CFNAME) + ".DBF")}, {" Пропустить БД ", ;
+               "    Выйти     "})
+
+      ENDIF
+
+      IF MES = 2
+
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   DBCLOSEALL()
+   LINER(MAS_PRC, NNUM)
+
+RETURN .T.
+

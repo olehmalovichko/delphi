@@ -1,0 +1,3235 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_KPLAT
+   Params: None.
+   Return: Logical
+  Example: EF_KPLAT()
+  ..........................................................................
+*/
+
+FUNCTION EF_KPLAT()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, ABROWSE, PPP
+
+   PRIVATE DESKTOP, NEW_REC, VYB := 1, DATN_, DATK_
+   PRIVATE BROWSE, COLUMN, LONG := .T.
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := DTOS(DAT_OD__), IKEY_BOT := DTOS(DAT_OD__)
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE KWO_DOC := 0, SUM_IT := 0, KWO_DOC2 := 0, SUM_IT2 := 0, PR_PK_
+   PRIVATE ARR_PL := ARRAY(0), DAT_KAS_, LS_SC_ := ""
+   PRIVATE ARR_POL := ARRAY(0), LONG := .T., ARR_P := {}, ARR_GPL := {}
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~Alt-F10-~меню операций"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+   PRIVATE MS1_POPUP := {{" новый клиент           ~F2~", .T.}, {;
+         " редактирование         ~F3~", .T.}, {"@s", .F.}, {;
+         " выборка                ~F5~", .T.}, {;
+         " отмена выборки         ~F6~", .T.}, {"@s", .F.}, {;
+         " приходные ордера       ~F7~", .T.}, {;
+         " печать квитанции       ~F8~", .T.}, {;
+         " печать штампа          ~F9~", .T.}}
+   PRIVATE MS3_POPUP := { -1,  -2, NIL,  -4,  -5, NIL,  -6,  -7,  -8}
+
+   IF  .NOT. AREA_OPEN({{"ef_jpkpl"}, {"ef_sys"}, {"ef_bank"}, {"ef_kasp"},;
+          {"ef_s_pl"}, {"ef_s_sc"}, {"ef_s_pr"}, {"ef_s_gpl"}, {"ef_s_tkp"};
+         , {"ef_s_ppl"}})
+
+      DBCLOSEALL()
+      RETURN .F.
+
+   ENDIF
+
+   IF EF_S_PR->(DBSEEK("тпк"))
+
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+      MEMVAR->LS_SC_ := EF_S_SC->SC_NEW
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@Внимание !", "В справочнике проводок ", ;
+            "не найдена запись с кодом "+CHR(34)+"тпк"+CHR(34)+" "}, {;
+            " Выход "})
+      RETURN .T.
+
+   ENDIF
+
+   DBSELECTAR("ef_s_gpl")
+
+   DO WHILE  .NOT. EOF()
+
+      AADD(ARR_GPL, {EF_S_GPL->NAM_VPL, EF_S_GPL->KOD_VPL})
+      DBSKIP()
+
+   ENDDO
+
+   DBSELECTAR("ef_s_pl")
+
+   DO WHILE  .NOT. EOF()
+
+      AADD(ARR_PL, {EF_S_PL->NAM_PL, STR(EF_S_PL->KOD_VPL, 3) + EF_S_PL->;
+            KOD_PL})
+      DBSKIP()
+
+   ENDDO
+
+   DBSELECTAR("ef_s_ppl")
+   DBSETORDER(2)
+   DBSELECTAR("ef_jpkpl")
+   MEMVAR->DESKTOP := WIN(1, 0, 24, 79)
+   SETCOLOR("w+/w")
+   DISPBOX(0, 0, 22, 79, SINGLE)
+   DEVPOS(0, 25)
+   DEVOUT(" Платежи граждан  за " + DTOC(DAT_OD__))
+   MEMVAR->CFL := {"Num_doc", "Dat_bank"}
+   MEMVAR->SEP := {" ", " ", "  "}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "ef_jpkpl->")
+   MEMVAR->SEP := {"", SPACE(2), ""}
+   ABROWSE := CREATTBROW(3, 1, 21, 22, "Pr_date", {||CREATSTR(CAL, CFL, ;
+         SEP)})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||KP_VV()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, LEN(;
+         IKEY_TOP)) == IKEY_TOP}
+
+   DO WHILE LONG
+
+      MEMVAR->KWO_DOC := 0
+      MEMVAR->SUM_IT := 0
+      MEMVAR->KWO_DOC2 := 0
+      MEMVAR->SUM_IT2 := 0
+      VSEGO_DOC()
+      DBSEEK(IKEY_TOP)
+      USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, ;
+            INDEXBLOCK, BL_PR_US)
+      SETCOLOR("w+/w")
+      SCRIO_1(.T.)
+      STATUSLINE(BOTIO_1)
+      DBSEEK(IKEY_TOP)
+      OBRIO_1()
+
+   ENDDO
+
+   DBCLOSEALL()
+   WINCLOSE(DESKTOP)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: V_PLAT
+   Params: None.
+   Return: Logical
+  Example: V_PLAT()
+  ..........................................................................
+*/
+
+FUNCTION V_PLAT()
+
+   LOCAL NKEY := 0, LMORE, ABROWSE1, PPP, RREC := RECNO(), OLD_IND := ;
+         INDEXORD()
+
+   PRIVATE DESKTOP1
+   PRIVATE BROWSE1, COLUMN1, NAM_BAS := "tmp_" + ZERO_STR(INT(RANDOM() / ;
+         10), 4)
+   PRIVATE INDEXBL1, BL_PR_US1
+   PRIVATE IKEY_TOP1 := "", IKEY_BOT1 := ""
+   PRIVATE COLORFON1, COLORCUR1, VYVBLOCK1, CAL1, CFL1, SEP1
+   PRIVATE I_D_K := 0, I_PL_K := 0, I_TB_K := 0, I_K_V := 0
+   PRIVATE BOTIO_3 := {"~Esc-~выход", "~F2-~ввод", "~F3-~редактирование", ;
+         "~F4-~удаление", "~F5-~оплата", "~^F10-~очистить"}
+   PRIVATE BOTIO_4 := {"~Esc-~выход", "~F10-~запомнить"}
+   PRIVATE NAM_PLAT_V := SPACE(30), ADR_V := SPACE(30)
+
+   IF  .NOT. HIDDEN_OPE(NAM_BAS, .T., 3, NIL, "k_plat")
+
+      RETURN .F.
+
+   ENDIF
+
+   DBSELECTAR("k_plat")
+   MEMVAR->DESKTOP1 := WIN(1, 0, 24, 79)
+   SETCOLOR("w+/w")
+   DISPBOX(0, 0, 22, 79, SINGLE)
+   CENTR(NIL, 0, " Новый клиент " + DTOC(DAT_OD__))
+   MEMVAR->CFL1 := {"Num_doc", "Dat_bank"}
+   MEMVAR->SEP1 := {" ", " ", "  "}
+   MEMVAR->CAL1 := ARRAY(LEN(CFL1))
+   AFILL(CAL1, "k_plat->")
+   MEMVAR->SEP1 := {"", SPACE(2), ""}
+   ABROWSE1 := CREATTBROW(3, 1, 21, 22, "Pr_date", {||CREATSTR(CAL1, CFL1, ;
+         SEP1)})
+   MEMVAR->BROWSE1 := ABROWSE1[1]
+   MEMVAR->COLUMN1 := ABROWSE1[2]
+   MEMVAR->COLORFON1 := "N/W"
+   MEMVAR->COLORCUR1 := "W+/GB"
+   MEMVAR->VYVBLOCK1 := {||KP_VV1()}
+   MEMVAR->BL_PR_US1 := ""
+   MEMVAR->INDEXBL1 := ""
+   DBGOTOP()
+   USTANTBROW(BROWSE1, COLORFON1, COLORCUR1, IKEY_TOP1, IKEY_BOT1, ;
+         INDEXBL1, BL_PR_US1)
+   SETCOLOR("w+/w")
+   SCRIO_1(.F.)
+   STATUSLINE(BOTIO_3)
+   OBRIO_2()
+   WINCLOSE(DESKTOP1)
+   K_PLAT->(DBCLOSEARE())
+   FERASE(("") + NAM_BAS + ".dbf")
+   DBSELECTAR("ef_jpkpl")
+   DBSETORDER(OLD_IND)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: KP_VV1
+   Params: None.
+   Return: Nil
+  Example: KP_VV1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION KP_VV1()
+
+   LOCAL OLDC := SETCOLOR("W+/W")
+
+   EF_S_GPL->(DBSEEK(STR(K_PLAT->KOD_VPL, 3)))
+   EF_S_PL->(DBSEEK(STR(K_PLAT->KOD_VPL, 3) + K_PLAT->KOD_PL))
+   EF_S_PPL->(DBSEEK(K_PLAT->KOD_POL))
+   DEVPOS(2, 38)
+   DEVOUTPICT(K_PLAT->KOD_VPL, "999")
+   DEVPOS(2, 42)
+   DEVOUTPICT(EF_S_GPL->NAM_VPL, "XXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(3, 38)
+   DEVOUTPICT(K_PLAT->KOD_PL, "XXX")
+   DEVPOS(3, 42)
+   DEVOUTPICT(EF_S_PL->NAM_PL, "XXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(4, 32)
+   DEVOUTPICT(K_PLAT->SUMMA, "9999999999999.99")
+   DEVPOS(5, 37)
+   DEVOUTPICT(K_PLAT->NAM_PLAT, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(6, 50)
+   DEVOUTPICT(K_PLAT->LS_PLAT, "XXXXXXXXXXXXXXXXXX")
+   DEVPOS(7, 37)
+   DEVOUTPICT(K_PLAT->ADRES, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(8, 37)
+   DEVOUTPICT(K_PLAT->NUM_TEL, "XXXXXXXXXX")
+   DEVPOS(10, 37)
+   DEVOUTPICT(EF_S_PPL->NAM_POL, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(12, 25)
+   DEVOUTPICT(EF_S_PPL->BANK, ;
+         "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(13, 30)
+   DEVOUTPICT(EF_S_PPL->MFO, "999999")
+   DEVPOS(13, 60)
+   DEVOUTPICT(EF_S_PPL->SC, "99999999999999")
+   DEVPOS(15, 47)
+   DEVOUTPICT(I_D_K, "9999", "W+/RG")
+   DEVPOS(15, 62)
+   DEVOUTPICT(I_PL_K, "9999999999999.99", "W+/RG")
+   DEVPOS(17, 31)
+   DEVOUTPICT(I_TB_K, "9999999999999.99", "W+/RG")
+   DEVPOS(17, 59)
+   DEVOUTPICT(I_TB_K + I_PL_K, "9999999999999.99", "W+/RG")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: KP_VV
+   Params: None.
+   Return: Nil
+  Example: KP_VV()
+  ..........................................................................
+*/
+
+STATIC FUNCTION KP_VV()
+
+   LOCAL OLDC := SETCOLOR("W+/W")
+
+   EF_S_GPL->(DBSEEK(STR(EF_JPKPL->KOD_VPL, 3)))
+   EF_S_PL->(DBSEEK(STR(EF_JPKPL->KOD_VPL, 3) + EF_JPKPL->KOD_PL))
+   EF_S_PPL->(DBSEEK(EF_JPKPL->KOD_POL))
+   DEVPOS(2, 38)
+   DEVOUTPICT(EF_JPKPL->KOD_VPL, "999")
+   DEVPOS(2, 42)
+   DEVOUTPICT(EF_S_GPL->NAM_VPL, "XXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(3, 38)
+   DEVOUTPICT(EF_JPKPL->KOD_PL, "XXX")
+   DEVPOS(3, 42)
+   DEVOUTPICT(EF_S_PL->NAM_PL, "XXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(4, 32)
+   DEVOUTPICT(EF_JPKPL->SUMMA, "9999999999999.99")
+   DEVPOS(5, 37)
+   DEVOUTPICT(EF_JPKPL->NAM_PLAT, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(6, 50)
+   DEVOUTPICT(EF_JPKPL->LS_PLAT, "XXXXXXXXXXXXXXXXXX")
+   DEVPOS(7, 37)
+   DEVOUTPICT(EF_JPKPL->ADRES, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(8, 37)
+   DEVOUTPICT(EF_JPKPL->NUM_TEL, "XXXXXXXXXX")
+   DEVPOS(10, 37)
+   DEVOUTPICT(EF_S_PPL->NAM_POL, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(12, 25)
+   DEVOUTPICT(EF_S_PPL->BANK, ;
+         "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(13, 30)
+   DEVOUTPICT(EF_S_PPL->MFO, "999999")
+   DEVPOS(13, 60)
+   DEVOUTPICT(EF_S_PPL->SC, "99999999999999")
+   DEVPOS(15, 38)
+   DEVOUT(IF(EF_JPKPL->PR_N_K, "карточка", "наличные"))
+   DEVPOS(17, 53)
+   DEVOUT(IF(EF_JPKPL->PR_TAR, STR(0.00, 16, 2), STR(EF_JPKPL->SUM_KOM, 16, ;
+         2)))
+   DEVPOS(20, 38)
+   DEVOUTPICT(KWO_DOC, "999999", "+W/RG")
+   DEVPOS(20, 57)
+   DEVOUTPICT(SUM_IT, "9999999999999.99", "+W/RG")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Logical
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE, NKEY, PPP, NEW_REC, V_ID_KL, DAT_END, NCHOICE, ACHOICE := {;
+         {" по плательщику  ", .T.}, {" по виду платежа ", .T.}}
+
+   LMORE := .T.
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+         MEMVAR->LONG := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY = -39
+
+            NKEY := MENU_POPUP(MS1_POPUP, "Меню операций")
+            IF(EMPTY(NKEY), NIL, NKEY := MEMVAR->MS3_POPUP[NKEY])
+
+         ENDIF
+
+         IF NKEY == -1
+
+            IF MEMVAR->MS1_POPUP[1, 2]
+
+               V_PLAT()
+               VSEGO_DOC()
+
+            ENDIF
+
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+            IF MEMVAR->MS1_POPUP[2, 2]
+
+               IF EF_JPKPL->PR_OTPR
+
+                  ERROR(NIL, NIL, {"@Внимание !", ;
+                        "Данный платеж уже отправлен !!", ;
+                        "редактирование заблокировано !"}, {" Выход "})
+
+               ELSE
+
+                  R_KPLAT()
+
+               ENDIF
+
+            ENDIF
+
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -4
+
+            IF MEMVAR->MS1_POPUP[4, 2]
+
+               NCHOICE := MENU_POPUP(ACHOICE, " Выборка ")
+
+               IF NCHOICE <> 0
+
+                  IF NCHOICE = 1
+
+                     IF VVOD_FIO()
+
+                        LMORE := .F.
+                        MEMVAR->LONG := .T.
+
+                     ENDIF
+
+                  ELSEIF VVOD_PLAT()
+
+                     LMORE := .F.
+                     MEMVAR->LONG := .T.
+
+                  ENDIF
+
+               ENDIF
+
+            ENDIF
+
+            LMORE := .F.
+
+         ENDIF
+
+         IF NKEY == -5
+
+            IF MEMVAR->MS1_POPUP[5, 2]
+
+               DBSETORDER(1)
+               MEMVAR->IKEY_TOP := DTOS(DAT_OD__)
+               MEMVAR->IKEY_BOT := DTOS(DAT_OD__)
+               LMORE := .F.
+               MEMVAR->LONG := .T.
+               SETCOLOR("w+/w")
+               DISPBOX(0, 0, 22, 79, SINGLE)
+               DEVPOS(0, 25)
+               DEVOUT(" Платежи граждан  за " + DTOC(DAT_OD__))
+
+            ENDIF
+
+         ENDIF
+
+         IF NKEY == -6
+
+            IF MEMVAR->MS1_POPUP[7, 2]
+
+               EF_KASP(0.00)
+
+            ENDIF
+
+         ENDIF
+
+         IF NKEY == -7
+
+            IF MEMVAR->MS1_POPUP[8, 2]
+
+               V_P_PE_K(.F.)
+
+            ENDIF
+
+         ENDIF
+
+         IF NKEY == -8 .AND. MEMVAR->MS1_POPUP[9, 2]
+
+            PRN_SHTAMP()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VSEGO_DOC
+   Params: None.
+   Return: Logical
+  Example: VSEGO_DOC()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VSEGO_DOC()
+
+   LOCAL REC := RECNO()
+
+   DBSEEK(IKEY_TOP)
+   MEMVAR->KWO_DOC := 0
+   MEMVAR->SUM_IT := 0
+
+   DO WHILE SUBSTR((&(INDEXKEY(INDEXORD()))), 1, LEN(IKEY_TOP)) == ;
+         IKEY_TOP .AND. .NOT. EF_JPKPL->(EOF())
+
+      ++MEMVAR->KWO_DOC
+      MEMVAR->SUM_IT := MEMVAR->SUM_IT + EF_JPKPL->SUMMA
+      DBSKIP(1)
+
+   ENDDO
+
+   DBGOTO(REC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: FLAG
+   Return: Logical
+  Example: SCRIO_1(FLAG)
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1(FLAG)
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DISPBOX(0, 23, 23, 23, SINGLE)
+   DISPBOX(2, 0, 2, 23, SINGLE)
+   DISPBOX(9, 23, 9, 79, SINGLE)
+   DISPBOX(14, 23, 14, 79, SINGLE)
+   DISPBOX(18, 22, 18, 79, SINGLE)
+   DEVPOS(2, 23)
+   DEVOUT("┤")
+   DEVPOS(2, 0)
+   DEVOUT("├")
+   DEVPOS(0, 23)
+   DEVOUT("┬")
+   DEVPOS(22, 23)
+   DEVOUT("┴")
+   DEVPOS(9, 79)
+   DEVOUT("┤")
+   DEVPOS(9, 23)
+   DEVOUT("├")
+   DEVPOS(14, 79)
+   DEVOUT("┤")
+   DEVPOS(14, 23)
+   DEVOUT("├")
+   DEVPOS(18, 79)
+   DEVOUT("┤")
+   DEVPOS(18, 23)
+   DEVOUT("├")
+   SETCOLOR("n/w")
+   DEVPOS(1, 4)
+   DEVOUT("N док.")
+   DEVPOS(1, 15)
+   DEVOUT("Дата")
+   DEVPOS(2, 25)
+   DEVOUT("Вид платежа:")
+   DEVPOS(4, 25)
+   DEVOUT("Сумма:")
+   DEVPOS(5, 25)
+   DEVOUT("Плательщик:")
+   DEVPOS(6, 25)
+   DEVOUT("Лицевой сч. плательщика:")
+   DEVPOS(7, 25)
+   DEVOUT("Адрес плат.")
+   DEVPOS(8, 25)
+   DEVOUT("N телефона")
+   DEVPOS(10, 25)
+   DEVOUT("Получатель:")
+   DEVPOS(11, 25)
+   DEVOUT("Банк получателя:")
+   DEVPOS(13, 25)
+   DEVOUT("МФО:")
+   DEVPOS(13, 44)
+   DEVOUT("Расчетный счет:")
+
+   IF FLAG
+
+      SCROLL(15, 25, 17, 78)
+      SETPOS(15, 25)
+      DEVPOS(15, 25)
+      DEVOUT("Вид оплаты :")
+      DEVPOS(17, 25)
+      DEVOUT("Удержано комиссии с плат. :")
+      DEVPOS(20, 25)
+      DEVOUT("Итого док. :          На сумму:                  грн. ")
+
+   ELSE
+
+      SCROLL(19, 25, 20, 78)
+      SETPOS(19, 25)
+      DEVPOS(15, 25)
+      DEVOUT("Итого по клиенту док.       на сумму ", "N/W")
+      DEVPOS(17, 25)
+      DEVOUT("Тариф                    Получить ", "N/W")
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: R_KPLAT
+   Params: None.
+   Return: Nil
+  Example: R_KPLAT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION R_KPLAT()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR()
+   LOCAL CUR_REC := RECNO()
+   LOCAL WIN, FL_EX := .F.
+   LOCAL CURPOS, REC := 0
+   LOCAL N_DOC_V := 0
+   LOCAL M := 0
+   LOCAL LS_PLAT_V := SPACE(18)
+   LOCAL PR_P_S := .F.
+   LOCAL PRC_TB_V := 0, NUM_T_V, PR_T_ := .F.
+
+   IF DBEMPTY()
+
+      RETURN NIL
+
+   ENDIF
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := BROWSE:ROWPOS() + (BROWSE:NTOP() - 1)
+   STATUSLINE(BOTIO_2)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   MEMVAR->KOD_VPL_V := EF_JPKPL->KOD_VPL
+   MEMVAR->KOD_PL_V := EF_JPKPL->KOD_PL
+   MEMVAR->KOD_POL_V := EF_JPKPL->KOD_POL
+   N_DOC_V := EF_JPKPL->NUM_DOC
+   MEMVAR->NAM_PLAT_V := EF_JPKPL->NAM_PLAT
+   MEMVAR->ADR_V := EF_JPKPL->ADRES
+   LS_PLAT_V := EF_JPKPL->LS_PLAT
+   PR_T_ := EF_S_PL->PR_TEL
+   NUM_T_V := EF_JPKPL->NUM_TEL
+
+   DO WHILE .T.
+
+      SETPOS(M, 1)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, N_DOC_V, N_DOC_V := _1)}, ;
+            "n_doc_v", "XXXXXXXXXX", {||NEW_POL(@KOD_POL_V, KOD_VPL_V, ;
+            KOD_PL_V)}, NIL):DISPLAY())
+      SETPOS(5, 37)
+      AADD(GETLIST, __GET(NIL, "nam_plat_v", ;
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+      SETPOS(6, 50)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, LS_PLAT_V, LS_PLAT_V := _1)}, ;
+            "ls_plat_v", "XXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+      SETPOS(7, 37)
+      AADD(GETLIST, __GET(NIL, "adr_v", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+            NIL, NIL):DISPLAY())
+      SETPOS(8, 37)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NUM_T_V, NUM_T_V := _1)}, ;
+            "num_t_v", "XXXXXXXXXX", {||IF(PR_T_,  .NOT. EMPTY(NUM_T_V), ;
+            .T.)}, NIL):DISPLAY())
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF IF(PR_T_, EMPTY(NUM_T_V), .F.) .OR. EMPTY(NAM_PLAT_V)
+
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY == -9 .AND. RECLOCK(3)
+
+      EF_JPKPL->KOD_POL := KOD_POL_V
+      EF_JPKPL->NUM_DOC := N_DOC_V
+      EF_JPKPL->NAM_PLAT := NAM_PLAT_V
+      EF_JPKPL->ADRES := ADR_V
+      EF_JPKPL->NUM_TEL := NUM_T_V
+      EF_JPKPL->LS_PLAT := LS_PLAT_V
+      DBUNLOCK()
+      DBCOMMIT()
+
+   ENDIF
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   SETCOLOR(OLDC)
+   DBSELECTAR("ef_jpkpl")
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_FIO
+   Params: None.
+   Return: Logical
+  Example: VVOD_FIO()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD_FIO()
+
+   LOCAL KEY, RET := .F.
+
+   PRIVATE NM := SPACE(30), DAT_ := DAT_OD__
+   KEY := GETWIN(NIL, NIL, {"@ Ввод ", " "}, {"Плательщик", "nm", ;
+         REPLICATE("X", 30), 30, "Дата платежа ", "dat_", "99.99.9999", 10};
+         , {"F10", -9, "Записать", "Esc", 27, "Отменить"})
+
+   IF KEY = 0 .OR. KEY = 2
+
+      RETURN .F.
+      RETURN 
+
+   ENDIF
+
+   MEMVAR->IKEY_TOP := DTOS(DAT_) + ALLTRIM(NM)
+   MEMVAR->IKEY_BOT := DTOS(DAT_) + ALLTRIM(NM)
+   SETCOLOR("w+/w")
+   DISPBOX(0, 1, 0, 78, SINGLE)
+   DEVPOS(0, 25)
+   DEVOUT(" Платежи " + ALLTRIM(NM) + "за " + DTOC(DAT_))
+   DBSETORDER(2)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_PLAT
+   Params: None.
+   Return: Undefined
+  Example: VVOD_PLAT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD_PLAT()
+
+   LOCAL KEY, RET := .T.
+
+   PRIVATE DAT_ := DAT_OD__
+   MEMVAR->KKK := MENU_POP(ARR_GPL, " Выберите платеж ")
+
+   IF KKK = 0
+
+      RET := .F.
+
+   ELSE
+
+      MEMVAR->KOD_PP := MEMVAR->ARR_GPL[KKK, 2]
+      SETKEYOF()
+      KEY := GETWIN(NIL, NIL, {"@ Ввод ", " Введите дату платежа"}, {"  ", ;
+            "dat_", "99.99.9999", 10}, {"F10", -9, "Записать"})
+
+      IF KEY = 0 .OR. EMPTY(DAT_)
+
+         RET := .F.
+
+      ELSE
+
+         MEMVAR->IKEY_TOP := DTOS(DAT_) + STR(KOD_PP, 3)
+         MEMVAR->IKEY_BOT := DTOS(DAT_) + STR(KOD_PP, 3)
+         SETCOLOR("w+/w")
+         DISPBOX(0, 1, 0, 78, SINGLE)
+         EF_S_GPL->(DBSEEK(STR(KOD_PP)))
+         DEVPOS(0, 25)
+         DEVOUT(" Платежи " + EF_S_GPL->NAM_VPL + "за " + DTOC(DAT_))
+         DBSETORDER(1)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRN_SHTAMP
+   Params: None.
+   Return: Logical
+  Example: PRN_SHTAMP()
+  ..........................................................................
+*/
+
+STATIC FUNCTION PRN_SHTAMP()
+
+   LOCAL KEY, OLDCOLOR, WIN, REC := RECNO(), JJ := 0
+   LOCAL SUM_V, NF, ND, WIN2
+
+   PRIVATE ARR_D := {}
+   KEY := DIALOG(NIL, NIL, {" Расположение штампа "}, {" Вертикальное ", ;
+         " Горизонтальное "}, 1)
+
+   IF KEY = 0
+
+      RETURN .T.
+
+   ENDIF
+
+   IF KEY = 1
+
+      ND := "vertik.txt"
+
+   ELSE
+
+      ND := "goriz.txt"
+
+   ENDIF
+
+   IF  .NOT. READ_DOG(ND)
+
+      RETURN .T.
+
+   ENDIF
+
+   IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+      RETURN .F.
+
+   ENDIF
+
+   SET(20, "PRINTER")
+
+   DO WHILE  .NOT. PRINTREADY(1)
+
+      SET(20, "SCREEN")
+
+      IF  .NOT. ZST_PRN(2, 17, 50, "N/W,+W/N", "W/N")
+
+         RETURN .F.
+
+      ENDIF
+
+      SET(20, "PRINTER")
+      PRNREADY(1, 2)
+
+   ENDDO
+
+   MEMVAR->RW := PROW()
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"9")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"@")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"x" + CHR(0))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"!"+CHR(4))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"3"+CHR(27))
+   MEMVAR->RW := MEMVAR->RW + 1
+
+   FOR II := 1 TO LEN(ARR_D)
+
+      MEMVAR->STRK := MEMVAR->ARR_D[II]
+      DEVPOS(MEMVAR->RW++, 0)
+      DEVOUT((&(STRK)))
+
+   NEXT
+
+   IF  .NOT. PR_R_L__
+
+      __EJECT()
+
+   ELSE
+
+      MEMVAR->RW := PROW() + 1
+
+      FOR I := 1 TO KVO_STR__
+
+         DEVPOS(RW + I, 0)
+         DEVOUT("")
+
+      NEXT
+
+   ENDIF
+
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"9")
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"@")
+   SET(20, "SCREEN")
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_2
+   Params: None.
+   Return: Logical
+  Example: OBRIO_2()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_2()
+
+   LOCAL LMORE, NKEY, PPP, NEW_REC, V_ID_KL, DAT_END, REC := RECNO()
+
+   LMORE := .T.
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE1:STABLE()
+
+         BROWSE1:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK1) == "B", EVAL(VYVBLOCK1), NIL)
+
+      IF BROWSE1:STABLE()
+
+         IF BROWSE1:HITTOP() .OR. BROWSE1:HITBOTTOM()
+
+            BROWSE1:HITTOP := .F.
+            BROWSE1:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE1:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         IF CHECK_OPL()
+
+            LMORE := .F.
+
+         ENDIF
+
+      CASE NKEY == 24
+
+         BROWSE1:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE1:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE1:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE1:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE1:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE1:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK1) == "B", EVAL(VYVBLOCK1), NIL)
+
+         IF NKEY == -1
+
+            KP_VVO_PL()
+            BROWSE1:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+            IF K_PLAT->PR_OPL
+
+               ERROR(NIL, NIL, {"@Внимание !", ;
+                     "Данный платеж уже оплачен !!", ;
+                     "редактирование заблокировано !"}, {" Выход "})
+
+            ELSE
+
+               RR_KPLAT()
+               MEMVAR->I_D_K := LASTREC()
+               MEMVAR->I_PL_K := 0
+               DBEVAL({||MEMVAR->I_PL_K := I_PL_K + SUMMA}, NIL, NIL, NIL, ;
+                     NIL, .F.)
+               MEMVAR->I_TB_K := 0
+               DBEVAL({||MEMVAR->I_TB_K := I_TB_K + SUM_KOM}, {|| .NOT. ;
+                     K_PLAT->PR_TAR}, NIL, NIL, NIL, .F.)
+               DBGOTO(REC)
+
+            ENDIF
+
+            BROWSE1:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -3
+
+            IF K_PLAT->PR_OPL
+
+               ERROR(NIL, NIL, {"@Внимание !", ;
+                     "Данный платеж уже оплачен !!", ;
+                     "удаление заблокировано !"}, {" Выход "})
+
+            ELSE
+
+               DD_KPLAT()
+               MEMVAR->I_D_K := LASTREC()
+               MEMVAR->I_PL_K := 0
+               DBEVAL({||MEMVAR->I_PL_K := I_PL_K + SUMMA}, NIL, NIL, NIL, ;
+                     NIL, .F.)
+               MEMVAR->I_TB_K := 0
+               DBEVAL({||MEMVAR->I_TB_K := I_TB_K + SUM_KOM}, {|| .NOT. ;
+                     K_PLAT->PR_TAR}, NIL, NIL, NIL, .F.)
+               DBGOTO(REC)
+
+            ENDIF
+
+            BROWSE1:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -4
+
+            IF OPLATA()
+
+               IF CHECK_OPL1()
+
+                  LMORE := .F.
+
+               ENDIF
+
+            ELSE
+
+               BROWSE1:REFRESHALL()
+
+            ENDIF
+
+         ENDIF
+
+         IF NKEY == -29
+
+            __DBZAP()
+            MEMVAR->I_D_K := LASTREC()
+            MEMVAR->I_PL_K := 0
+            DBEVAL({||MEMVAR->I_PL_K := I_PL_K + SUMMA}, NIL, NIL, NIL, NIL,;
+                   .F.)
+            MEMVAR->I_TB_K := 0
+            DBEVAL({||MEMVAR->I_TB_K := I_TB_K + SUM_KOM}, {|| .NOT. K_PLAT->;
+                  PR_TAR}, NIL, NIL, NIL, .F.)
+            BROWSE1:REFRESHALL()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NEW_POL
+   Params: K_POL, K_VPL, K_PL
+   Return: Logical
+  Example: NEW_POL(K_POL, K_VPL, K_PL)
+  ..........................................................................
+*/
+
+STATIC FUNCTION NEW_POL(K_POL, K_VPL, K_PL)
+
+   LOCAL KEY := 0
+   LOCAL ARR_POL := {}
+
+   DBSELECTAR("ef_s_ppl")
+   DBSETORDER(1)
+   DBSEEK(STR(K_VPL, 3))
+
+   DO WHILE EF_S_PPL->KOD_VPL == K_VPL .AND. .NOT. EOF()
+
+      AADD(ARR_POL, {EF_S_PPL->NAM_POL, EF_S_PPL->KOD_POL})
+      DBSKIP()
+
+   ENDDO
+
+   DBSETORDER(2)
+   DBSELECTAR("ef_jpkpl")
+
+   IF LEN(ARR_POL) > 1
+
+      KEY := 0
+      SETKEYOF()
+      KEY := MENU_POP(ARR_POL, "Выберите получателя")
+      SETKEYON()
+
+      IF KEY <> 0
+
+         K_POL := ARR_POL[KEY, 2]
+         EF_S_PPL->(DBSEEK(K_POL))
+         DEVPOS(10, 37)
+         DEVOUTPICT(EF_S_PPL->NAM_POL, ;
+               "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "W+/W")
+         DEVPOS(12, 25)
+         DEVOUTPICT(EF_S_PPL->BANK, ;
+               "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+               "W+/W")
+         DEVPOS(13, 30)
+         DEVOUTPICT(EF_S_PPL->MFO, "999999", "W+/W")
+         DEVPOS(13, 60)
+         DEVOUTPICT(EF_S_PPL->SC, "99999999999999", "W+/W")
+         RETURN .T.
+
+      ELSE
+
+         RETURN .F.
+
+      ENDIF
+
+      RETURN 
+
+   ENDIF
+
+   IF LEN(ARR_POL) = 1
+
+      K_POL := ARR_POL[1, 2]
+      EF_S_PPL->(DBSEEK(K_POL))
+      DEVPOS(9, 37)
+      DEVOUTPICT(EF_S_PPL->NAM_POL, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+            "W+/W")
+      DEVPOS(11, 25)
+      DEVOUTPICT(EF_S_PPL->BANK, ;
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "W+/W")
+      DEVPOS(12, 30)
+      DEVOUTPICT(EF_S_PPL->MFO, "999999", "W+/W")
+      DEVPOS(12, 60)
+      DEVOUTPICT(EF_S_PPL->SC, "99999999999999", "W+/W")
+      RETURN .T.
+      RETURN 
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: READ_DOG
+   Params: NAMFILE
+   Return: Logical
+  Example: READ_DOG(NAMFILE)
+  ..........................................................................
+*/
+
+STATIC FUNCTION READ_DOG(NAMFILE)
+
+   LOCAL I, NHANDLE, NLENGTH, TEKPOS, J := 0
+   LOCAL STR
+
+   NHANDLE := FOPEN(NAMFILE, 0)
+
+   IF FERROR() <> 0
+
+      ERROR(NIL, NIL, {"@ Внимание !", "Файл " + NAMFILE + ;
+            " не может быть открыт !", "Ошибка DOS: " + FERROR()}, {;
+            " Выход "})
+      RETURN .F.
+
+   ENDIF
+
+   NLENGTH := FSEEK(NHANDLE, 0, 2)
+   TEKPOS := FSEEK(NHANDLE, 0, 0)
+
+   DO WHILE TEKPOS < NLENGTH
+
+      STR := STREAD(NHANDLE, NLENGTH)
+      AADD(ARR_D, STR)
+      TEKPOS := FSEEK(NHANDLE, 0, 1)
+
+   ENDDO
+
+   FCLOSE(NHANDLE)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CHECK_OPL
+   Params: None.
+   Return: Logical
+  Example: CHECK_OPL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CHECK_OPL()
+
+   LOCAL REC := RECNO(), RET := .T.
+
+   IF DBEMPTY()
+
+      RETURN .T.
+
+   ENDIF
+
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF  .NOT. K_PLAT->PR_OPL
+
+         RET := .F.
+         EXIT
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   IF RET
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@Внимание !", ;
+            "Вы не выполнили операцию оплаты плетежей !!", ;
+            "Или выполните ее или очистите ввод !!"}, {" Выход "})
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: KP_VVO_PL
+   Params: None.
+   Return: Logical
+  Example: KP_VVO_PL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION KP_VVO_PL()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR()
+   LOCAL WINN, FL_EX := .F.
+   LOCAL CURPOS, REC_DOC := K_PLAT->(RECNO()), REC := 0
+   LOCAL N_DOC_V := 0, KOD_PL_V := "   ", SUM_TAR_V, KOD_VPL_V := 0
+   LOCAL M := 0, SUM_V := 0, KOD_SV := 0, BIN_SV := SPACE(6)
+   LOCAL LS_PLAT_V := 0
+   LOCAL PR_P_S := .F.
+   LOCAL PRC_TB_V := 0, PR_, NUM_T_V := SPACE(10)
+
+   WINN := SAVESCREEN(0, 0, 24, 79)
+   REC := RECNO()
+   CURPOS := BROWSE1:ROWPOS() - 1 + BROWSE1:NTOP()
+   M := CURPOS + 1
+
+   IF DBEMPTY()
+
+      M := BROWSE1:NTOP()
+
+   ELSEIF CURPOS + 1 = BROWSE1:NBOTTOM()
+
+      M := BROWSE:NBOTTOM()
+
+   ELSE
+
+      DBSKIP()
+
+      DO WHILE  .NOT. EOF() .AND. M < BROWSE1:NBOTTOM()
+
+         IF IF(VALTYPE(BL_PR_US1) = "B", EVAL(BL_PR_US1), .T.) .AND. IF(;
+               VALTYPE(INDEXBL1) = "B", EVAL(INDEXBL1), .T.)
+
+            ++M
+
+         ENDIF
+
+         DBSKIP()
+
+      ENDDO
+
+   ENDIF
+
+   DBGOTO(REC)
+   COLORWIN2(BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NLEFT(), ;
+         BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NRIGHT(), ;
+         COLORFON)
+   STATUSLINE(BOTIO_4)
+
+   DO WHILE  .NOT. KEY == 27
+
+      MEMVAR->I_D_K := LASTREC()
+      MEMVAR->I_PL_K := 0
+      DBEVAL({||MEMVAR->I_PL_K := I_PL_K + SUMMA}, NIL, NIL, NIL, NIL, .F.)
+      MEMVAR->I_TB_K := 0
+      DBEVAL({||MEMVAR->I_TB_K := I_TB_K + SUM_KOM}, {|| .NOT. K_PLAT->;
+            PR_TAR}, NIL, NIL, NIL, .F.)
+      DEVPOS(15, 47)
+      DEVOUTPICT(I_D_K, "9999", "W+/RG")
+      DEVPOS(15, 62)
+      DEVOUTPICT(I_PL_K, "9999999999999.99", "W+/RG")
+      DEVPOS(17, 31)
+      DEVOUTPICT(I_TB_K, "9999999999999.99", "W+/RG")
+      DEVPOS(17, 59)
+      DEVOUTPICT(I_TB_K + I_PL_K, "9999999999999.99", "W+/RG")
+      N_DOC_V := SPACE(10)
+      KOD_PL_V := "   "
+      SUM_TAR_V := 0.00
+      KOD_VPL_V := 0
+      MEMVAR->KOD_POL_V := 0
+      SUM_V := 0
+      LS_PLAT_V := SPACE(18)
+      PR_P_S := .F.
+      PRC_TB_V := 0
+      PR_ := .T.
+      MEMVAR->PR_T_ := .F.
+      MEMVAR->MIN_S := 0
+      NUM_T_V := SPACE(10)
+
+      IF M > BROWSE1:NBOTTOM()
+
+         SCROLL(BROWSE1:NTOP(), BROWSE1:NLEFT(), BROWSE1:NBOTTOM(), ;
+               BROWSE1:NRIGHT(), 1)
+         M := BROWSE1:NBOTTOM()
+
+      ENDIF
+
+      SETCOLOR("n/w,w+/b,,,w+/bg")
+      COLORWIN2(M, BROWSE1:NLEFT(), M, BROWSE1:NRIGHT(), COLORFON1)
+      DBGOTO(REC)
+      DEVPOS(2, 38)
+      DEVOUTPICT(KOD_VPL_V, "999")
+      DEVPOS(2, 42)
+      DEVOUT(SPACE(20))
+      DEVPOS(3, 38)
+      DEVOUTPICT(KOD_PL_V, "XXX")
+      DEVPOS(3, 42)
+      DEVOUT(SPACE(20))
+      DEVPOS(4, 32)
+      DEVOUTPICT(SUM_V, "9999999999999.99")
+      DEVPOS(5, 37)
+      DEVOUTPICT(NAM_PLAT_V, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+      DEVPOS(6, 50)
+      DEVOUTPICT(LS_PLAT_V, "XXXXXXXXXXXXXXXXXX")
+      DEVPOS(7, 37)
+      DEVOUTPICT(ADR_V, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+      DEVPOS(8, 37)
+      DEVOUTPICT(NUM_T_V, "XXXXXXXXXX")
+      DEVPOS(10, 37)
+      DEVOUT(SPACE(35))
+      DEVPOS(12, 25)
+      DEVOUT(SPACE(50))
+      DEVPOS(13, 30)
+      DEVOUTPICT(0, "999999")
+      DEVPOS(13, 60)
+      DEVOUTPICT(0, "99999999999999")
+      __KEYBOARD()
+      DEVPOS(M, 13)
+      DEVOUT(DAT_OD__)
+
+      DO WHILE .T.
+
+         SETPOS(M, 1)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, N_DOC_V, N_DOC_V := _1)}, ;
+               "n_doc_v", "XXXXXXXXXX", NIL, NIL):DISPLAY())
+         SETPOS(2, 38)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KOD_VPL_V, KOD_VPL_V := _1);
+               }, "kod_vpl_v", "999", {||NEW_KOD_PL(@KOD_VPL_V, @KOD_POL_V,;
+                @PRC_TB_V, @PR_P_S, @PR_, @MIN_S)}, NIL):DISPLAY())
+         SETPOS(3, 38)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KOD_PL_V, KOD_PL_V := _1)},;
+                "kod_pl_v", "XXX", {||NEW_K_PL(KOD_VPL_V, @KOD_PL_V, PR_, ;
+               @PR_T_)}, {||PR_VV(KOD_VPL_V, @KOD_PL_V, PR_)}):DISPLAY())
+         SETPOS(4, 32)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, SUM_V, SUM_V := _1)}, ;
+               "sum_v", "9999999999999.99", NIL, NIL):DISPLAY())
+         SETPOS(5, 37)
+         AADD(GETLIST, __GET(NIL, "nam_plat_v", ;
+               "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+         SETPOS(6, 50)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, LS_PLAT_V, LS_PLAT_V := _1);
+               }, "ls_plat_v", "XXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+         SETPOS(7, 37)
+         AADD(GETLIST, __GET(NIL, "adr_v", ;
+               "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+         SETPOS(8, 37)
+         AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NUM_T_V, NUM_T_V := _1)}, ;
+               "num_t_v", "XXXXXXXXXX", {||IF(PR_T_,  .NOT. EMPTY(NUM_T_V),;
+                .T.)}, NIL):DISPLAY())
+         SETKEYON()
+         SETCURSOR(1)
+         READMODAL(GETLIST)
+         MEMVAR->GETLIST := {}
+         SETCURSOR(0)
+         SETKEYOF()
+         KEY := LASTKEY()
+
+         IF KEY = -9
+
+            IF EMPTY(KOD_VPL_V) .OR. EMPTY(SUM_V) .OR. IF(PR_T_, EMPTY(;
+                  NUM_T_V), .F.)
+
+               LOOP
+
+            ELSE
+
+               EXIT
+
+            ENDIF
+
+         ELSEIF KEY = 27
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+      COLORWIN2(M, BROWSE1:NLEFT() - 1, M, BROWSE1:NRIGHT(), "w+/w")
+
+      IF KEY = -9
+
+         IF EMPTY(N_DOC_V)
+
+            IF EF_SYS->(RECLOCK(3))
+
+               N_DOC_V := STR(EF_SYS->LAST_NUM + 1, 10)
+               EF_SYS->LAST_NUM := EF_SYS->LAST_NUM + 1
+               EF_SYS->(DBUNLOCK())
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@Внимание !", ;
+                     "Не могу сформировать номер документа"}, {" Выход "})
+               LOOP
+
+            ENDIF
+
+         ENDIF
+
+         DBSELECTAR("k_plat")
+
+         IF ADDREC(3)
+
+            K_PLAT->KOD_VPL := KOD_VPL_V
+            K_PLAT->KOD_PL := KOD_PL_V
+            K_PLAT->KOD_POL := KOD_POL_V
+            K_PLAT->NUM_DOC := N_DOC_V
+            K_PLAT->DAT_BANK := DAT_OD__
+            K_PLAT->SUMMA := SUM_V
+
+            IF PRC_TB_V > 0.001
+
+               SUM_TAR_V := IF(PR_P_S, PRC_TB_V, IF(ROUND(SUM_V * PRC_TB_V ;
+                     / 100, 2) + 0.001 < MIN_S, MIN_S, ROUND(SUM_V * ;
+                     PRC_TB_V / 100, 2)))
+
+            ENDIF
+
+            K_PLAT->SUM_KOM := SUM_TAR_V
+            K_PLAT->NAM_PLAT := NAM_PLAT_V
+            K_PLAT->ADRES := ADR_V
+            K_PLAT->NUM_TEL := NUM_T_V
+            K_PLAT->LS_PLAT := LS_PLAT_V
+            K_PLAT->FIO_OP := FIO_OP__
+            K_PLAT->PR_TAR := EF_S_GPL->PR_TAR
+            DBUNLOCK()
+
+            IF EF_BANK->PR_ZAPR
+
+               MEMVAR->KK := DIALOG(NIL, NIL, {"Печатать квитанцию ?"}, {;
+                     "  Да ", " Нет "}, 2)
+
+               IF KK = 1
+
+                  V_P_PE_K(.T.)
+
+               ENDIF
+
+            ENDIF
+
+            DEVPOS(M, 1)
+            DEVOUT(N_DOC_V)
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@Внимание !", "Не могу записать документ"}, {;
+                  " Выход "})
+            LOOP
+
+         ENDIF
+
+      ELSEIF KEY = 27
+
+         RESTSCREEN(0, 0, 24, 79, WINN)
+
+      ENDIF
+
+      ++M
+
+   ENDDO
+
+   DBSELECTAR("k_plat")
+   SETCOLOR(OLDC)
+   RESTSCREEN(0, 0, 24, 79, WINN)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RR_KPLAT
+   Params: None.
+   Return: Nil
+  Example: RR_KPLAT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION RR_KPLAT()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR()
+   LOCAL CUR_REC := RECNO()
+   LOCAL WINN, FL_EX := .F.
+   LOCAL CURPOS, REC_DOC := K_PLAT->(RECNO()), REC := 0
+   LOCAL N_DOC_V := 0, KOD_PL_V := "   ", SUM_TAR_V := 0.00, KOD_VPL_V ;
+         := 0
+   LOCAL M := 0, SUM_V := 0
+   LOCAL LS_PLAT_V := 0, MIN_S := 0
+   LOCAL PR_P_S := .F.
+   LOCAL PRC_TB_V := 0, NUM_T_V, PR_T_ := .F.
+
+   IF DBEMPTY()
+
+      RETURN NIL
+
+   ENDIF
+
+   MEMVAR->WIN := SAVESCREEN(0, 0, 24, 79)
+   M := BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1)
+   STATUSLINE(BOTIO_4)
+   COLORWIN2(BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NLEFT(), ;
+         BROWSE1:ROWPOS() + (BROWSE1:NTOP() - 1), BROWSE1:NRIGHT(), ;
+         COLORFON)
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   KOD_VPL_V := K_PLAT->KOD_VPL
+   KOD_PL_V := K_PLAT->KOD_PL
+   MEMVAR->KOD_POL_V := K_PLAT->KOD_POL
+   N_DOC_V := K_PLAT->NUM_DOC
+   SUM_V := K_PLAT->SUMMA
+   MEMVAR->NAM_PLAT_V := K_PLAT->NAM_PLAT
+   MEMVAR->ADR_V := K_PLAT->ADRES
+   LS_PLAT_V := K_PLAT->LS_PLAT
+   PR_P_S := .F.
+   PRC_TB_V := 0
+   MEMVAR->PR_ := .T.
+   MIN_S := 0
+   NUM_T_V := K_PLAT->NUM_TEL
+
+   DO WHILE .T.
+
+      SETPOS(M, 1)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, N_DOC_V, N_DOC_V := _1)}, ;
+            "n_doc_v", "XXXXXXXXXX", NIL, NIL):DISPLAY())
+      SETPOS(2, 38)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KOD_VPL_V, KOD_VPL_V := _1)}, ;
+            "kod_vpl_v", "999", {||NEW_KOD_PL(@KOD_VPL_V, @KOD_POL_V, ;
+            @PRC_TB_V, @PR_P_S, @PR_, @MIN_S)}, NIL):DISPLAY())
+      SETPOS(3, 38)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, KOD_PL_V, KOD_PL_V := _1)}, ;
+            "kod_pl_v", "XXX", {||NEW_K_PL(KOD_VPL_V, @KOD_PL_V, PR_, ;
+            @PR_T_)}, {||PR_VV(KOD_VPL_V, @KOD_PL_V, PR_)}):DISPLAY())
+      SETPOS(4, 32)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, SUM_V, SUM_V := _1)}, "sum_v",;
+             "9999999999999.99", NIL, NIL):DISPLAY())
+      SETPOS(5, 37)
+      AADD(GETLIST, __GET(NIL, "nam_plat_v", ;
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+      SETPOS(6, 50)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, LS_PLAT_V, LS_PLAT_V := _1)}, ;
+            "ls_plat_v", "XXXXXXXXXXXXXXXXXX", NIL, NIL):DISPLAY())
+      SETPOS(7, 37)
+      AADD(GETLIST, __GET(NIL, "adr_v", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+            NIL, NIL):DISPLAY())
+      SETPOS(8, 37)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, NUM_T_V, NUM_T_V := _1)}, ;
+            "num_t_v", "XXXXXXXXXX", {||IF(PR_T_,  .NOT. EMPTY(NUM_T_V), ;
+            .T.)}, NIL):DISPLAY())
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF EMPTY(KOD_VPL_V) .OR. EMPTY(SUM_V) .OR. IF(PR_T_, EMPTY(;
+               NUM_T_V), .F.)
+
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY == -9 .AND. RECLOCK(3)
+
+      K_PLAT->KOD_VPL := KOD_VPL_V
+      K_PLAT->KOD_PL := KOD_PL_V
+      K_PLAT->KOD_POL := KOD_POL_V
+      K_PLAT->NUM_DOC := N_DOC_V
+      K_PLAT->SUMMA := SUM_V
+
+      IF PRC_TB_V > 0.001
+
+         SUM_TAR_V := IF(PR_P_S, PRC_TB_V, IF(ROUND(SUM_V * PRC_TB_V / 100,;
+                2) + 0.001 < MIN_S, MIN_S, ROUND(SUM_V * PRC_TB_V / 100, 2);
+               ))
+
+      ENDIF
+
+      K_PLAT->SUM_KOM := SUM_TAR_V
+      K_PLAT->NAM_PLAT := NAM_PLAT_V
+      K_PLAT->ADRES := ADR_V
+      K_PLAT->NUM_TEL := NUM_T_V
+      K_PLAT->LS_PLAT := LS_PLAT_V
+      K_PLAT->PR_TAR := EF_S_GPL->PR_TAR
+      DBUNLOCK()
+      DBCOMMIT()
+
+   ENDIF
+
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   SETCOLOR(OLDC)
+   DBSELECTAR("k_plat")
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DD_KPLAT
+   Params: None.
+   Return: Nil
+  Example: DD_KPLAT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION DD_KPLAT()
+
+   LOCAL KEY
+
+   IF DBEMPTY()
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Удалять строку ?"}, {"  Да ", " Нет "}, 2)
+
+   IF KEY = 1 .AND. RECLOCK(3)
+
+      DBDELETE()
+      DBCOMMIT()
+      DBUNLOCK()
+
+   ELSE
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   BROWSE1:REFRESHALL()
+
+   DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+   ENDDO
+
+   IF BROWSE1:ROWPOS() = 1
+
+      BROWSE1:REFRESHALL()
+
+      DO WHILE  .NOT. BROWSE1:STABILIZE()
+
+      ENDDO
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OPLATA
+   Params: None.
+   Return: Logical
+  Example: OPLATA()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OPLATA()
+
+   LOCAL REC := RECNO(), KEY, PR_PK_ := .T., DAT_OPL_ := DAT_OD__
+   LOCAL PR_N := .F., PR_K := .F., PR_KM := .F.
+   LOCAL FL_OPL := .F., RET := .T.
+
+   PRIVATE SUM_N := 0, SUM_K := 0, SUM_KM := 0
+   KEY := DIALOG(NIL, NIL, {" Вид оплаты "}, {" Наличные ", ;
+         " Пласт. карта ", " Выход "}, 4)
+
+   IF KEY = 0 .OR. KEY = 3
+
+      RETURN .F.
+
+   ENDIF
+
+   MEMVAR->KK := DIALOG(NIL, NIL, {"Выполнять оплату ?"}, {"  Да ", " Нет "};
+         , 2)
+
+   IF KK <> 1
+
+      RETURN .F.
+
+   ENDIF
+
+   IF KEY = 1
+
+      PR_N := .F.
+      MEMVAR->SUM_N := I_PL_K
+      MEMVAR->SUM_KM := I_TB_K
+
+      IF EF_S_PR->(DBSEEK("кпн"))
+
+         IF SUM_KM > 0.001
+
+            IF EF_S_PR->(DBSEEK("тпн"))
+
+               FL_OPL := OPL_NAL(@PR_PK_, @DAT_OPL_)
+
+               IF FL_OPL
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@Внимание !", ;
+                        "Оплата не произведена !!!", ;
+                        "Попробуйте еще раз !!! "}, {" Выход "})
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@Внимание !", "В справочнике проводок ", ;
+                     "не найдена запись с кодом "+CHR(34)+"тпн"+CHR(34)+;
+                     " "}, {" Выход "})
+
+            ENDIF
+
+         ELSE
+
+            FL_OPL := OPL_NAL(@PR_PK_, @DAT_OPL_)
+
+            IF FL_OPL
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@Внимание !", "Оплата не произведена !!!",;
+                      "Попробуйте еще раз !!! "}, {" Выход "})
+
+            ENDIF
+
+         ENDIF
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@Внимание !", "В справочнике проводок ", ;
+               "не найдена запись с кодом "+CHR(34)+"кпн"+CHR(34)+" "}, {;
+               " Выход "})
+
+      ENDIF
+
+   ELSEIF KEY = 2
+
+      PR_N := .T.
+      MEMVAR->SUM_K := I_PL_K
+      MEMVAR->SUM_KM := I_TB_K
+
+      IF EF_S_PR->(DBSEEK("кпк"))
+
+         FL_OPL := OPL_CARD()
+
+         IF FL_OPL
+
+            PR_PK_ := .F.
+            DAT_OPL_ := DAT_OD__
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@Внимание !", "Оплата не произведена !!!", ;
+                  "Попробуйте еще раз !!! "}, {" Выход "})
+
+         ENDIF
+
+         PR_PK_ := .F.
+         DAT_OPL_ := DAT_OD__
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@Внимание !", "В справочнике проводок ", ;
+               "не найдена запись с кодом "+CHR(34)+"кпк"+CHR(34)+" "}, {;
+               " Выход "})
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   IF  .NOT. FL_OPL
+
+      DBSELECTAR("k_plat")
+      RETURN .F.
+
+   ENDIF
+
+   DBSELECTAR("k_plat")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      K_PLAT->PR_PK := PR_PK_
+      K_PLAT->DAT_OPL := DAT_OPL_
+      K_PLAT->PR_OPL := .T.
+      K_PLAT->PR_N_K := PR_N
+      DBSKIP()
+
+   ENDDO
+
+   DIALOG(NIL, NIL, {"@Внимание !", "Оплата всех платежей произведена !"}, ;
+         {" Продолжить "})
+   DBGOTO(REC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CHECK_OPL1
+   Params: None.
+   Return: Logical
+  Example: CHECK_OPL1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION CHECK_OPL1()
+
+   LOCAL REC := RECNO(), RET := .T.
+
+   IF DBEMPTY()
+
+      RETURN .T.
+
+   ENDIF
+
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF  .NOT. K_PLAT->PR_OPL
+
+         RET := .F.
+         EXIT
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   IF RET
+
+      DBGOTOP()
+
+      DO WHILE  .NOT. EOF()
+
+         IF EF_JPKPL->(ADDREC(3))
+
+            EF_JPKPL->KOD_VPL := K_PLAT->KOD_VPL
+            EF_JPKPL->KOD_PL := K_PLAT->KOD_PL
+            EF_JPKPL->KOD_POL := K_PLAT->KOD_POL
+            EF_JPKPL->NUM_DOC := K_PLAT->NUM_DOC
+            EF_JPKPL->DAT_BANK := K_PLAT->DAT_BANK
+            EF_JPKPL->DAT_OPL := K_PLAT->DAT_OPL
+            EF_JPKPL->SUMMA := K_PLAT->SUMMA
+            EF_JPKPL->SUM_KOM := K_PLAT->SUM_KOM
+            EF_JPKPL->NAM_PLAT := K_PLAT->NAM_PLAT
+            EF_JPKPL->LS_PLAT := K_PLAT->LS_PLAT
+            EF_JPKPL->ADRES := K_PLAT->ADRES
+            EF_JPKPL->FIO_OP := K_PLAT->FIO_OP
+            EF_JPKPL->NUM_OTPR := K_PLAT->NUM_OTPR
+            EF_JPKPL->DAT_OTPR := K_PLAT->DAT_OTPR
+            EF_JPKPL->PR_OPL := K_PLAT->PR_OPL
+            EF_JPKPL->PR_PK := K_PLAT->PR_PK
+            EF_JPKPL->PR_TAR := K_PLAT->PR_TAR
+            EF_JPKPL->PR_N_K := K_PLAT->PR_N_K
+            EF_JPKPL->NUM_TEL := K_PLAT->NUM_TEL
+            EF_JPKPL->KOD_SOV := K_PLAT->KOD_SOV
+            EF_JPKPL->PR_KOM := K_PLAT->PR_KOM
+
+         ENDIF
+
+         DBSKIP()
+
+      ENDDO
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@Внимание !", ;
+            "Вы не выполнили операцию оплаты плетежей !!", ;
+            "Или выполните ее или очистите ввод !!"}, {" Выход "})
+
+   ENDIF
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NEW_KOD_PL
+   Params: KOD, K_POL, PRC, P_S, PR, MIN_S
+   Return: Logical
+  Example: NEW_KOD_PL(KOD, K_POL, PRC, P_S, PR, MIN_S)
+  ..........................................................................
+*/
+
+STATIC FUNCTION NEW_KOD_PL(KOD, K_POL, PRC, P_S, PR, MIN_S)
+
+   LOCAL KEY := 0
+
+   PRIVATE ARR_POL := {}
+
+   IF KOD > 0
+
+      IF EF_S_GPL->(DBSEEK(STR(KOD, 3)))
+
+         DEVPOS(2, 42)
+         DEVOUTPICT(EF_S_GPL->NAM_VPL, "XXXXXXXXXXXXXXXXXXXX", "W+/W")
+
+         IF EF_S_PL->(DBSEEK(STR(KOD, 3)))
+
+            PR := .T.
+
+         ELSE
+
+            PR := .F.
+
+         ENDIF
+
+         DBSELECTAR("ef_s_ppl")
+         DBSETORDER(1)
+         DBSEEK(STR(KOD, 3))
+
+         DO WHILE EF_S_PPL->KOD_VPL == KOD .AND. .NOT. EOF()
+
+            AADD(ARR_POL, {EF_S_PPL->NAM_POL, EF_S_PPL->KOD_POL})
+            DBSKIP()
+
+         ENDDO
+
+         DBSETORDER(2)
+         DBSELECTAR("k_plat")
+
+         IF LEN(ARR_POL) > 1
+
+            KEY := 0
+            SETKEYOF()
+            KEY := MENU_POP(ARR_POL, "Выберите получателя")
+            SETKEYON()
+
+            IF KEY <> 0
+
+               K_POL := MEMVAR->ARR_POL[KEY, 2]
+               EF_S_PPL->(DBSEEK(K_POL))
+               EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+               PRC := EF_S_TKP->PRC_TB
+               P_S := EF_S_TKP->PR_PR_S
+               MIN_S := EF_S_TKP->MIN_TB
+               DEVPOS(10, 37)
+               DEVOUTPICT(EF_S_PPL->NAM_POL, ;
+                     "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "W+/W")
+               DEVPOS(12, 25)
+               DEVOUTPICT(EF_S_PPL->BANK, ;
+                     "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+                     "W+/W")
+               DEVPOS(13, 30)
+               DEVOUTPICT(EF_S_PPL->MFO, "999999", "W+/W")
+               DEVPOS(13, 60)
+               DEVOUTPICT(EF_S_PPL->SC, "99999999999999", "W+/W")
+               RETURN .T.
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+         ELSEIF LEN(ARR_POL) = 1
+
+            K_POL := MEMVAR->ARR_POL[1, 2]
+            EF_S_PPL->(DBSEEK(K_POL))
+            EF_S_PPL->(DBSEEK(K_POL))
+            EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+            PRC := EF_S_TKP->PRC_TB
+            P_S := EF_S_TKP->PR_PR_S
+            MIN_S := EF_S_TKP->MIN_TB
+            DEVPOS(10, 37)
+            DEVOUTPICT(EF_S_PPL->NAM_POL, ;
+                  "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "W+/W")
+            DEVPOS(12, 25)
+            DEVOUTPICT(EF_S_PPL->BANK, ;
+                  "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+                  "W+/W")
+            DEVPOS(13, 30)
+            DEVOUTPICT(EF_S_PPL->MFO, "999999", "W+/W")
+            DEVPOS(13, 60)
+            DEVOUTPICT(EF_S_PPL->SC, "99999999999999", "W+/W")
+            RETURN .T.
+
+         ELSE
+
+            RETURN .F.
+
+         ENDIF
+
+      ELSE
+
+         RETURN .F.
+
+      ENDIF
+
+      RETURN 
+
+   ENDIF
+
+   KEY := MENU_POP(ARR_GPL, "Выберите вид платежа")
+
+   IF KEY <> 0
+
+      KOD := MEMVAR->ARR_GPL[KEY, 2]
+      EF_S_GPL->(DBSEEK(STR(KOD, 3)))
+      DEVPOS(2, 42)
+      DEVOUTPICT(EF_S_GPL->NAM_VPL, "XXXXXXXXXXXXXXXXXXXX", "W+/W")
+
+      IF EF_S_PL->(DBSEEK(STR(KOD, 3)))
+
+         PR := .T.
+
+      ELSE
+
+         PR := .F.
+
+      ENDIF
+
+      DBSELECTAR("ef_s_ppl")
+      DBSETORDER(1)
+      DBSEEK(STR(KOD, 3))
+
+      DO WHILE EF_S_PPL->KOD_VPL == KOD .AND. .NOT. EOF()
+
+         AADD(ARR_POL, {EF_S_PPL->NAM_POL, EF_S_PPL->KOD_POL})
+         DBSKIP()
+
+      ENDDO
+
+      DBSETORDER(2)
+
+      IF LEN(ARR_POL) > 1
+
+         KEY := 0
+         SETKEYOF()
+         KEY := MENU_POP(ARR_POL, "Выберите получателя")
+         SETKEYON()
+
+         IF KEY <> 0
+
+            K_POL := MEMVAR->ARR_POL[KEY, 2]
+            EF_S_PPL->(DBSEEK(K_POL))
+            EF_S_PPL->(DBSEEK(K_POL))
+            EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+            PRC := EF_S_TKP->PRC_TB
+            P_S := EF_S_TKP->PR_PR_S
+            MIN_S := EF_S_TKP->MIN_TB
+            DEVPOS(10, 37)
+            DEVOUTPICT(EF_S_PPL->NAM_POL, ;
+                  "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "W+/W")
+            DEVPOS(12, 25)
+            DEVOUTPICT(EF_S_PPL->BANK, ;
+                  "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+                  "W+/W")
+            DEVPOS(13, 30)
+            DEVOUTPICT(EF_S_PPL->MFO, "999999", "W+/W")
+            DEVPOS(13, 60)
+            DEVOUTPICT(EF_S_PPL->SC, "99999999999999", "W+/W")
+            RETURN .T.
+
+         ELSE
+
+            RETURN .F.
+
+         ENDIF
+
+      ELSEIF LEN(ARR_POL) = 1
+
+         K_POL := MEMVAR->ARR_POL[1, 2]
+         EF_S_PPL->(DBSEEK(K_POL))
+         EF_S_PPL->(DBSEEK(K_POL))
+         EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+         PRC := EF_S_TKP->PRC_TB
+         P_S := EF_S_TKP->PR_PR_S
+         MIN_S := EF_S_TKP->MIN_TB
+         DEVPOS(10, 37)
+         DEVOUTPICT(EF_S_PPL->NAM_POL, ;
+               "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "W+/W")
+         DEVPOS(12, 25)
+         DEVOUTPICT(EF_S_PPL->BANK, ;
+               "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", ;
+               "W+/W")
+         DEVPOS(13, 30)
+         DEVOUTPICT(EF_S_PPL->MFO, "999999", "W+/W")
+         DEVPOS(13, 60)
+         DEVOUTPICT(EF_S_PPL->SC, "99999999999999", "W+/W")
+         RETURN .T.
+
+      ELSE
+
+         RETURN .F.
+
+      ENDIF
+
+      RETURN 
+
+   ENDIF
+
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NEW_K_PL
+   Params: V_PL, KOD, PR, PR_T
+   Return: Logical
+  Example: NEW_K_PL(V_PL, KOD, PR, PR_T)
+  ..........................................................................
+*/
+
+STATIC FUNCTION NEW_K_PL(V_PL, KOD, PR, PR_T)
+
+   LOCAL KEY := 0
+
+   PRIVATE ARR_PP := {}
+
+   IF PR
+
+      IF  .NOT. EMPTY(KOD)
+
+         IF EF_S_PL->(DBSEEK(STR(V_PL, 3) + KOD))
+
+            DEVPOS(3, 42)
+            DEVOUTPICT(EF_S_PL->NAM_PL, "XXXXXXXXXXXXXXXXXXXX", "W+/W")
+            PR_T := EF_S_PL->PR_TEL
+            RETURN .T.
+
+         ELSE
+
+            RETURN .F.
+
+         ENDIF
+
+      ELSE
+
+         DBSELECTAR("ef_s_pl")
+         DBSEEK(STR(V_PL, 3))
+
+         DO WHILE EF_S_PL->KOD_VPL == V_PL .AND. .NOT. EOF()
+
+            AADD(ARR_PP, {EF_S_PL->NAM_PL, EF_S_PL->KOD_PL})
+            DBSKIP()
+
+         ENDDO
+
+         DBSELECTAR("k_plat")
+
+         IF LEN(ARR_PP) > 1
+
+            KEY := 0
+            SETKEYOF()
+            KEY := MENU_POP(ARR_PP, "Выберите платеж")
+            SETKEYON()
+
+            IF KEY <> 0
+
+               KOD := MEMVAR->ARR_PP[KEY, 2]
+               EF_S_PL->(DBSEEK(STR(V_PL, 3) + KOD))
+               DEVPOS(3, 42)
+               DEVOUTPICT(EF_S_PL->NAM_PL, "XXXXXXXXXXXXXXXXXXXX", "W+/W")
+               PR_T := EF_S_PL->PR_TEL
+               RETURN .T.
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+         ELSEIF LEN(ARR_PP) = 1
+
+            KOD := MEMVAR->ARR_PP[1, 2]
+            EF_S_PL->(DBSEEK(STR(V_PL, 3) + KOD))
+            DEVPOS(3, 42)
+            DEVOUTPICT(EF_S_PL->NAM_PL, "XXXXXXXXXXXXXXXXXXXX", "W+/W")
+            PR_T := EF_S_PL->PR_TEL
+            RETURN .T.
+
+         ELSE
+
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+      RETURN 
+
+   ENDIF
+
+   DEVPOS(3, 42)
+   DEVOUT(SPACE(20), "W+/W")
+   KOD := "   "
+   PR_T := .F.
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PR_VV
+   Params: V_PL, KOD, PR
+   Return: Logical
+  Example: PR_VV(V_PL, KOD, PR)
+  ..........................................................................
+*/
+
+STATIC FUNCTION PR_VV(V_PL, KOD, PR)
+
+   IF PR
+
+      RETURN .T.
+      RETURN 
+
+   ENDIF
+
+   DEVPOS(3, 38)
+   DEVOUT("   ", "W+/W")
+   DEVPOS(3, 42)
+   DEVOUT(SPACE(20), "W+/W")
+   KOD := "  "
+   MEMVAR->PR_T := .F.
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OPL_NAL
+   Params: PR_, DAT
+   Return: Logical
+  Example: OPL_NAL(PR_, DAT)
+  ..........................................................................
+*/
+
+STATIC FUNCTION OPL_NAL(PR_, DAT)
+
+   LOCAL REC := RECNO(), KEY, PR_VYP := .F.
+   LOCAL PR_N := .F., PR_K := .F., PR_KM := .F.
+
+   IF PR_BA__
+
+      IF  .NOT. AREA_OPEN({{"ef_kasp"}, {"ef_prov"}})
+
+         RETURN .F.
+
+      ENDIF
+
+   ELSE
+
+      IF  .NOT. AREA_OPEN({{"ef_kasp"}, {"ef_prov"}, {"kn_sys", NIL, NIL, ;
+            DIR_KK__}, {"kn_kas_p", NIL, NIL, DIR_KK__}})
+
+         RETURN .F.
+
+      ENDIF
+
+      KN_KAS_P->(DBSETORDER(2))
+
+   ENDIF
+
+   EF_PROV->(DBSETORDER(2))
+   EF_KASP->(DBSETORDER(2))
+
+   IF PR_BA__
+
+      PR_ := .F.
+      DAT := DAT_OD__
+
+   ELSEIF KN_SYS->PR_BLOK = .T. .OR. KN_SYS->DAT_OD <> DAT_OD__
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Касса закрыта - ввод заблокирован !"};
+            , {" Выход "})
+      DBSELECTAR("ef_kasp")
+
+      IF PR_BA__
+
+         EF_KASP->(DBCLOSEARE())
+         EF_PROV->(DBCLOSEARE())
+
+      ELSE
+
+         EF_KASP->(DBCLOSEARE())
+         EF_PROV->(DBCLOSEARE())
+         KN_SYS->(DBCLOSEARE())
+         KN_KAS_P->(DBCLOSEARE())
+
+      ENDIF
+
+      RETURN .F.
+
+   ELSE
+
+      PR_ := KN_SYS->PR_PK
+
+      IF KN_SYS->PR_PK = .T.
+
+         DAT := KN_SYS->DAT_PD
+
+      ELSE
+
+         DAT := DAT_OD__
+
+      ENDIF
+
+   ENDIF
+
+   IF SUM_KM > 0.001
+
+      EF_S_PR->(DBSEEK("тпн"))
+      PR_VYP := EF_KASP(SUM_KM, KOD_VUAH__, 0, K_PLAT->NAM_PLAT, SPACE(16))
+
+   ELSE
+
+      PR_VYP := .T.
+
+   ENDIF
+
+   IF PR_BA__
+
+      EF_KASP->(DBCLOSEARE())
+      EF_PROV->(DBCLOSEARE())
+
+   ELSE
+
+      EF_KASP->(DBCLOSEARE())
+      EF_PROV->(DBCLOSEARE())
+      KN_SYS->(DBCLOSEARE())
+      KN_KAS_P->(DBCLOSEARE())
+
+   ENDIF
+
+
+RETURN PR_VYP
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OPL_CARD
+   Params: None.
+   Return: Logical
+  Example: OPL_CARD()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OPL_CARD()
+
+   LOCAL REC := RECNO(), KEY, PR_VYP1 := .F., PR_VYP2 := .F.
+   LOCAL PR_N := .F., PR_K := .F., PR_KM := .F.
+
+   IF  .NOT. AREA_OPEN({{"ef_merch"}, {"ef_head"}, {"cb_s_tc"}, {;
+         "ef_s_mop"}, {"ef_prov"}, {"ef_doc"}, {"ef_slip"}})
+
+      RETURN .F.
+
+   ENDIF
+
+   EF_MERCH->(DBSETORDER(2))
+   EF_DOC->(DBSETORDER(2))
+   EF_SLIP->(DBSETORDER(4))
+
+   IF SUM_K + SUM_KM > 0.001
+
+      EF_S_PR->(DBSEEK("кпк"))
+      PR_VYP1 := AVTOR_SUM(SUM_KM + SUM_K, KOD_VUAH__)
+
+   ENDIF
+
+   PR_VYP2 := .T.
+   EF_MERCH->(DBCLOSEARE())
+   EF_HEAD->(DBCLOSEARE())
+   CB_S_TC->(DBCLOSEARE())
+   EF_S_MOP->(DBCLOSEARE())
+   EF_PROV->(DBCLOSEARE())
+   EF_DOC->(DBCLOSEARE())
+   EF_SLIP->(DBCLOSEARE())
+
+RETURN PR_VYP1 .AND. PR_VYP2
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: AVTOR_SUM
+   Params: SUM_, VAL_
+   Return: Logical
+  Example: AVTOR_SUM(SUM_, VAL_)
+  ..........................................................................
+*/
+
+STATIC FUNCTION AVTOR_SUM(SUM_, VAL_)
+
+   LOCAL RET := .F., WIN, DESCK_, OLDC := SETCOLOR()
+   LOCAL KEY := 0, ASTR := ARRAY(0)
+   LOCAL MER, V_NUMS := 0, V_KAVT := SPACE(6)
+   LOCAL V_NC := SPACE(19), V_DEND := 0, V_EN := SPACE(25)
+
+   IF EF_S_MOP->(DBSEEK(FIO_OP__))
+
+      IF EMPTY(EF_S_MOP->KOM_MERCH)
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Для операциониста "+CHR(34) + ;
+               FIO_OP__ + CHR(34), "нет информации в базе "+CHR(34)+;
+               "EF_S_MOP.dbf"+CHR(34)+" !"}, {" Выход "})
+         RETURN .F.
+
+      ELSE
+
+         MER := EF_S_MOP->KOM_MERCH
+
+         IF EF_MERCH->(DBSEEK(MER))
+
+            MEMVAR->DESCK := WIN(5, 20, 15, 65, "d", "t")
+            CENTR(NIL, 0, "  Ввод слипа   ")
+            SETCOLOR("r/w")
+            DEVPOS(10, 5)
+            DEVOUT("F10- запомнить, ESC- выход")
+            SETCOLOR("n/w")
+            DEVPOS(1, 2)
+            DEVOUT("N слипа")
+            DEVPOS(2, 2)
+            DEVOUT("N карты")
+            DEVPOS(3, 2)
+            DEVOUT("Дата окончания")
+            DEVPOS(4, 2)
+            DEVOUT("Имя и фамилия ")
+            DEVPOS(5, 2)
+            DEVOUT("N мерчанта")
+            DEVPOS(7, 2)
+            DEVOUT("Сумма авторизации")
+            DEVPOS(8, 2)
+            DEVOUT("Код авторизации")
+            KEY := DIALOG(NIL, NIL, {"@Ввод", ;
+                  "Выберите способ ввода информации"}, {"   Ручной   ", ;
+                  " Карт-ридер "}, 1)
+
+            IF KEY = 1
+
+               RET := VV_SLIP(.T., KOD_VUAH__, ASTR, SUM_)
+
+            ELSEIF KEY = 2
+
+               ASTR := CARD_READE()
+
+               IF  .NOT. EMPTY(ASTR)
+
+                  RET := VV_SLIP(.F., KOD_VUAH__, ASTR, SUM_)
+
+               ELSE
+
+                  RETURN .F.
+
+               ENDIF
+
+            ELSE
+
+               RETURN .F.
+
+            ENDIF
+
+            IF RET
+
+               DEVPOS(10, 5)
+               DEVOUT(" F8- печать чека           ", "r/w")
+
+               DO WHILE .T.
+
+                  MEMVAR->KKK := INKEY(0)
+
+                  IF KKK = -7
+
+                     V_P_CH(.F.)
+                     EXIT
+
+                  ELSE
+
+                     LOOP
+
+                  ENDIF
+
+               ENDDO
+
+            ENDIF
+
+            SETCOLOR(OLDC)
+            WINCLOSE(DESCK)
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@Ошибка !", "Не найден мерчант " + MER + ;
+                  " !"}, {" Выход "})
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Для операциониста "+CHR(34) + ;
+            FIO_OP__ + CHR(34), "нет информации в базе "+CHR(34)+;
+            "EF_S_MOP.dbf"+CHR(34)+" !"}, {" Выход "})
+      RETURN .F.
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VV_SLIP
+   Params: FLAG, VALUTA, ASTR, SUM
+   Return: Variable
+  Example: VV_SLIP(FLAG, VALUTA, ASTR, SUM)
+  ..........................................................................
+*/
+
+STATIC FUNCTION VV_SLIP(FLAG, VALUTA, ASTR, SUM)
+
+   LOCAL KEY := 0, OLDC := SETCOLOR()
+   LOCAL V_NUMS, V_D_TR, V_NC, V_DEND, V_MER, V_KAVT, V_EN, T_C := 0, ;
+         NN, STROKA := "", BUF := " ", V_TR := 0
+   LOCAL FL_SHEM, FLA := .F., QQQQ := " ", I_K_V := 0, V_VPN := ;
+         SPACE(6), TC := 0
+
+   V_NUMS := 0
+   MEMVAR->SSS_KT := 0
+
+   IF FLAG
+
+      V_NC := SPACE(19)
+      V_DEND := 0
+      V_EN := SPACE(25)
+      TC := 0
+
+   ELSE
+
+      V_NC := ASTR[4]
+      V_DEND := VAL(SUBSTR(ASTR[3], 3, 2) + SUBSTR(ASTR[3], 1, 2))
+      V_EN := ATREPL("/", PADR(ASTR[2], 25), " ")
+
+      IF  .NOT. CH_NUM(@V_NC, @TC) .OR. .NOT. CH_END(@V_DEND, DAT_OD__)
+
+         SETCOLOR(OLDC)
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   V_KAVT := SPACE(6)
+   DEVPOS(1, 13)
+   DEVOUT(STR(V_NUMS, 10), "w+/w")
+   DEVPOS(1, 25)
+   DEVOUT(DAT_OD__, "w+/w")
+   DEVPOS(2, 13)
+   DEVOUT(TRANSFORM(V_NC, "@R 9999 9999 9999 9999 999"), "w+/w")
+   DEVPOS(3, 20)
+   DEVOUT(TRANSFORM(ZERO_STR(V_DEND, 4), "@R 99/99"), "w+/w")
+   DEVPOS(4, 16)
+   DEVOUTPICT(V_EN, "XXXXXXXXXXXXXXXXXXXXXXXXX", "w+/w")
+   DEVPOS(5, 16)
+   DEVOUTPICT(EF_MERCH->MERCH, "99999999", "w+/w")
+   DEVPOS(6, 16)
+   DEVOUTPICT(EF_MERCH->MERCH_NAME, "XXXXXXXXXXXXXXXXXXXXXXXXX", "w+/w")
+   DEVPOS(7, 20)
+   DEVOUTPICT(SUM, "9999999999.99", "w+/w")
+   DEVPOS(7, 35)
+   DEVOUTPICT(EF_MERCH->CURR, "XXX", "gr+/w")
+   DEVPOS(8, 21)
+   DEVOUTPICT(V_KAVT, "NNNNNN", "w+/w")
+   DEVPOS(9, 20)
+   DEVOUTPICT(FIO_OP__, "XXXXXXXXXXXXXXXXXXXX", "w+/w")
+
+   DO WHILE .T.
+
+      SETPOS(1, 13)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_NUMS, V_NUMS := _1)}, ;
+            "v_nums", "9999999999", NIL, {||FLAG}):DISPLAY())
+      SETPOS(2, 13)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_NC, V_NC := _1)}, "v_nc", ;
+            "@R 9999 9999 9999 9999 999", {||CH_NUM(@V_NC, @TC)}, {||FLAG});
+            :DISPLAY())
+      SETPOS(3, 20)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_DEND, V_DEND := _1)}, ;
+            "v_dend", "99/99", {||CH_END(@V_DEND, DAT_OD__)}, {||FLAG});
+            :DISPLAY())
+      SETPOS(4, 16)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_EN, V_EN := _1)}, "v_en", ;
+            "XXXXXXXXXXXXXXXXXXXXXXXXX", NIL, {||FLAG}):DISPLAY())
+      SETPOS(8, 20)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_KAVT, V_KAVT := _1)}, ;
+            "v_kavt", "NNNNNN", {||CH_AVTOR(V_KAVT)}, {||CHECK_AVT(@FLA, ;
+            @V_KAVT, EF_MERCH->MERCH, FLAG, V_NC, V_DEND, SUM, ASTR, TC, 2)};
+            ):DISPLAY())
+      SETPOS(8, 26)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, QQQQ, QQQQ := _1)}, "qqqq", ;
+            "X", NIL, {|| .NOT. FLAG}):DISPLAY())
+      ATAIL(GETLIST):COLORDISP("w/w")
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF  .NOT. CH_NUM(V_NC, @TC) .OR. .NOT. CH_END(V_DEND, DAT_OD__) ;
+               .OR. .NOT. CH_AVTOR(V_KAVT)
+
+            LOOP
+
+         ENDIF
+
+         IF  .NOT. FLAG
+
+            IF EF_SYS->(RECLOCK(3))
+
+               V_NUMS := EF_SYS->N_SL
+               DEVPOS(1, 13)
+               DEVOUT(V_NUMS, "W+/W")
+               ++EF_SYS->N_SL
+               EF_SYS->(DBUNLOCK())
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@Ошибка !", "Не удалось получить", ;
+                     "номер слипа в течении дня", "в базе "+CHR(34)+;
+                     "EF_SYS.dbf"+CHR(34)+" !"}, {" Выход "})
+               KEY := 27
+               EXIT
+
+            ENDIF
+
+         ENDIF
+
+         MEMVAR->DBERR := EF_SLIP->(DBSEEK(EF_MERCH->MERCH + DTOS(DAT_OD__) + ;
+               STR(V_NUMS, 10)))
+
+         IF DBERR
+
+            ERROR(NIL, NIL, {"@Ошибка !", "Запись с данным номером", ;
+                  "слипа уже есть в базе данных !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         IF V_KAVT == "000000"
+
+            MEMVAR->KK := ERROR(NIL, NIL, {"@Внимание !", ;
+                  "Вы уверены , что код авторизации ", ;
+                  " действительно равен "+CHR(34)+"000000"+CHR(34)+"?"}, {;
+                  " Нет ", " Да "})
+
+            IF KK <> 2
+
+               LOOP
+
+            ENDIF
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         IF  .NOT. EMPTY(V_KAVT)
+
+            MEMVAR->PLM := ERROR(NIL, NIL, {"@Внимание !", ;
+                  "Получен код авторизации !!!!", ;
+                  "Вы уверены , что хотите отказаться ", ;
+                  "от операции ????"}, {" Нет ", " Да "}, 1)
+
+            IF PLM = 2
+
+               KEY := 27
+               EXIT
+
+            ELSE
+
+               LOOP
+
+            ENDIF
+
+         ELSE
+
+            KEY := 27
+            EXIT
+
+         ENDIF
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY = -9
+
+      EF_S_PR->(DBSEEK("кпк"))
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+      MEMVAR->S_D := EF_S_SC->SC_NEW
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+      MEMVAR->S_K := EF_S_SC->SC_NEW
+
+      IF EF_DOC->(DBSEEK(DTOS(DAT_OD__) + S_D + PADR(ALLTRIM(KOD_B__), 9) + ;
+            S_K + PADR(ALLTRIM(KOD_B__), 9)))
+
+         IF EF_DOC->(RECLOCK(3)) .AND. EF_SLIP->(ADDREC(3))
+
+            K_PLAT->(DBGOTOP())
+            I_K_V := 0
+            MEMVAR->SSS_KT := 0
+
+            DO WHILE K_PLAT->( .NOT. EOF())
+
+               MEMVAR->PKOD_SV := 0
+
+               IF K_PLAT->PR_TAR
+
+                  EF_S_PPL->(DBSEEK(K_PLAT->KOD_POL))
+                  EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+                  EF_S_GPL->(DBSEEK(STR(K_PLAT->KOD_VPL, 3)))
+
+                  IF CB_S_TC->(DBSEEK(SUBSTR(V_NC, 1, 6)))
+
+                     V_VPN := SUBSTR(V_NC, 1, 6)
+
+                     IF EF_S_GPL->BIN_SOV == V_VPN
+
+                        MEMVAR->PKOD_SV := 3
+
+                        IF EF_S_TKP->PR_PR_S
+
+                           MEMVAR->SSS_KKK := EF_S_TKP->PRC_SOV
+
+                        ELSE
+
+                           MEMVAR->MMM_KKK := EF_S_TKP->MIN_SOV
+                           MEMVAR->SSS_KKK := ROUND(K_PLAT->SUMMA * EF_S_TKP->;
+                                 PRC_SOV / 100, 2)
+
+                           IF SSS_KKK + 0.001 < MMM_KKK
+
+                              MEMVAR->SSS_KKK := MMM_KKK
+
+                           ENDIF
+
+                        ENDIF
+
+                     ELSE
+
+                        MEMVAR->PKOD_SV := 1
+
+                        IF EF_S_TKP->PR_PR_S
+
+                           MEMVAR->SSS_KKK := EF_S_TKP->PRC_TKB
+
+                        ELSE
+
+                           MEMVAR->MMM_KKK := EF_S_TKP->MIN_TKB
+                           MEMVAR->SSS_KKK := ROUND(K_PLAT->SUMMA * EF_S_TKP->;
+                                 PRC_TKB / 100, 2)
+
+                           IF SSS_KKK + 0.001 < MMM_KKK
+
+                              MEMVAR->SSS_KKK := MMM_KKK
+
+                           ENDIF
+
+                        ENDIF
+
+                     ENDIF
+
+                  ELSE
+
+                     MEMVAR->PKOD_SV := 2
+
+                     IF EF_S_TKP->PR_PR_S
+
+                        MEMVAR->SSS_KKK := EF_S_TKP->PRC_TKP
+
+                     ELSE
+
+                        MEMVAR->MMM_KKK := EF_S_TKP->MIN_TKP
+                        MEMVAR->SSS_KKK := ROUND(K_PLAT->SUMMA * EF_S_TKP->;
+                              PRC_TKP / 100, 2)
+
+                        IF SSS_KKK + 0.001 < MMM_KKK
+
+                           MEMVAR->SSS_KKK := MMM_KKK
+
+                        ENDIF
+
+                     ENDIF
+
+                  ENDIF
+
+                  IF EF_S_GPL->PR_KOM
+
+                     MEMVAR->SSS_KKKK := 0
+
+                  ELSE
+
+                     MEMVAR->SSS_KKKK := SSS_KKK
+
+                  ENDIF
+
+                  K_PLAT->PR_KOM := EF_S_GPL->PR_KOM
+                  K_PLAT->SUM_KOM := SSS_KKK
+                  K_PLAT->KOD_SOV := PKOD_SV
+
+               ELSE
+
+                  MEMVAR->SSS_KKK := K_PLAT->SUM_KOM
+                  MEMVAR->SSS_KKKK := K_PLAT->SUM_KOM
+                  MEMVAR->SSS_KT := MEMVAR->SSS_KT + K_PLAT->SUM_KOM
+
+               ENDIF
+
+               I_K_V := I_K_V + SSS_KKKK
+               K_PLAT->(DBSKIP())
+
+            ENDDO
+
+            EF_DOC->SUMMA := EF_DOC->SUMMA + SUM
+            EF_SLIP->CODE := "UP"
+            EF_SLIP->PR_DATE := DAT_OD__
+            EF_SLIP->NO_SLIP := V_NUMS
+            EF_SLIP->TRAN_DATE := DAT_OD__
+            EF_SLIP->CH_NO := PADR(ALLTRIM(V_NC), 19)
+            EF_SLIP->E_NAME := V_EN
+            EF_SLIP->EXP_DATE := ZERO_STR(V_DEND, 4)
+            EF_SLIP->MERCH := EF_MERCH->MERCH
+            EF_SLIP->CITY := EF_MERCH->CITY
+            EF_SLIP->CURR := EF_MERCH->CURR
+            EF_SLIP->AMOUNT := SUM
+            EF_SLIP->AMOUNT_M := SUM - I_K_V
+            EF_SLIP->CURR_M := EF_MERCH->CURR_M
+            EF_SLIP->AUTH_NO := V_KAVT
+
+            IF  .NOT. FLAG
+
+               EF_SLIP->MAGTRACKRD := 2
+
+            ENDIF
+
+            IF FLA
+
+               EF_SLIP->PR_AVT := .T.
+
+            ENDIF
+
+            EF_SLIP->FIO_OPER := FIO_OP__
+            EF_SLIP->PR_PK := .F.
+            DBCOMMITAL()
+            DBUNLOCKAL()
+
+         ELSE
+
+            MEMVAR->RET := .F.
+
+         ENDIF
+
+      ELSEIF EF_DOC->(ADDREC(3)) .AND. (EF_SLIP->(ADDREC(3)) .AND. EF_SYS->(;
+            RECLOCK(3)))
+
+         MEMVAR->NPP := EF_SYS->N_PP + 1
+         MEMVAR->SSS_KT := 0
+         I_K_V := 0
+         K_PLAT->(DBGOTOP())
+
+         DO WHILE K_PLAT->( .NOT. EOF())
+
+            MEMVAR->PKOD_SV := 0
+
+            IF K_PLAT->PR_TAR
+
+               EF_S_PPL->(DBSEEK(K_PLAT->KOD_POL))
+               EF_S_TKP->(DBSEEK(STR(EF_S_PPL->KOD_TAR, 3)))
+               EF_S_GPL->(DBSEEK(STR(K_PLAT->KOD_VPL, 3)))
+
+               IF CB_S_TC->(DBSEEK(SUBSTR(V_NC, 1, 6)))
+
+                  V_VPN := SUBSTR(V_NC, 1, 6)
+
+                  IF EF_S_GPL->BIN_SOV == V_VPN
+
+                     MEMVAR->PKOD_SV := 3
+
+                     IF EF_S_TKP->PR_PR_S
+
+                        MEMVAR->SSS_KKK := EF_S_TKP->PRC_SOV
+
+                     ELSE
+
+                        MEMVAR->MMM_KKK := EF_S_TKP->MIN_SOV
+                        MEMVAR->SSS_KKK := ROUND(K_PLAT->SUMMA * EF_S_TKP->;
+                              PRC_SOV / 100, 2)
+
+                        IF SSS_KKK + 0.001 < MMM_KKK
+
+                           MEMVAR->SSS_KKK := MMM_KKK
+
+                        ENDIF
+
+                     ENDIF
+
+                  ELSE
+
+                     MEMVAR->PKOD_SV := 1
+
+                     IF EF_S_TKP->PR_PR_S
+
+                        MEMVAR->SSS_KKK := EF_S_TKP->PRC_TKB
+
+                     ELSE
+
+                        MEMVAR->MMM_KKK := EF_S_TKP->MIN_TKB
+                        MEMVAR->SSS_KKK := ROUND(K_PLAT->SUMMA * EF_S_TKP->;
+                              PRC_TKB / 100, 2)
+
+                        IF SSS_KKK + 0.001 < MMM_KKK
+
+                           MEMVAR->SSS_KKK := MMM_KKK
+
+                        ENDIF
+
+                     ENDIF
+
+                  ENDIF
+
+               ELSE
+
+                  MEMVAR->PKOD_SV := 2
+
+                  IF EF_S_TKP->PR_PR_S
+
+                     MEMVAR->SSS_KKK := EF_S_TKP->PRC_TKP
+
+                  ELSE
+
+                     MEMVAR->MMM_KKK := EF_S_TKP->MIN_TKP
+                     MEMVAR->SSS_KKK := ROUND(K_PLAT->SUMMA * EF_S_TKP->;
+                           PRC_TKP / 100, 2)
+
+                     IF SSS_KKK + 0.001 < MMM_KKK
+
+                        MEMVAR->SSS_KKK := MMM_KKK
+
+                     ENDIF
+
+                  ENDIF
+
+               ENDIF
+
+               K_PLAT->PR_KOM := EF_S_GPL->PR_KOM
+               K_PLAT->SUM_KOM := SSS_KKK
+               K_PLAT->KOD_SOV := PKOD_SV
+
+               IF EF_S_GPL->PR_KOM
+
+                  MEMVAR->SSS_KKKK := 0
+
+               ELSE
+
+                  MEMVAR->SSS_KKKK := SSS_KKK
+
+               ENDIF
+
+            ELSE
+
+               MEMVAR->SSS_KKK := K_PLAT->SUM_KOM
+               MEMVAR->SSS_KKKK := K_PLAT->SUM_KOM
+               MEMVAR->SSS_KT := MEMVAR->SSS_KT + K_PLAT->SUM_KOM
+
+            ENDIF
+
+            I_K_V := I_K_V + SSS_KKKK
+            K_PLAT->(DBSKIP())
+
+         ENDDO
+
+         EF_DOC->TIP_DOC := "м"
+         EF_DOC->VID_OP := "06"
+         EF_DOC->NUM_DOC := NPP
+         EF_DOC->DAT_KL := DAT_OD__
+         EF_DOC->DAT_BANK := DAT_OD__
+         EF_DOC->SUMMA := SUM
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+         EF_DOC->NAM_DT := EF_S_SC->NAM_SC
+         EF_DOC->BANK_DT := NAM_B__
+         EF_DOC->MFO_DT := KOD_B__
+         EF_DOC->SC_DT := EF_S_SC->SC_NEW
+         EF_DOC->INDEX_DT := STR(POST_IND__, 6)
+         EF_DOC->OKPO_DT := KOD_OKPO__
+         EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+         EF_DOC->NAM_KT := EF_S_SC->NAM_SC
+         EF_DOC->BANK_KT := NAM_B__
+         EF_DOC->MFO_KT := KOD_B__
+         EF_DOC->SC_KT := EF_S_SC->SC_NEW
+         EF_DOC->INDEX_KT := STR(POST_IND__, 6)
+         EF_DOC->OKPO_KT := KOD_OKPO__
+         EF_DOC->OSN := EF_S_PR->OSN
+         EF_DOC->FIO_OP := FIO_OP__
+         EF_DOC->KOD_V := KOD_VUAH__
+         EF_DOC->NO_SLIP := V_NUMS
+         EF_DOC->FL_INF := .F.
+         EF_SYS->N_PP := NPP
+         EF_SLIP->CODE := "UP"
+         EF_SLIP->PR_DATE := DAT_OD__
+         EF_SLIP->NO_SLIP := V_NUMS
+         EF_SLIP->TRAN_DATE := DAT_OD__
+         EF_SLIP->CH_NO := PADR(ALLTRIM(V_NC), 19)
+         EF_SLIP->E_NAME := V_EN
+         EF_SLIP->EXP_DATE := ZERO_STR(V_DEND, 4)
+         EF_SLIP->MERCH := EF_MERCH->MERCH
+         EF_SLIP->CITY := EF_MERCH->CITY
+         EF_SLIP->CURR := EF_MERCH->CURR
+         EF_SLIP->AMOUNT := SUM
+         EF_SLIP->AMOUNT_M := SUM - I_K_V
+         EF_SLIP->CURR_M := EF_MERCH->CURR_M
+         EF_SLIP->AUTH_NO := V_KAVT
+
+         IF  .NOT. FLAG
+
+            EF_SLIP->MAGTRACKRD := 2
+
+         ENDIF
+
+         IF FLA
+
+            EF_SLIP->PR_AVT := .T.
+
+         ENDIF
+
+         EF_SLIP->FIO_OPER := FIO_OP__
+         EF_SLIP->PR_PK := .F.
+         DBCOMMITAL()
+         DBUNLOCKAL()
+
+      ELSE
+
+         MEMVAR->RET := .F.
+
+      ENDIF
+
+      EF_S_PR->(DBSEEK("тпк"))
+
+      IF SSS_KT > 0.001
+
+         ADD_PROV(SSS_KT, "UAH")
+
+      ENDIF
+
+      MEMVAR->RET := .T.
+
+   ELSEIF KEY = 27
+
+      MEMVAR->RET := .F.
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ADD_PROV
+   Params: SUM_, VAL_
+   Return: Undefined
+  Example: ADD_PROV(SUM_, VAL_)
+  ..........................................................................
+*/
+
+STATIC FUNCTION ADD_PROV(SUM_, VAL_)
+
+   LOCAL RET := .F.
+
+   EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+   MEMVAR->S_D := EF_S_SC->SC_NEW
+   EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+   MEMVAR->S_K := EF_S_SC->SC_NEW
+
+   IF EF_DOC->(DBSEEK(DTOS(DAT_OD__) + S_D + PADR(ALLTRIM(KOD_B__), 9) + ;
+         S_K + PADR(EF_HEAD->MFO, 9)))
+
+      IF EF_DOC->(RECLOCK(3))
+
+         EF_DOC->SUMMA := EF_DOC->SUMMA + SUM_
+         DBCOMMITAL()
+         DBUNLOCKAL()
+         RET := .T.
+
+      ELSE
+
+         RET := .F.
+
+      ENDIF
+
+   ELSEIF EF_DOC->(ADDREC(3)) .AND. EF_SYS->(RECLOCK(3))
+
+      MEMVAR->NPP := EF_SYS->N_PP + 1
+      EF_DOC->TIP_DOC := "м"
+      EF_DOC->VID_OP := "06"
+      EF_DOC->NUM_DOC := NPP
+      EF_DOC->DAT_KL := DAT_OD__
+      EF_DOC->DAT_BANK := DAT_OD__
+      EF_DOC->SUMMA := SUM_
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+      EF_DOC->NAM_DT := EF_S_SC->NAM_SC
+      EF_DOC->BANK_DT := NAM_B__
+      EF_DOC->MFO_DT := KOD_B__
+      EF_DOC->SC_DT := EF_S_SC->SC_NEW
+      EF_DOC->INDEX_DT := STR(POST_IND__, 6)
+      EF_DOC->OKPO_DT := KOD_OKPO__
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+      EF_DOC->NAM_KT := EF_S_SC->NAM_SC
+      EF_DOC->BANK_KT := NAM_B__
+      EF_DOC->MFO_KT := KOD_B__
+      EF_DOC->SC_KT := EF_S_SC->SC_NEW
+      EF_DOC->INDEX_KT := STR(POST_IND__, 6)
+      EF_DOC->OKPO_KT := KOD_OKPO__
+      EF_DOC->OSN := EF_S_PR->OSN
+      EF_DOC->FIO_OP := FIO_OP__
+      EF_DOC->KOD_V := KOD_VUAH__
+      EF_DOC->FL_INF := .F.
+      EF_SYS->N_PP := NPP
+      DBCOMMITAL()
+      DBUNLOCKAL()
+      RET := .T.
+
+   ELSE
+
+      RET := .F.
+
+   ENDIF
+
+
+RETURN RET
+

@@ -1,0 +1,1108 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_OPKTS
+   Params: FFF
+   Return: Nil
+  Example: EF_OPKTS(FFF)
+  ..........................................................................
+*/
+
+FUNCTION EF_OPKTS(FFF)
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, ABROWSE, BOTIO_1 := {"~Esc-~выход", ;
+         "~F10-~сформировать и отправить пакет", "~+,-,Ins-~отметить"}
+
+   PRIVATE BROWSE, COLUMN, DESKTOP
+   PRIVATE INDEXBLOCK, BL_PR_US, FLAGG := FFF
+   PRIVATE IKEY_TOP := "0", IKEY_BOT := "0"
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+
+   IF  .NOT. AREA_OPEN({{"ef_slip", .T.}, {"ef_merch"}, {"ef_head"}, {;
+         "ef_kasr"}, {"ef_doc"}, {"ef_s_sc"}, {"ef_s_pr"}, {"for_mb", .T.},;
+          {"ef_kasp"}, {"ef_post"}, {"ef_bank"}, {"ef_sys"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(EF_BANK->BRANCH)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Заполните код Вашего подразделения", ;
+            "в настройке комплекса !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   DBSELECTAR("ef_kasr")
+   DBSETORDER(2)
+   DBSELECTAR("ef_doc")
+   DBSETORDER(3)
+   DBSELECTAR("ef_kasp")
+   DBSETORDER(2)
+   DBSELECTAR("ef_slip")
+   DBSETORDER(5)
+
+   IF  .NOT. DBSEEK("0")
+
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", "Нет ни одной слипа для отправки !"};
+            , {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      EF_SLIP->FL_INS := .F.
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   DBSEEK("0")
+   ABROWSE := CREATTBROW(3, 10, 19, 69, "senddate", {||VYVSTR()})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+
+   IF FLAGG
+
+      MEMVAR->BL_PR_US := {||EF_SLIP->CODE <> "CD"}
+
+   ELSE
+
+      MEMVAR->BL_PR_US := {||EF_SLIP->CODE == "CD"}
+
+   ENDIF
+
+   MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 1) == "0"}
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   MEMVAR->DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+
+   IF FLAGG
+
+      CENTR(NIL, 0, " ОТПРАВКА ПАКЕТОВ С СЛИПАМИ В ГБ")
+
+   ELSE
+
+      CENTR(NIL, 0, " ОТПРАВКА ПАКЕТОВ С ПОПОЛНЕНИЯМИ В ГБ")
+
+   ENDIF
+
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   DBSEEK("0")
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      IF EVAL(BL_PR_US)
+
+         EXIT
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   OBRIO_1()
+   WINCLOSE(DESKTOP)
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRINT_MEM
+   Params: None.
+   Return: Number
+  Example: PRINT_MEM()
+  ..........................................................................
+*/
+
+FUNCTION PRINT_MEM()
+
+   IF SCANCODE() = -1
+
+      IF PRINTYES()
+
+         PRINTFILE(FVIEWFILE, .T.)
+         FERASE(("") + FVIEWFILE)
+
+      ENDIF
+
+   ELSEIF SCANCODE() = -2
+
+      IPD_TO_MAI(.F.)
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYVSTR
+   Params: None.
+   Return: Undefined
+  Example: VYVSTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYVSTR()
+
+   LOCAL CSTR, CTMP
+
+   IF DBEMPTY()
+
+      CSTR := SPACE(60)
+
+   ELSE
+
+      IF EF_SLIP->FL_INS
+
+         CSTR := " √"
+
+      ELSE
+
+         CSTR := "  "
+
+      ENDIF
+
+      CSTR := CSTR + ("   " + DTOC(EF_SLIP->PR_DATE))
+      CSTR := CSTR + ("     " + ZERO_STR(EF_SLIP->NO_SLIP, 10))
+      CSTR := CSTR + ("   " + EF_SLIP->CURR)
+      CSTR := CSTR + ("       " + STR(EF_SLIP->AMOUNT, 11, 2) + "   " + ;
+            EF_SLIP->CODE + " ")
+
+   ENDIF
+
+
+RETURN CSTR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL CSTR
+
+   SETCOLOR("w+/w")
+
+   IF DBEMPTY()
+
+      DEVPOS(21, 17)
+      DEVOUT(SPACE(47))
+
+   ELSE
+
+      DEVPOS(21, 14)
+      DEVOUT(TRANSFORM(EF_SLIP->CH_NO, "@R 9999 9999 9999 9999 999") + ;
+            "   " + EF_SLIP->E_NAME)
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(2, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   DEVPOS(20, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 15)
+   DEVOUT("Дата слипа     N слипа     Валюта     Сумма        Код")
+   DEVPOS(21, 6)
+   DEVOUT("Карта")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY, REC
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(10)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -9
+
+            OUT_PKT()
+            LMORE := .F.
+
+         ELSEIF NKEY == 43
+
+            REC := RECNO()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF() .AND. LMORE
+
+               IF EVAL(BL_PR_US)
+
+                  IF EF_MERCH->(DBSEEK(EF_SLIP->MERCH))
+
+                     IF EF_SLIP->CODE == "CD"
+
+                        IF EF_KASP->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(;
+                              EF_SLIP->NO_SLIP, 10)))
+
+                           IF EF_KASP->PR_OPL == "о"
+
+                              EF_SLIP->FL_INS := .T.
+
+                           ENDIF
+
+                        ELSEIF EF_DOC->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(;
+                              EF_SLIP->NO_SLIP, 10)))
+
+                           EF_SLIP->FL_INS := .T.
+
+                        ENDIF
+
+                     ELSEIF EF_KASR->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(;
+                           EF_SLIP->NO_SLIP, 10)))
+
+                        IF EF_KASR->PR_OPL == "о"
+
+                           EF_SLIP->FL_INS := .T.
+
+                        ENDIF
+
+                     ELSE
+
+                        EF_SLIP->FL_INS := .T.
+
+                     ENDIF
+
+                  ELSE
+
+                     ERROR(NIL, NIL, {"@ Ошибка !", "Точка с кодом "+CHR(;
+                           34) + EF_SLIP->MERCH + CHR(34)+" ", ;
+                           "отсутствует в справочнике точек !", ;
+                           "Занесите точку в справочник !"}, {" Выход "})
+                     LMORE := .F.
+
+                  ENDIF
+
+               ENDIF
+
+               EF_SLIP->(DBSKIP())
+
+            ENDDO
+
+            DBGOTO(REC)
+
+         ELSEIF NKEY == 45
+
+            REC := RECNO()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+               IF EVAL(BL_PR_US)
+
+                  EF_SLIP->FL_INS := .F.
+
+               ENDIF
+
+               EF_SLIP->(DBSKIP())
+
+            ENDDO
+
+            DBGOTO(REC)
+
+         ELSEIF NKEY == 22 .AND. EMPTY(EF_SLIP->SENDDATE)
+
+            IF EF_SLIP->FL_INS
+
+               EF_SLIP->FL_INS := .F.
+
+            ELSEIF EF_MERCH->(DBSEEK(EF_SLIP->MERCH))
+
+               IF EF_SLIP->CODE == "CD"
+
+                  IF EF_KASP->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(EF_SLIP->;
+                        NO_SLIP, 10)))
+
+                     IF EF_KASP->PR_OPL == "о"
+
+                        EF_SLIP->FL_INS := .T.
+
+                     ENDIF
+
+                  ELSE
+
+                     EF_SLIP->FL_INS := .T.
+
+                  ENDIF
+
+               ELSEIF EF_KASR->(DBSEEK(DTOS(EF_SLIP->PR_DATE) + STR(EF_SLIP->;
+                     NO_SLIP, 10)))
+
+                  IF EF_KASR->PR_OPL == "о"
+
+                     EF_SLIP->FL_INS := .T.
+
+                  ENDIF
+
+               ELSE
+
+                  EF_SLIP->FL_INS := .T.
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Точка с кодом "+CHR(34) + ;
+                     EF_SLIP->MERCH + CHR(34)+" ", ;
+                     "отсутствует в справочнике точек !", ;
+                     "Занесите точку в справочник !"}, {" Выход "})
+               LMORE := .F.
+
+            ENDIF
+
+         ENDIF
+
+         BROWSE:REFRESHALL()
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      IF EVAL(BL_PR_US)
+
+         EF_SLIP->FL_INS := .F.
+
+      ENDIF
+
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OUT_PKT
+   Params: None.
+   Return: Nil
+  Example: OUT_PKT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OUT_PKT()
+
+   LOCAL REC, RES := .F., NF := ""
+   LOCAL HOST, WIN
+
+   DBSELECTAR("ef_sys")
+
+   IF FLAGG
+
+      MEMVAR->NUM_P := NUM_PAK(3)
+
+   ELSE
+
+      MEMVAR->NUM_P := NUM_PAK(5)
+
+   ENDIF
+
+   IF NUM_P > "z"
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "На сегодня свободные", ;
+            "N для отправки пакетов кончились !"}, {" Выход "})
+      DBSELECTAR("ef_slip")
+      RETURN NIL
+
+   ENDIF
+
+   IF RECLOCK(3)
+
+      IF FLAGG
+
+         NF := "Q" + EF_BANK->BRANCH + ZERO_STR(DOY(DAT_OD__), 3) + NUM_P
+         EF_SYS->N_S := ASC(NUM_P)
+
+      ELSE
+
+         NF := "J" + EF_BANK->BRANCH + ZERO_STR(DOY(DAT_OD__), 3) + NUM_P
+         EF_SYS->N_P := ASC(NUM_P)
+
+      ENDIF
+
+      DBCOMMIT()
+      DBUNLOCK()
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось получить", ;
+            "N пакета для отправки !"}, {" Выход "})
+      DBSELECTAR("ef_slip")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_slip")
+   REC := RECNO()
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      IF EF_SLIP->FL_INS
+
+         RES := .T.
+         EXIT
+
+      ENDIF
+
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   DBGOTO(REC)
+
+   IF  .NOT. RES
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Нет ни одного отмеченного слипа !", ;
+            "Пакет не сформирован !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE("c_tmp", .T.)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось открыть временную базу !",;
+             "Пакет не сформирован !"}, {" Выход "})
+      DBSELECTAR("ef_slip")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("c_tmp")
+   __DBZAP()
+   DBSELECTAR("ef_slip")
+   DBGOTOP()
+   MEMVAR->SUM_UA := 0
+   MEMVAR->SUM_US := 0
+
+   DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+      IF  .NOT. EF_SLIP->FL_INS
+
+         EF_SLIP->(DBSKIP())
+         LOOP
+
+      ENDIF
+
+      IF EF_SLIP->CODE == "CD"
+
+         IF EF_SLIP->CURR == KOD_VUAH__
+
+            MEMVAR->SUM_UA := MEMVAR->SUM_UA + EF_SLIP->AMOUNT
+
+         ELSE
+
+            MEMVAR->SUM_US := MEMVAR->SUM_US + EF_SLIP->AMOUNT
+
+         ENDIF
+
+      ENDIF
+
+      DBSELECTAR("c_tmp")
+
+      IF  .NOT. ADDREC(3)
+
+         LOOP
+
+      ENDIF
+
+      C_TMP->CODE := EF_SLIP->CODE
+      C_TMP->PR_DATE := EF_SLIP->PR_DATE
+      C_TMP->NO_SLIP := EF_SLIP->NO_SLIP
+      C_TMP->TRAN_DATE := EF_SLIP->TRAN_DATE
+      C_TMP->CH_NO := EF_SLIP->CH_NO
+      C_TMP->E_NAME := EF_SLIP->E_NAME
+      C_TMP->EXP_DATE := EF_SLIP->EXP_DATE
+      C_TMP->MERCH := EF_SLIP->MERCH
+      C_TMP->BRANCH := KOD_OTD__
+      C_TMP->CURR := EF_SLIP->CURR
+      C_TMP->CURR_M := EF_SLIP->CURR_M
+
+      IF EF_SLIP->CODE == "CD"
+
+         C_TMP->AMOUNT := -1 * EF_SLIP->AMOUNT
+
+      ELSE
+
+         C_TMP->AMOUNT := EF_SLIP->AMOUNT
+
+      ENDIF
+
+      C_TMP->AMOUNT_H := EF_SLIP->AMOUNT_H
+      C_TMP->AMOUNT_M := EF_SLIP->AMOUNT_M
+      C_TMP->AUTH_NO := EF_SLIP->AUTH_NO
+      C_TMP->FIO_OPER := EF_SLIP->FIO_OPER
+      C_TMP->DAT_ACCPT := EF_SLIP->DAT_ACCPT
+      C_TMP->DAT_PAY := EF_SLIP->DAT_PAY
+      C_TMP->IMPORTFILE := EF_SLIP->IMPORTFILE
+      C_TMP->EXPORTFILE := EF_SLIP->EXPORTFILE
+      C_TMP->SENDDATE := EF_SLIP->SENDDATE
+      C_TMP->DAT_A_OPL := EF_SLIP->DAT_A_OPL
+      C_TMP->PS_DATE := EF_SLIP->PS_DATE
+      C_TMP->AMOUNT_PS := EF_SLIP->AMOUNT_PS
+      C_TMP->AMOUNT_V := EF_SLIP->AMOUNT_V
+      C_TMP->AMOUNT_FIL := EF_SLIP->AMOUNT_FIL
+      C_TMP->AMOUNT_DPK := EF_SLIP->AMOUNT_DPK
+      C_TMP->MAGTRACKRD := EF_SLIP->MAGTRACKRD
+      DBSELECTAR("ef_slip")
+      EF_SLIP->(DBSKIP())
+
+   ENDDO
+
+   C_TMP->(DBCLOSEARE())
+
+   IF FRENAME("c_tmp.dbf", NF + ".dbf") = -1
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось переименовть файл !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   MEMVAR->DD := CTOD("01.01." + SUBSTR(STR(YEAR(DAT_OD__), 4), 3, 2)) + ;
+         DOY(DAT_OD__) - 1
+   MEMVAR->DDD := DTOS(DAT_OD__)
+   MEMVAR->PAROL := SUBSTR(NF, 1, 1) + "_" + SUBSTR(DDD, 7, 2) + "_" + ;
+         CMONTH_L(DAT_OD__) + "_" + SUBSTR(DDD, 3, 2) + "_" + SUBSTR(NF, 8,;
+          1) + "_" + EF_BANK->BRANCH
+   HOST := "pkzip -a -s" + PAROL + " " + OUT_PATH__ + NF + ".zip " + NF + ;
+         ".dbf"
+   WSELECT(0)
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   DISPBOX(0, 0, 24, 79, "         ", "W/N")
+   S_RUN(HOST, -1, .T.)
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   WSELECT(DESKTOP)
+   FERASE(("") + NF + ".dbf")
+
+   IF FILE(OUT_PATH__ + NF + ".zip")
+
+      IF EF_POST->(ADDREC(3))
+
+         EF_POST->NAM_FILE := NF + ".zip"
+         EF_POST->DAT_POST := DAT_OD__
+         EF_POST->TIME_POST := TIME()
+         EF_POST->PR_V_I := .F.
+         EF_POST->(DBCOMMIT())
+         EF_POST->(DBUNLOCK())
+
+      ENDIF
+
+      __COPYFILE(OUT_PATH__ + NF + ".zip", CP_PATH__ + NF + ".zip")
+
+      IF SUM_UA > 0.001 .OR. SUM_US > 0.001
+
+         DBSELECTAR("for_mb")
+         MEMVAR->NND := LASTREC()
+         __DBZAP()
+         EF_S_SC->(DBSETORDER(1))
+
+         IF SUM_UA > 0.001
+
+            EF_S_PR->(DBSEEK("пнк        "))
+            DBSELECTAR("for_mb")
+            FOR_MB->(DBAPPEND())
+            FOR_MB->TIP := 6
+            FOR_MB->N_D := EF_SYS->N_D + 1
+            FOR_MB->VAL := KOD_VUAH__
+            FOR_MB->DATE := DAT_OD__
+            FOR_MB->SUMMA := SUM_UA
+            EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+            FOR_MB->NAME_A := EF_S_SC->NAM_SC
+            FOR_MB->BANK_A := NAM_B__ + NAM_FIL__
+            FOR_MB->MFO_A := VAL(KOD_B__)
+            FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                  EF_S_SC->SC))
+
+            IF ALLTRIM(KOD_B__) == EF_BANK->MFO_PS
+
+               EF_S_SC->(DBSEEK("ксг" + KOD_VUAH__))
+               FOR_MB->NAME_B := EF_S_SC->NAM_SC
+               FOR_MB->BANK_B := NAM_B__ + NAM_FIL__
+               FOR_MB->MFO_B := VAL(KOD_B__)
+               FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                     EF_S_SC->SC))
+
+            ELSE
+
+               EF_S_SC->(DBSEEK("спс" + KOD_VUAH__))
+               FOR_MB->NAME_B := EF_S_SC->NAM_SC
+               FOR_MB->BANK_B := "КБ "+CHR(34)+"Приватбанк"+CHR(34)
+               FOR_MB->MFO_B := VAL(EF_BANK->MFO_PS)
+               FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                     EF_S_SC->SC))
+
+            ENDIF
+
+            EF_S_SC->(DBSEEK("спс" + KOD_VUAH__))
+            FOR_MB->N_P := "#" + NF + "# Пополнения по файлу " + NF + ;
+                  " для зарахування на рахунок " + IF(PR_NEWPL__, EF_S_SC->;
+                  SC_NEW, EF_S_SC->SC) + " згiдно реєстру вiд " + DTOC(;
+                  DAT_OD__) + " р."
+            FOR_MB->USER := FIO_OP__
+
+         ENDIF
+
+         IF SUM_US > 0.001
+
+            DBSELECTAR("for_mb")
+            EF_S_PR->(DBSEEK("пнк        "))
+            DBAPPEND()
+            FOR_MB->TIP := 6
+            FOR_MB->N_D := EF_SYS->N_D + 2
+            FOR_MB->VAL := "USD"
+            FOR_MB->DATE := DAT_OD__
+            FOR_MB->SUMMA := SUM_US
+            EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + "USD"))
+            FOR_MB->NAME_A := EF_S_SC->NAM_SC
+            FOR_MB->BANK_A := NAM_B__ + NAM_FIL__
+            FOR_MB->MFO_A := VAL(KOD_B__)
+            FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                  EF_S_SC->SC))
+            EF_S_SC->(DBSEEK("ксгUSD"))
+            FOR_MB->NAME_B := EF_S_SC->NAM_SC
+            FOR_MB->BANK_B := NAM_B__ + NAM_FIL__
+            FOR_MB->MFO_B := VAL(KOD_B__)
+            FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                  EF_S_SC->SC))
+            EF_S_SC->(DBSEEK("спсUSD"))
+            FOR_MB->N_P := "#" + NF + "# Пополнения по файлу " + NF + ;
+                  " для зарахування на рахунок " + IF(PR_NEWPL__, EF_S_SC->;
+                  SC_NEW, EF_S_SC->SC) + " згiдно реєстру вiд " + DTOC(;
+                  DAT_OD__) + " р."
+            FOR_MB->USER := FIO_OP__
+
+         ENDIF
+
+         MEMVAR->FNAME := "EF_ord" + SUBSTR(NF, 8, 1) + "." + KOD_OTD__
+         PRN_MEMORD(FNAME)
+         __COPYFILE(("") + FNAME, ("") + OUT_PATH__ + FNAME)
+         FILEVIEW(1, 0, 23, 79, FNAME, "@ Мемориальные ордера", {||;
+               PRINT_MEM()}, {"~Esc-~выход", "~F2-~печать", ;
+               "~F3-~экспорт в ОДБ"})
+
+         IF FILE(("") + FNAME)
+
+            DO WHILE .T.
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Для выхода необходимо распечатать", ;
+                     "файл с мемориальными ордерами !"}, {" Продолжить "})
+
+               IF PRINTYES()
+
+                  PRINTFILE(FNAME, .T.)
+                  FERASE(("") + FNAME)
+                  EXIT
+
+               ENDIF
+
+            ENDDO
+
+         ENDIF
+
+         IF EF_SYS->(RECLOCK(3))
+
+            EF_SYS->N_D := EF_SYS->N_D + 2
+            EF_SYS->(DBUNLOCK())
+
+         ENDIF
+
+      ENDIF
+
+      DBSELECTAR("ef_slip")
+      DBGOTOP()
+
+      DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+         IF EF_SLIP->FL_INS
+
+            EF_SLIP->FL_INS := .F.
+            EF_SLIP->SENDDATE := DAT_OD__
+            EF_SLIP->EXPORTFILE := NF
+            EF_SLIP->(DBGOTOP())
+
+         ELSE
+
+            EF_SLIP->(DBSKIP())
+
+         ENDIF
+
+      ENDDO
+
+      DIALOG(NIL, NIL, {"@Сообщение", "", "Пакет сформирован успешно !", ;
+            ""}, {" Выход "})
+
+   ELSE
+
+      DBSELECTAR("ef_slip")
+      DBGOTOP()
+
+      DO WHILE EMPTY(EF_SLIP->SENDDATE) .AND. .NOT. EOF()
+
+         EF_SLIP->FL_INS := .F.
+         EF_SLIP->(DBSKIP())
+
+      ENDDO
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось сформировать пакет !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRN_MEMORD
+   Params: FN
+   Return: Logical
+  Example: PRN_MEMORD(FN)
+  ..........................................................................
+*/
+
+STATIC FUNCTION PRN_MEMORD(FN)
+
+   LOCAL WIN, RW, I, NB := CHR(34) + ALIAS() + CHR(34)
+   LOCAL SUMPROP := ""
+   LOCAL CL, NN
+
+   SET(24, ("") + FN, .F.)
+   SET(25, 3)
+   SET(20, "PRINTER")
+   DBSELECTAR("for_mb")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      RW := PROW()
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"@")
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"x" + CHR(0))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"!"+CHR(4))
+      DEVPOS(RW + 0, 0)
+      DEVOUT(CHR(27)+"3"+CHR(25))
+      RW := RW + 3
+
+      FOR I := 1 TO 2
+
+         DEVPOS(RW + 0, 58)
+         DEVOUT(;
+               "--------------------------                         ---------------------";
+               )
+         DEVPOS(RW + 1, 16)
+         DEVOUT("М Е М О Р I А Л Ь Н И Й   О Р Д Е Р  N    !       " + STR(;
+               FOR_MB->N_D, 10) + ;
+               "       !                         !      0401009      !")
+         DEVPOS(RW + 2, 58)
+         DEVOUT(;
+               "--------------------------                         ---------------------";
+               )
+         CL := INT((130 - LEN(ZERO_STR(DAY(DAT_OD__), 2) + " " + CMONTHUI(;
+               DAT_OD__) + " " + STR(YEAR(DAT_OD__), 4) + " р.")) / 2)
+         DEVPOS(RW + 4, CL)
+         DEVOUT(ZERO_STR(DAY(DAT_OD__), 2) + " " + CMONTHUI(DAT_OD__) + ;
+               " " + STR(YEAR(DAT_OD__), 4) + " р.")
+         DEVPOS(RW + 6, 0)
+         DEVOUT("Платник   : " + FOR_MB->NAME_A)
+         DEVPOS(RW + 6, 90)
+         DEVOUT("Д Е Б Е Т              С у м а  ")
+         DEVPOS(RW + 7, 83)
+         DEVOUT("===============================================")
+         DEVPOS(RW + 8, 0)
+         DEVOUT(;
+               "----------------------------                                                       !                      !                      !";
+               )
+         DEVPOS(RW + 9, 0)
+         DEVOUT("! Код   " + STR(FOR_MB->OKPO_A, 9) + ;
+               "          !                                                       !    ";
+                + STR(FOR_MB->COUNT_A, 14) + "    !                      !")
+         DEVPOS(RW + 10, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------==================!                      !                      !";
+               )
+         DEVPOS(RW + 11, 65)
+         DEVOUT(;
+               "!                 !рах. N                !                      !";
+               )
+         DEVPOS(RW + 12, 0)
+         DEVOUT("Банк платника   : " + PADR(ALLTRIM(FOR_MB->BANK_A), 45))
+         DEVPOS(RW + 12, 65)
+         DEVOUT("! Код  " + STR(FOR_MB->MFO_A, 9) + ;
+               "  !======================!                      !")
+         DEVPOS(RW + 13, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------===================                      !                      !";
+               )
+         DEVPOS(RW + 14, 0)
+         DEVOUT("Одержувач : " + FOR_MB->NAME_B)
+         DEVPOS(RW + 14, 89)
+         DEVOUT("К Р Е Д И Т      !   " + SUBSTR(STR(FOR_MB->SUMMA, 16, 2), ;
+               1, 13) + "=" + SUBSTR(STR(FOR_MB->SUMMA, 16, 2), 15, 2) + ;
+               "   !")
+         DEVPOS(RW + 15, 83)
+         DEVOUT("=======================!                      !")
+         DEVPOS(RW + 16, 0)
+         DEVOUT(;
+               "----------------------------                                                       !                      !                      !";
+               )
+         DEVPOS(RW + 17, 0)
+         DEVOUT("! Код   " + STR(FOR_MB->OKPO_B, 9) + ;
+               "          !                                                       !                      !                      !";
+               )
+         DEVPOS(RW + 18, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------==================!   ";
+                + STR(FOR_MB->COUNT_B, 14) + ;
+               "     !                      !")
+         DEVPOS(RW + 19, 65)
+         DEVOUT(;
+               "!                 !                      !                      !";
+               )
+         DEVPOS(RW + 20, 0)
+         DEVOUT("Банк одержувача: " + PADR(ALLTRIM(FOR_MB->BANK_B), 45))
+         DEVPOS(RW + 20, 65)
+         DEVOUT("! Код  " + STR(FOR_MB->MFO_B, 9) + ;
+               "  ! сч. N                !                      !")
+         DEVPOS(RW + 21, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------=================================================================";
+               )
+
+         IF ALLTRIM(FOR_MB->VAL) == KOD_VUAH__
+
+            SUMPROP := SUM_PROP(FOR_MB->SUMMA, .T.)
+
+         ELSE
+
+            SUMPROP := SUM_PROP(FOR_MB->SUMMA, .T., FOR_MB->VAL, " ")
+
+         ENDIF
+
+         TOKENUPPER(@SUMPROP, 1)
+         DEVPOS(RW + 23, 0)
+         DEVOUT("Сума  прописом: ")
+
+         IF LEN(SUMPROP) <= 115
+
+            DEVPOS(RW + 23, 16)
+            DEVOUT(SUMPROP)
+
+         ELSEIF LEN(SUMPROP) <= 230
+
+            NN := 115
+
+            DO WHILE .T.
+
+               IF SUBSTR(SUMPROP, NN + 1, 1) = " "
+
+                  EXIT
+
+               ELSE
+
+                  --NN
+
+               ENDIF
+
+            ENDDO
+
+            DEVPOS(RW + 23, 16)
+            DEVOUT(SUBSTR(SUMPROP, 1, NN))
+            DEVPOS(RW + 24, 16)
+            DEVOUT(SUBSTR(SUMPROP, NN + 2))
+            ++RW
+
+         ENDIF
+
+         DEVPOS(RW + 24, 0)
+         DEVOUT(;
+               "----------------------------------------------------------------------------------------------------------------------------------";
+               )
+         DEVPOS(RW + 25, 0)
+         DEVOUT("Призначення платежу: " + ALLTRIM(FOR_MB->N_P))
+         DEVPOS(RW + 25, 119)
+         DEVOUT("Коди")
+         DEVPOS(RW + 26, 100)
+         DEVOUT("==============================")
+         DEVPOS(RW + 27, 100)
+         DEVOUT("! Вид опер. !                !")
+         DEVPOS(RW + 28, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 29, 100)
+         DEVOUT("!Призн плат.!                !")
+         DEVPOS(RW + 30, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 31, 100)
+         DEVOUT("!Строк плат.!                !")
+         DEVPOS(RW + 32, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 33, 100)
+         DEVOUT("!Очер. плат.!                !")
+         DEVPOS(RW + 34, 100)
+         DEVOUT("!-----------+----------------!")
+         DEVPOS(RW + 35, 100)
+         DEVOUT("!N гр. банку!                !")
+         DEVPOS(RW + 36, 100)
+         DEVOUT("==============================")
+         DEVPOS(RW + 38, 0)
+         DEVOUT(;
+               "Додаток    на _______________ сторiнках                                     Пiдписи";
+               )
+         DEVPOS(RW + 39, 0)
+         DEVOUT("")
+
+         IF I = 1
+
+            DEVPOS(RW + 40, 0)
+            DEVOUT(;
+                  "----- Линия разреза --------------------------------------------------------------------------------------------------------------";
+                  )
+
+         ENDIF
+
+         RW := RW + 47
+
+      NEXT
+
+      __EJECT()
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"9")
+      DEVPOS(PROW(), 0)
+      DEVOUT(CHR(27)+"@")
+      DBSKIP()
+
+   ENDDO
+
+   SET(24, "")
+   SET(20, "SCREEN")
+
+RETURN .T.
+

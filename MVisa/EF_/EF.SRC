@@ -1,0 +1,1324 @@
+STATIC _COLOR
+STATIC _DESKTOP
+STATIC DT_TM := "14.04.2000 15:24"
+STATIC EXE_SIZE := "1013760"
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ERROR1
+   Params: ER, B_ERR, NB
+   Return: Variable
+  Example: ERROR1(ER, B_ERR, NB)
+  ..........................................................................
+*/
+
+STATIC FUNCTION ERROR1(ER, B_ERR, NB)
+
+   IF ER:CANSUBSTIT()
+
+      IF ER:GENCODE() == 5
+
+         RETURN 0
+
+      ELSEIF ER:OPERATION() == "&" .AND. (EMPTY(ER:ARGS()) .OR. EMPTY(;
+            ER:ARGS[1]))
+
+         RETURN NIL
+
+      ELSEIF ER:OPERATION() == "EVAL" .AND. (EMPTY(ER:ARGS()) .OR. VALTYPE(;
+            ER:ARGS[1]) <> "B")
+
+         RETURN NIL
+
+      ENDIF
+
+   ENDIF
+
+   IF ER:CANDEFAULT()
+
+      IF ER:GENCODE() == 21 .AND. ER:OSCODE() == 32
+
+         NETERR(.T.)
+         RETURN .F.
+
+      ENDIF
+
+      IF ER:GENCODE() == 40
+
+         NETERR(.T.)
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   IF ER:CANRETRY()
+
+   ENDIF
+
+   ERRORBLOCK(B_ERR)
+   SET(7, "")
+   DBCLOSEALL()
+   DIR_ALT("ERR", .T.)
+   SET(17, .F.)
+   SET(23, .F.)
+   QOUT()
+   QOUT("********")
+   QOUT(ER:CANDEFAULT(), ER:CANRETRY(), ER:CANSUBSTIT())
+   EVAL(B_ERR, ER, .T.)
+   QOUT()
+   DIR_ALT()
+   SET(20, "SCREEN")
+   ERROR(NIL, NIL, {"@ Ошибка !", "Произошла ошибка ", ;
+         "выполнения программы !", "Протокол ошибок ERR.TXT !"}, {;
+         " Выход "})
+   SETCOLOR("W/N")
+   SCROLL()
+   __QUIT()
+
+RETURN 
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_MAIN
+   Params: PASV, DOSTUP, KOD_K
+   Return: Nil
+  Example: EF_MAIN(PASV, DOSTUP, KOD_K)
+  ..........................................................................
+*/
+
+FUNCTION EF_MAIN(PASV, DOSTUP, KOD_K)
+
+   STATIC LUCK := "0"
+
+   LOCAL OLDS, OLDC, PR := "Комплекс программ "+CHR(34)+"МИНИ - ОТДЕЛЕНИЯ"+;
+         CHR(34)+" ~ПриватБанк~, (c)"
+
+   PUBLIC PR__ := CHARNOT(CHARSWAP(CHARMIRR(PR)))
+   PUBLIC DOSTUP_F__, PASV__
+   PUBLIC NAM_B__, POST_IND__, GOS__, OBL__, GOROD__, CITY__, KOD_B__
+   PUBLIC NAM_FIL__, KOD_OTD__, NAM_OTD__, KOD_OKPO__, PR_NEWPL__
+   PUBLIC DAT_OD__, DAT_PD__, FIO_OP__, KOD_KOMP__, PR_KAS__, PR_R_L__, ;
+         KVO_STR__
+   PUBLIC KOD_VUAH__, KOD_VUSD__, MIN_KUP__, NAM_OTD__, KOD_MAIL__, ;
+         PR_KAS__
+   PUBLIC REP_PATH__, KS_PATH__, CP_PATH__, CHKPLANR__, CHKPLANP__, ;
+         CH_KPL_T__, CH_KPL_K__
+   PUBLIC PUT_PATH__, AU_PATH__, MB_PATH__, VL_PATH__, KEY_PATH__, K_CR__
+   PUBLIC IN_PATH__, OUT_PATH__, DIR_KK__, DIR_VK__, DIR_AK__, PRC_CRED__
+   PUBLIC POS_PATH__, POS_FNAME_, N_SHEM__, POSE_PATH_, PR_POSE__, PR_BA__
+   PUBLIC LUCK__
+   PUBLIC CHKPLNRV__, CHKPLNPV__
+   PUBLIC CMVSLIP := 1210, CMVSLIP1 := 1211, CMVCASH := 1220, CMPCARD := ;
+         1230, CMKOMP := 1233, CMKOMP1 := 1234, CMKOMP2 := 1235, ;
+         CMCF_VPKTZ := 1231, CMCF_VPKTP := 1232, CMFIRM := 1300, CMMERCH ;
+         := 1400, CMEF_OPKTT := 2110, CMEF_OPKTF := 2120, CMEF_OPKTE := ;
+         2130, CMEF_OPKTS := 2131, CMEF_OPPOP := 2133, CMEF_OPRES := 2132, ;
+         CMEF_KPRES := 2134, CMEF_PPKTE := 2220, CMEF_PPKTS := 2221, ;
+         CMEF_PPKP := 2222, CMPOSEM := 2230, CMCF_F0015 := 3100, CMBUH := ;
+         3210, CMITPROVDA := 3200, CMEF_ZAKOD := 3300, CMOPLSL := 3400, ;
+         CMPRVDOC := 3500, CMPLRES := 3600, CMBUX_KOM := 3700, CMVEDFIRM ;
+         := 3800, CMVEDNOPL := 3900, CMSPRSC := 4100, CMSPRVIDCA := 4200, ;
+         CMSPRPR := 4300, CMSPRTR := 4900, CMSU2M := 4800, CMSVALT := 4950,;
+          CMADMREIND := 4400, CMADMMYIND := 4500, CMADMPACKB := 4600, ;
+         CMEF_NASTR := 4700, CMPLAT := 5001, CMSPRPL := 5002, CMSPRPOL := ;
+         5003, CMSPRTKP := 5004, CMTETRIS := 5000
+   MEMVAR->LUCK__ := LUCK
+   SETDATE(NNETSDATE(), ISAT())
+   SETTIME(NNETSTIME(), ISAT())
+
+   IF KBDTYPE() > 0
+
+      KBDSPEED(0, 0)
+
+   ENDIF
+
+   SET(32, "OFF")
+   SET(4, IF(__SETCENTU(), "dd.mm.yyyy", "dd.mm.yy"))
+   SET(4, "dd.mm.yyyy")
+   SET(28, "ON")
+   SET(11, "ON")
+   SET(8, "OFF")
+   MEMVAR->PR_BA__ := .F.
+   MEMVAR->KOD_KOMP__ := KOD_K
+   MEMVAR->PASV__ := PADR(PASV, 6)
+   MEMVAR->DOSTUP_F__ := DOSTUP
+   _DESKTOP := SAVESCREEN(0, 0, 24, 79)
+   _COLOR := SETCOLOR()
+
+   IF POINTROUTI()
+
+      SETCURSOR(0)
+
+      IF  .NOT. HIDDEN_OPE("ef_bank")
+
+         ERROR(NIL, NIL, {"@ Ошибка !", ;
+               "Невозможно открыть файл EF_BANK.DBF"}, {" Выход "})
+         SETCOLOR(_COLOR)
+         RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+         __QUIT()
+
+      ENDIF
+
+      MEMVAR->KOD_OTD__ := EF_BANK->BRANCH
+      MEMVAR->KOD_OKPO__ := EF_BANK->KOD_OKPO
+      MEMVAR->POST_IND__ := EF_BANK->POST_IND
+      MEMVAR->GOROD__ := EF_BANK->GOROD
+      MEMVAR->CITY__ := EF_BANK->CITY
+      MEMVAR->NAM_FIL__ := ALLTRIM(EF_BANK->NAM_FIL)
+      MEMVAR->NAM_B__ := ALLTRIM(EF_BANK->NAM_B)
+      MEMVAR->KOD_B__ := ALLTRIM(EF_BANK->KOD_B)
+      MEMVAR->PR_KAS__ := EF_BANK->PR_KAS
+
+      IF PR_BA__
+
+         MEMVAR->PR_KAS__ := "н"
+
+      ENDIF
+
+      MEMVAR->PRC_CRED__ := EF_BANK->PRC_CRED
+      MEMVAR->IN_PATH__ := ALLTRIM(EF_BANK->IN_PATH)
+      MEMVAR->OUT_PATH__ := ALLTRIM(EF_BANK->OUT_PATH)
+      MEMVAR->CP_PATH__ := ALLTRIM(EF_BANK->CP_PATH)
+      MEMVAR->REP_PATH__ := ALLTRIM(EF_BANK->REP_PATH)
+      MEMVAR->MB_PATH__ := ALLTRIM(EF_BANK->MB_PATH)
+      MEMVAR->VL_PATH__ := ALLTRIM(EF_BANK->VL_PATH)
+      MEMVAR->POSE_PATH_ := ALLTRIM(EF_BANK->POSE_PATH)
+      MEMVAR->PR_POSE__ := EF_BANK->PR_POSE
+      MEMVAR->POS_PATH__ := ALLTRIM(EF_BANK->POS_PATH)
+      MEMVAR->KOD_VUAH__ := EF_BANK->KOD_NAC
+      MEMVAR->KOD_VUSD__ := EF_BANK->KOD_VALT
+      MEMVAR->CHKPLANR__ := EF_BANK->CH_KPLAN_R
+      MEMVAR->CHKPLANP__ := EF_BANK->CH_KPLAN_P
+      MEMVAR->CHKPLNRV__ := EF_BANK->CH_KPLNV_R
+      MEMVAR->CHKPLNPV__ := EF_BANK->CH_KPLNV_P
+      MEMVAR->CH_KPL_T__ := EF_BANK->CH_KPL_T
+      MEMVAR->CH_KPL_K__ := EF_BANK->CH_KPL_K
+      MEMVAR->N_SHEM__ := EF_BANK->N_SHEM
+      MEMVAR->PR_NEWPL__ := EF_BANK->PR_NEW_PL
+      MEMVAR->K_CR__ := EF_BANK->K_CR
+      MEMVAR->KVO_STR__ := EF_BANK->KVO_STR
+      MEMVAR->PR_R_L__ := EF_BANK->PR_R_L
+
+      IF  .NOT. HIDDEN_OPE("ps_s_pas", .F., 3, DIR_AK__)
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть PS_S_PAS.DBF"}, {;
+               " Выход "})
+         SETCOLOR(_COLOR)
+         RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+         __QUIT()
+
+      ENDIF
+
+      IF PS_S_PAS->(DBSEEK(CRYPT(PASV__, PR__)))
+
+         MEMVAR->FIO_OP__ := CRYPT(PS_S_PAS->FIO_OP, PR__)
+         DBCLOSEALL()
+
+      ELSE
+
+         DBCLOSEALL()
+         SETCOLOR(_COLOR)
+         RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+         __QUIT()
+
+      ENDIF
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Невозможно запустить комплекс !"}, {;
+            " Выход "})
+      SETCOLOR(_COLOR)
+      RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+      __QUIT()
+
+   ENDIF
+
+   DBCLOSEALL()
+   SETCOLOR("w/b")
+   DISPBOX(0, 0, 24, 79, REPLICATE("▓", 10))
+   SETCOLOR("b/w")
+   DEVPOS(0, 0)
+   DEVOUT(REPLICATE(" ", 80))
+   MEMVAR->COLORS[41] := 2
+   TIMEWAIT(600)
+   MENU({0, 0, "z", " ~Данные ", CHECK(1), " Работа с данными ", {2, 1, ;
+         "st", " ~Эквайринг       ", CHECK(2), NIL, CMVSLIP, "@s", NIL, ;
+         NIL, NIL, " ~Кредит-ваучер   ", CHECK(3), NIL, CMVSLIP1, "@s", ;
+         NIL, NIL, NIL, " ~Выдача наличных ", CHECK(4), NIL, CMVCASH, "@s",;
+          NIL, NIL, NIL, " ~Пополнения на карту ", IF(PR_BA__, .F., CHECK(;
+         5)), NIL, CMPCARD, "@s", NIL, NIL, NIL, ;
+         " ~Слипы по коммун. плат.", IF(PR_BA__, .F., CHECK(42)), NIL, ;
+         CMKOMP, " ~Charge Back ( Sale )  ", IF(PR_BA__, CHECK(2), CHECK(;
+         42)), NIL, CMKOMP1, " Charge ~Back ( Cash )  ", IF(PR_BA__, CHECK(;
+         2), CHECK(42)), NIL, CMKOMP2}, " ~Платежи граждан ", IF(PR_BA__, ;
+         .F., CHECK(33)), " Коммунальные и другие платежи ", {13, 1, "st", ;
+         " ~Ввод платежей", CHECK(34), NIL, CMPLAT, "@s", NIL, NIL, NIL, ;
+         " Справочник ~платежей      ", CHECK(35), NIL, CMSPRPL, ;
+         " Справочник п~олучателей   ", CHECK(36), NIL, CMSPRPOL, ;
+         " Справочник ~тарифов       ", CHECK(37), NIL, CMSPRTKP}, ;
+         " ~Почта ", CHECK(6), " Почтовые операции ", {21, 1, "st", ;
+         " ~Отправка пакетов ", CHECK(7), NIL, {13, 3, "st", ;
+         " на регистрацию/изменение ~точек ", CHECK(8), NIL, CMEF_OPKTT, ;
+         " на регистрацию/изменение ~фирм  ", CHECK(9), NIL, CMEF_OPKTF, ;
+         " по слипам в ~вышестоящий EF     ", CHECK(10), NIL, CMEF_OPKTE, ;
+         " ~коммун.платежи в вышестоящий EF ", CHECK(43), NIL, CMEF_KPRES, ;
+         " по слипам в ~ГБ                 ", CHECK(11), NIL, CMEF_OPKTS, ;
+         " пополнения в Г~Б                ", CHECK(11), NIL, CMEF_OPPOP, ;
+         " ~реестры платежей граждан в ГБ  ", CHECK(40), NIL, CMEF_OPRES}, ;
+         " ~Прием пакетов ", CHECK(12), NIL, {13, 4, "st", ;
+         " от ~нижестоящего EF ", CHECK(13), NIL, CMEF_PPKTE, ;
+         " ~коммун. платежей от EF ", CHECK(44), NIL, CMEF_PPKP, ;
+         " от ~ГБ              ", CHECK(14), NIL, CMEF_PPKTS}}, ;
+         " ~Завершение ОД ", CHECK(15), " Закрытие операционного дня ", {;
+         30, 1, "st", IF(N_SHEM__ = 3, " И~тговые расх. ордера", ;
+         " ~Бухгалтер"), IF(N_SHEM__ = 1, .F., CHECK(16)), NIL, CMBUH, ;
+         " ~Итоговые проводки ОД ", CHECK(17), NIL, CMITPROVDA, ;
+         " ~Ведомоть по слипам (сводная)", CHECK(41), NIL, CMVEDFIRM, ;
+         " ~Ведомоть неоплаченных слипов ", CHECK(41), NIL, CMVEDNOPL, ;
+         "@s", NIL, NIL, NIL, " ~Заключ. опер. ком.  плат.", CHECK(38), ;
+         NIL, CMBUX_KOM, " ~Платежные реестры        ", CHECK(39), NIL, ;
+         CMPLRES, "@s", NIL, NIL, NIL, " ~Закрытие ОД ", CHECK(20), NIL, ;
+         CMEF_ZAKOD}, " Сер~вис ", CHECK(21), " Обслуживание комплекса ", {;
+         49, 1, "st", " ~Торговые точки ", CHECK(22), NIL, CMMERCH, ;
+         " ~Фирмы ", CHECK(23), NIL, CMFIRM, " Справочник ~счетов ", CHECK(;
+         24), NIL, CMSPRSC, " Справочник ~видов карт ", CHECK(25), NIL, ;
+         CMSPRVIDCA, " Справочник ~проводок   ", CHECK(26), NIL, CMSPRPR, ;
+         " Справочник ~тарифов    ", CHECK(27), NIL, CMSPRTR, ;
+         " Справочник п~ользователей ", CHECK(28), NIL, CMSU2M, ;
+         " Справочник в~алют  ", CHECK(24), NIL, CMSVALT, "@s", NIL, NIL, ;
+         NIL, " ~Переиндексация всех БД ", CHECK(29), NIL, CMADMREIND, ;
+         " ~Выборочная переиндексация ", CHECK(30), NIL, CMADMMYIND, ;
+         " Па~ковка БД ", CHECK(31), NIL, CMADMPACKB, "@s", NIL, NIL, NIL, ;
+         " ~Настройка комплекса ", CHECK(32), NIL, CMEF_NASTR}})
+   ENDWORK()
+   WINCLOSEAL()
+   SETCOLOR(_COLOR)
+   RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+   __QUIT()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: POINTROUTI
+   Params: None.
+   Return: Logical
+  Example: POINTROUTI()
+  ..........................................................................
+*/
+
+STATIC FUNCTION POINTROUTI()
+
+   LOCAL DEV_BD_, DIR_BD_ := ALLTRIM(GETENV("DIR_BD"))
+
+   DEV_BD_ := ALLTRIM(GETENV("DEV_BD"))
+   MEMVAR->PUT_PATH__ := ALLTRIM(DEV_BD_) + ALLTRIM(DIR_BD_)
+
+   IF  .NOT. HIDDEN_OPE("spr_komp", .F., 3, PUT_PATH__)
+
+      ERROR(NIL, NIL, {"@ Внимание ! ", "Не найден файл "+CHR(34)+;
+            "SPR_KOMP.dbf"+CHR(34), "по пути "+CHR(34) + PUT_PATH__ + CHR(;
+            34)}, {" Выход из комплекса "})
+      RETURN .F.
+
+   ENDIF
+
+   IF  .NOT. PR_BA__
+
+      IF DBSEEK("KN")
+
+         MEMVAR->DIR_KK__ := ALLTRIM(SPR_KOMP->DEV_KOMP) + ALLTRIM(SPR_KOMP->;
+               DIR_KOMP) + "\"
+
+      ELSE
+
+         DBCLOSEALL()
+         ERROR(NIL, NIL, {"@ Внимание ! ", ;
+               "Не найдена запись по комплексу "+CHR(34)+"KN"+CHR(34), ;
+               "в файле "+CHR(34)+"SPR_KOMP.DBF"+CHR(34), "по пути "+CHR(;
+               34) + PUT_PATH__ + CHR(34)}, {" Выход из комплекса "})
+         RETURN .F.
+
+      ENDIF
+
+      IF DBSEEK("KV")
+
+         MEMVAR->DIR_VK__ := ALLTRIM(SPR_KOMP->DEV_KOMP) + ALLTRIM(SPR_KOMP->;
+               DIR_KOMP) + "\"
+
+      ELSE
+
+         DBCLOSEALL()
+         ERROR(NIL, NIL, {"@ Внимание ! ", ;
+               "Не найдена запись по комплексу "+CHR(34)+"KV"+CHR(34), ;
+               "в файле "+CHR(34)+"SPR_KOMP.DBF"+CHR(34), "по пути "+CHR(;
+               34) + PUT_PATH__ + CHR(34)}, {" Выход из комплекса "})
+         RETURN .F.
+
+      ENDIF
+
+   ENDIF
+
+   IF DBSEEK("AK")
+
+      MEMVAR->DIR_AK__ := ALLTRIM(SPR_KOMP->DEV_KOMP) + ALLTRIM(SPR_KOMP->;
+            DIR_KOMP) + "\"
+
+   ELSE
+
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание ! ", "Не найдена запись по комплексу "+;
+            CHR(34)+"AK"+CHR(34), "в файле "+CHR(34)+"SPR_KOMP.DBF"+CHR(34);
+            , "по пути "+CHR(34) + PUT_PATH__ + CHR(34)}, {;
+            " Выход из комплекса "})
+      RETURN .F.
+
+   ENDIF
+
+   DBCLOSEALL()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CHECK
+   Params: N
+   Return: Logical
+  Example: CHECK(N)
+  ..........................................................................
+*/
+
+FUNCTION CHECK(N)
+
+
+RETURN IF(SUBSTR(DOSTUP_F__, N, 1) = "1", .T., .F.)
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ENDWORK
+   Params: None.
+   Return: Nil
+  Example: ENDWORK()
+  ..........................................................................
+*/
+
+FUNCTION ENDWORK()
+
+   IF HIDDEN_OPE("ps_s_pol", .F., 3, DIR_AK__)
+
+      DBSELECTAR("ps_s_pol")
+
+      IF DBSEEK(CRYPT(PASV__, PR__) + CRYPT(KOD_KOMP__, PR__)) .AND. ;
+            RECLOCK(3)
+
+         PS_S_POL->P_WORK := .F.
+         PS_S_POL->LOGIN_ID := SPACE(15)
+         DBCOMMIT()
+         DBUNLOCK()
+
+      ENDIF
+
+   ENDIF
+
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: HANDLEEVEN
+   Params: KEY
+   Return: Nil
+  Example: HANDLEEVEN(KEY)
+  ..........................................................................
+*/
+
+FUNCTION HANDLEEVEN(KEY)
+
+   LOCAL OLDS_WIN, OLDCURS
+
+   IF KEY = CMINITMENU
+
+      NEWDATOD()
+      CHECKKURS("1")
+
+   ELSEIF KEY = CMVSLIP
+
+      VED_SLIP("01")
+
+   ELSEIF KEY = CMVSLIP1
+
+      VED_SLIP("09")
+
+   ELSEIF KEY = CMKOMP
+
+      KOM_SLIP("UP")
+
+   ELSEIF KEY = CMKOMP1
+
+      KOM_SLIP("CB")
+
+   ELSEIF KEY = CMKOMP2
+
+      KOM_SLIP("CC")
+
+   ELSEIF KEY = CMVCASH
+
+      VED_CASH()
+
+   ELSEIF KEY = CMPCARD
+
+      VED_POPOLN()
+
+   ELSEIF KEY = CMFIRM
+
+      EF_FIRM()
+
+   ELSEIF KEY = CMMERCH
+
+      EF_MERCH()
+
+   ELSEIF KEY = CMEF_OPKTT
+
+      EF_OPKTT()
+
+   ELSEIF KEY = CMEF_OPKTF
+
+      EF_OPKTF()
+
+   ELSEIF KEY = CMEF_OPKTE
+
+      EF_OPKTE()
+
+   ELSEIF KEY = CMEF_OPKTS
+
+      EF_OPKTS(.T.)
+
+   ELSEIF KEY = CMEF_OPPOP
+
+      EF_OPKTS(.F.)
+
+   ELSEIF KEY = CMEF_OPRES
+
+      EF_OPRES()
+
+   ELSEIF KEY = CMEF_KPRES
+
+      EF_KPRES()
+
+   ELSEIF KEY = CMEF_PPKP
+
+      EF_PPKP()
+
+   ELSEIF KEY = CMEF_PPKTE
+
+      EF_PPKTE()
+
+   ELSEIF KEY = CMEF_PPKTS
+
+      EF_PPKTS()
+
+   ELSEIF KEY = CMSPRSC
+
+      SPRSC()
+
+   ELSEIF KEY = CMSPRPR
+
+      SPRPROV()
+
+   ELSEIF KEY = CMSPRTR
+
+      SPRTARIF()
+
+   ELSEIF KEY = CMSPRVIDCA
+
+      SPRVIDCARD()
+
+   ELSEIF KEY = CMPOSEM
+
+      POS_SLIP()
+
+   ELSEIF KEY = CMPLAT
+
+      EF_KPLAT()
+
+   ELSEIF KEY = CMVEDFIRM
+
+      EF_SVVED(.T.)
+
+   ELSEIF KEY = CMVEDNOPL
+
+      EF_SVVED(.F.)
+
+   ELSEIF KEY = CMSPRPL
+
+      EF_S_PL()
+
+   ELSEIF KEY = CMSPRPOL
+
+      EF_S_PPL()
+
+   ELSEIF KEY = CMSPRTKP
+
+      EF_S_TKP()
+
+   ELSEIF KEY = CMEF_ZAKOD
+
+      EF_ZAKOD()
+
+   ELSEIF KEY = CMBUX_KOM
+
+      EF_BUXKP()
+
+   ELSEIF KEY = CMPLRES
+
+      PLAT_REEST()
+
+   ELSEIF KEY = CMBUH
+
+      IF N_SHEM__ > 1
+
+         VED_BUH(N_SHEM__)
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@Внимание !", ;
+               "В данный момент схема выдачи наличных", CHR(34)+;
+               "Провод по кассе каждой операции"+CHR(34)+" !"}, {" Выход "};
+               )
+
+      ENDIF
+
+   ELSEIF KEY = CMITPROVDA
+
+      ITPROVDAY()
+
+   ELSEIF KEY = CMOPLSL
+
+   ELSEIF KEY = CMSU2M
+
+      SPRUSER2M()
+
+   ELSEIF KEY = CMSVALT
+
+      SPRVALT()
+
+   ELSEIF KEY = CMPRVDOC
+
+   ELSEIF KEY = CMADMREIND
+
+      ADMREINDEX()
+
+   ELSEIF KEY = CMADMMYIND
+
+      ADMMYINDEX()
+
+   ELSEIF KEY = CMADMPACKB
+
+      ADMPACKBAS()
+
+   ELSEIF KEY = CMEF_NASTR
+
+      EF_NASTR()
+
+   ELSEIF KEY = CMNOCOMMAN
+
+      DIALOG(NIL, NIL, {"Извините, данная функция комплекса", ;
+            "еще не реализована !"}, {" Выход "})
+
+   ELSEIF KEY = CMNOACTIVE
+
+      SSCREEN(DT_TM, EXE_SIZE)
+
+   ELSEIF KEY = CMEXITMENU
+
+      CURMENUCLO(.T.)
+      MEMVAR->EXITMENU := .T.
+
+   ELSE
+
+      STANDART(KEY)
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NEWDATOD
+   Params: None.
+   Return: Logical
+  Example: NEWDATOD()
+  ..........................................................................
+*/
+
+FUNCTION NEWDATOD()
+
+   LOCAL WIN1, KEY, NBUT
+
+   IF  .NOT. HIDDEN_OPE("ef_sys")
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не могу открыть EF_SYS.DBF"}, {;
+            " Выход "})
+      WINCLOSEAL()
+      SETCOLOR(_COLOR)
+      RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+      __QUIT()
+
+   ENDIF
+
+   MEMVAR->DAT_OD__ := EF_SYS->DAT_OD
+   MEMVAR->DAT_PD__ := EF_SYS->DAT_PD
+   DBCLOSEALL()
+   SETCOLOR("n/w, w+/b,,,w+/bg")
+   DIALOG(NIL, NIL, {"!   "+CHR(34)+"ЭКВАРИНГ ПЛАСТИКОВЫХ КАРТОЧЕК"+CHR(34);
+         +"    ", "(филиал банка)", "┌────────────────────────────────┐", ;
+         "│ Версия от     " + PADR(DT_TM, 16) + " │", ;
+         "│ размер ef_mo.exe: " + PADL(ALLTRIM(EXE_SIZE), 7) + " байт │", ;
+         "└────────────────────────────────┘", ;
+         "Текуший операционный день:", DTOC(DAT_OD__) + " г."}, {;
+         " Продолжить "})
+   COMMENT(SPACE(68) + "│" + DTOC(DAT_OD__) + " г.")
+   LENCOMMENT(68)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CHECKKURS
+   Params: FMENU
+   Return: Logical
+  Example: CHECKKURS(FMENU)
+  ..........................................................................
+*/
+
+FUNCTION CHECKKURS(FMENU)
+
+   LOCAL RET := .F.
+
+   IF  .NOT. HIDDEN_OPE({{"ef_s_kur"}, {"spr_valt", .F., 3, DIR_AK__}})
+
+      RETURN .F.
+
+   ENDIF
+
+   SPR_VALT->(DBGOTOP())
+
+   DO WHILE  .NOT. SPR_VALT->(EOF())
+
+      IF SPR_VALT->ABBREV == KOD_VUSD__
+
+         IF EF_S_KUR->(DBSEEK(SPR_VALT->ABBREV))
+
+            IF EF_S_KUR->DAT_KURS <> DAT_OD__
+
+               IF FMENU <> NIL
+
+                  ERROR(NIL, NIL, {"@ Внимание !", ;
+                        "Не найден курс для валюты " + SPR_VALT->ABBREV, ;
+                        "(" + ALLTRIM(SPR_VALT->NAM_V) + ") за " + DTOC(;
+                        DAT_OD__) + " г. !", ;
+                        "Вы должны ввести курсы на сегодня !"}, {" Выход "};
+                        )
+
+               ENDIF
+
+               STATUSOPT(" Выдача наличных ", NIL, .F.)
+               STATUSOPT(" Пополнения на карту ", NIL, .F.)
+               SPR_VALT->(DBCLOSEARE())
+               EF_S_KUR->(DBCLOSEARE())
+               RETURN .F.
+
+            ELSE
+
+               RET := .T.
+
+            ENDIF
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Внимание !", "Не найден курс для валюты " +;
+                   SPR_VALT->ABBREV, "(" + ALLTRIM(SPR_VALT->NAM_V) + ;
+                  ") за " + DTOC(DAT_OD__) + " г. !", ;
+                  "Вы должны ввести курсы на сегодня !"}, {" Выход "})
+            STATUSOPT(" Выдача наличных ", NIL, .F.)
+            STATUSOPT(" Пополнения на карту ", NIL, .F.)
+            SPR_VALT->(DBCLOSEARE())
+            EF_S_KUR->(DBCLOSEARE())
+            RETURN .F.
+
+         ENDIF
+
+      ENDIF
+
+      SPR_VALT->(DBSKIP())
+
+   ENDDO
+
+   SPR_VALT->(DBCLOSEARE())
+   EF_S_KUR->(DBCLOSEARE())
+
+   IF RET .AND. FMENU <> NIL
+
+      STATUSOPT(" Выдача наличных ", NIL, .T.)
+      STATUSOPT(" Пополнения на карту ", NIL, .T.)
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SSCREEN
+   Params: DT_TM, EXE_SIZE
+   Return: Nil
+  Example: SSCREEN(DT_TM, EXE_SIZE)
+  ..........................................................................
+*/
+
+FUNCTION SSCREEN(DT_TM, EXE_SIZE)
+
+   LOCAL WIN, OLDC := SETCOLOR("w/n")
+   LOCAL L1 := {"n/n", "b/n", "g/n", "bg/n", "r/n", "rb/n", "gr/n", ;
+         "w/n", "n+/n", "b+/n", "g+/n", "bg+/n", "r+/n", "rb+/n", "gr+/n", ;
+         "w+/n"}
+   LOCAL L2 := 1, L3 := 1, L4 := 4, L5 := 4, L6 := 0, L7 := 2
+   LOCAL L8 := {{3, 3}, {2, 2}, {1, 1}, {0, 0}}
+   LOCAL L9 :=  -1, L10 :=  -1
+   LOCAL L11 := MAXROW() - 4, L12 := MAXCOL() - 4
+   LOCAL L13 := 0, L14 := 7
+   LOCAL L15 := {{MAXROW() - 3, MAXCOL() - 3}, {MAXROW() - 2, ;
+         MAXCOL() - 2}, {MAXROW() - 1, MAXCOL() - 1}, {MAXROW(), MAXCOL()}}
+
+   WIN := WIN(0, 0, 24, 79, NIL, "n")
+
+   DO WHILE .T.
+
+      DISPBEGIN()
+      DEVPOS(L4, L5)
+      DEVOUT("███", L1[L7])
+      DEVPOS(L4 + 1, L5)
+      DEVOUT("███", L1[L7])
+      DEVPOS(L8[1, 1], L8[1, 2])
+      DEVOUT("▓▓▓", L1[L7])
+      DEVPOS(L8[1, 1] + 1, L8[1, 2])
+      DEVOUT("▓▓▓", L1[L7])
+      DEVPOS(L8[2, 1], L8[2, 2])
+      DEVOUT("▒▒▒", L1[L7])
+      DEVPOS(L8[2, 1] + 1, L8[2, 2])
+      DEVOUT("▒▒▒", L1[L7])
+      DEVPOS(L8[3, 1], L8[3, 2])
+      DEVOUT("░░░", L1[L7])
+      DEVPOS(L8[3, 1] + 1, L8[3, 2])
+      DEVOUT("░░░", L1[L7])
+      DEVPOS(L8[4, 1], L8[4, 2])
+      DEVOUT("   ", L1[L7])
+      DEVPOS(L8[4, 1] + 1, L8[4, 2])
+      DEVOUT("   ", L1[L7])
+      L8[4] := L8[3]
+      L8[3] := L8[2]
+      L8[2] := L8[1]
+      L8[1] := {L4, L5}
+      DEVPOS(L11, L12)
+      DEVOUT("███", L1[L14])
+      DEVPOS(L11 + 1, L12)
+      DEVOUT("███", L1[L14])
+      DEVPOS(L15[1, 1], L15[1, 2])
+      DEVOUT("▓▓▓", L1[L14])
+      DEVPOS(L15[1, 1] + 1, L15[1, 2])
+      DEVOUT("▓▓▓", L1[L14])
+      DEVPOS(L15[2, 1], L15[2, 2])
+      DEVOUT("▒▒▒", L1[L14])
+      DEVPOS(L15[2, 1] + 1, L15[2, 2])
+      DEVOUT("▒▒▒", L1[L14])
+      DEVPOS(L15[3, 1], L15[3, 2])
+      DEVOUT("░░░", L1[L14])
+      DEVPOS(L15[3, 1] + 1, L15[3, 2])
+      DEVOUT("░░░", L1[L14])
+      DEVPOS(L15[4, 1], L15[4, 2])
+      DEVOUT("   ", L1[L14])
+      DEVPOS(L15[4, 1] + 1, L15[4, 2])
+      DEVOUT("   ", L1[L14])
+      L15[4] := L15[3]
+      L15[3] := L15[2]
+      L15[2] := L15[1]
+      L15[1] := {L11, L12}
+      DISPEND()
+      L4 := L4 + L2
+
+      IF L4 > MAXROW() - 1
+
+         L2 := -1
+
+      ENDIF
+
+      IF L4 < 1
+
+         L2 := 1
+
+      ENDIF
+
+      L5 := L5 + L3
+
+      IF L5 > MAXCOL() - 1
+
+         L3 := -1
+
+      ENDIF
+
+      IF L5 < 1
+
+         L3 := 1
+
+      ENDIF
+
+      L11 := L11 + L9
+
+      IF L11 > MAXROW() - 1
+
+         L9 := -1
+
+      ENDIF
+
+      IF L11 < 1
+
+         L9 := 1
+
+      ENDIF
+
+      L12 := L12 + L10
+
+      IF L12 > MAXCOL() - 1
+
+         L10 := -1
+
+      ENDIF
+
+      IF L12 < 1
+
+         L10 := 1
+
+      ENDIF
+
+      IF INKEY(0.01) <> 0
+
+         EXIT
+
+      ENDIF
+
+      ++L6
+
+      IF L6 > 1000
+
+         L6 := 0
+         ++L5
+         ++L7
+
+         IF L7 > 16
+
+            L7 := 2
+
+         ENDIF
+
+      ENDIF
+
+      ++L13
+
+      IF L13 > 1000
+
+         L13 := 0
+         ++L12
+         ++L14
+
+         IF L14 > 16
+
+            L14 := 2
+
+         ENDIF
+
+      ENDIF
+
+   ENDDO
+
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: USERS
+   Params: None.
+   Return: Undefined
+  Example: USERS()
+  ..........................................................................
+*/
+
+FUNCTION USERS()
+
+   LOCAL FL := .F., MS := ARRAY(0)
+
+   IF  .NOT. HIDDEN_OPE({{"ps_s_pol", .F., 3, DIR_AK__}, {"ps_s_pas", .F., ;
+         3, DIR_AK__}})
+
+      DBCLOSEALL()
+      RETURN  .NOT. FL
+
+   ENDIF
+
+   DBSELECTAR("ps_s_pol")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF CRYPT(KOD_KOMP__, PR__) == PS_S_POL->KOD_KOMP
+
+         PS_S_PAS->(DBSEEK(PS_S_POL->PAROL))
+
+         IF PS_S_POL->P_WORK .AND. .NOT. CRYPT(PS_S_PAS->FIO_OP, PR__) == ;
+               FIO_OP__
+
+            FL := .T.
+            AADD(MS, " " + CRYPT(PS_S_PAS->FIO_OP, PR__) + " ")
+
+         ENDIF
+
+      ENDIF
+
+      DBSKIP()
+
+   ENDDO
+
+   DBCLOSEALL()
+
+   IF  .NOT. FL
+
+      RETURN FL
+
+   ENDIF
+
+   WBROWSER(NIL, NIL, {"@Пользователи в комплексе !"}, MS)
+
+RETURN FL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETKEYON
+   Params: None.
+   Return: Nil
+  Example: SETKEYON()
+  ..........................................................................
+*/
+
+FUNCTION SETKEYON()
+
+   SETKEY(-9, {|P,L,V|CLGET(P, L, V)})
+   SETKEY(27, {|P,L,V|CLGET(P, L, V)})
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLGET
+   Params: GETLIST
+   Return: Nil
+  Example: CLGET(GETLIST)
+  ..........................................................................
+*/
+
+FUNCTION CLGET(GETLIST)
+
+   READKILL(.T.)
+   GETLIST := {}
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETKEYOF
+   Params: None.
+   Return: Nil
+  Example: SETKEYOF()
+  ..........................................................................
+*/
+
+FUNCTION SETKEYOF()
+
+   SETKEY(-9, NIL)
+   SETKEY(27, NIL)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETKEYON1
+   Params: None.
+   Return: Logical
+  Example: SETKEYON1()
+  ..........................................................................
+*/
+
+FUNCTION SETKEYON1()
+
+   SETKEY(-9, {|P,L,V|CLGET(P, L, V)})
+   SETKEY(27, {|P,L,V|CLGET(P, L, V)})
+   SETKEY(-29, {|P,L,V|CLGET(P, L, V)})
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETKEYOF1
+   Params: None.
+   Return: Logical
+  Example: SETKEYOF1()
+  ..........................................................................
+*/
+
+FUNCTION SETKEYOF1()
+
+   SETKEY(-9, NIL)
+   SETKEY(27, NIL)
+   SETKEY(-29, NIL)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETKEYON2
+   Params: None.
+   Return: Logical
+  Example: SETKEYON2()
+  ..........................................................................
+*/
+
+FUNCTION SETKEYON2()
+
+   SETKEY(-9, {|P,L,V|CLGET(P, L, V)})
+   SETKEY(27, {|P,L,V|CLGET(P, L, V)})
+   SETKEY(-4, {|P,L,V|CLGET(P, L, V)})
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SETKEYOF2
+   Params: None.
+   Return: Logical
+  Example: SETKEYOF2()
+  ..........................................................................
+*/
+
+FUNCTION SETKEYOF2()
+
+   SETKEY(-9, NIL)
+   SETKEY(27, NIL)
+   SETKEY(-4, NIL)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: QUITMAIN
+   Params: None.
+   Return: Nil
+  Example: QUITMAIN()
+  ..........................................................................
+*/
+
+FUNCTION QUITMAIN()
+
+   HANDLEEVEN(CMEXITMENU)
+   DBCLOSEALL()
+   WINCLOSEAL()
+   SETCOLOR(_COLOR)
+   RESTSCREEN(0, 0, 24, 79, _DESKTOP)
+   __QUIT()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRNREADY
+   Params: NPORT, NSECONDS
+   Return: Logical
+  Example: PRNREADY(NPORT, NSECONDS)
+  ..........................................................................
+*/
+
+FUNCTION PRNREADY(NPORT, NSECONDS)
+
+   LOCAL I := SECONDS()
+
+   DO WHILE  .NOT. PRINTREADY(NPORT) .AND. SECONDS() - I <= NSECONDS
+
+   ENDDO
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CLOSEAREA
+   Params: MS_AREA
+   Return: Nil
+  Example: CLOSEAREA(MS_AREA)
+  ..........................................................................
+*/
+
+FUNCTION CLOSEAREA(MS_AREA)
+
+   LOCAL I
+
+   FOR I := 1 TO LEN(MS_AREA)
+
+      IF SELECT(MS_AREA[I]) > 0
+
+         (MS_AREA[I])->(DBCLOSEARE())
+
+      ENDIF
+
+   NEXT
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: DIR_ALT
+   Params: DCT, ADD
+   Return: Logical
+  Example: DIR_ALT(DCT, ADD)
+  ..........................................................................
+*/
+
+FUNCTION DIR_ALT(DCT, ADD)
+
+   IF DCT == NIL
+
+      SET(17, .T.)
+      SET(19, "")
+
+   ELSEIF VALTYPE(DCT) == "L"
+
+      SET(17,  .NOT. DCT)
+      SET(18, DCT)
+
+   ELSE
+
+      SET(19, DCT, ADD)
+      SET(23, .F.)
+      DIR_ALT(.T.)
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MXTOC
+   Params: EX
+   Return: String
+  Example: MXTOC(EX)
+  ..........................................................................
+*/
+
+FUNCTION MXTOC(EX)
+
+   LOCAL TY := VALTYPE(EX)
+
+
+RETURN IF(TY == "C" .OR. TY == "M", EX, IF(TY == "N", STR(EX), IF(TY == ;
+      "D", DTOC(EX), IF(TY == "L", IF(EX, ".T.", ".F."), ""))))
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MYTRIM
+   Params: EXP
+   Return: Undefined
+  Example: MYTRIM(EXP)
+  ..........................................................................
+*/
+
+FUNCTION MYTRIM(EXP)
+
+
+RETURN ALLTRIM(MXTOC(EXP))
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: NUM_PAK
+   Params: TIP
+   Return: Undefined
+  Example: NUM_PAK(TIP)
+  ..........................................................................
+*/
+
+FUNCTION NUM_PAK(TIP)
+
+   LOCAL POLE, NUM, NN, MM
+
+   IF TIP = 1
+
+      POLE := "n_f"
+
+   ELSEIF TIP = 2
+
+      POLE := "n_t"
+
+   ELSEIF TIP = 4
+
+      POLE := "n_r"
+
+   ELSEIF TIP = 3
+
+      POLE := "n_s"
+
+   ELSEIF TIP = 5
+
+      POLE := "n_p"
+
+   ENDIF
+
+   NN := EF_SYS->(FIELDGET(EF_SYS->(FIELDPOS(POLE))))
+   MM := NN + 1
+
+   IF MM = 58
+
+      MM := 97
+
+   ENDIF
+
+   NUM := CHR(MM)
+
+RETURN NUM
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: GETKURSVAL
+   Params: VAL_
+   Return: Nil
+  Example: GETKURSVAL(VAL_)
+  ..........................................................................
+*/
+
+FUNCTION GETKURSVAL(VAL_)
+
+   LOCAL RET, OLDAR := ALIAS()
+
+   IF  .NOT. HIDDEN_OPE("ef_s_kur")
+
+      ERROR(NIL, NIL, {"@ Ошибка !", ;
+            "Не могу открыть справочник валютных курсов !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. EF_S_KUR->(DBSEEK(VAL_))
+
+      ERROR(NIL, NIL, {"@ Внимание !", "Не найден курс для валюты " + VAL_ ;
+            + " !", "Вы должны перед операцией ввести курсы на сегодня", ;
+            "для всех валют из справочника SPR_VALT !"}, {" Выход "})
+      EF_S_KUR->(DBCLOSEARE())
+      DBSELECTAR(OLDAR)
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_S_KUR->DAT_KURS <> DAT_OD__
+
+      ERROR(NIL, NIL, {"@ Внимание !", "Курс для валюты " + VAL_, ;
+            "указан за " + DTOC(EF_S_KUR->DAT_KURS) + " г. !", ;
+            "Вы должны перед операцией ввести курсы на сегодня", ;
+            "для всех валют из справочника SPR_VALT !"}, {" Выход "})
+      EF_S_KUR->(DBCLOSEARE())
+      DBSELECTAR(OLDAR)
+      RETURN NIL
+
+   ENDIF
+
+   RET := EF_S_KUR->KUR_NBU
+   EF_S_KUR->(DBCLOSEARE())
+   DBSELECTAR(OLDAR)
+
+RETURN RET
+

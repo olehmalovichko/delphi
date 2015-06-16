@@ -1,0 +1,770 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: KOM_SLIP
+   Params: KOD
+   Return: Logical
+  Example: KOM_SLIP(KOD)
+  ..........................................................................
+*/
+
+FUNCTION KOM_SLIP(KOD)
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, ABROWSE, PPP
+
+   PRIVATE DESKTOP, NEW_REC, VYB := 5, DATN_, DATK_
+   PRIVATE BROWSE, COLUMN, LONG := .T., KOD_ := KOD
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~Alt-F10-~меню операций"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+   PRIVATE MS1_POPUP := {{" поиск по N слипа       ~F5~", .T.}, {"@s", .F.};
+         , {" выборка                ~F6~", .T.}, {;
+         " отмена выборки         ~F7~", .T.}}
+   PRIVATE MS3_POPUP := { -4, NIL,  -5,  -6}
+
+   IF  .NOT. AREA_OPEN({{"ef_merch"}, {"ef_sys"}, {"ef_head"}, {"cb_s_tc"},;
+          {"ef_s_sc"}, {"ef_s_pr"}, {"ef_slip"}})
+
+      DBCLOSEALL()
+      RETURN .F.
+
+   ENDIF
+
+   MEMVAR->DATN_ := DAT_OD__
+   MEMVAR->DATK_ := DAT_OD__
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   DBSELECTAR("ef_head")
+   DBSETORDER(3)
+   DBSELECTAR("ef_slip")
+   MEMVAR->DESKTOP := WIN(1, 0, 24, 79)
+   SETCOLOR("w+/w")
+   DISPBOX(0, 0, 22, 79, SINGLE)
+   CENTR(NIL, 0, " Слипы за " + DTOC(DAT_OD__))
+   MEMVAR->CFL := {"Pr_date", "No_slip"}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "ef_slip->")
+   MEMVAR->SEP := {"", SPACE(2), ""}
+   ABROWSE := CREATTBROW(3, 1, 21, 22, "Pr_date", {||CREATSTR(CAL, CFL, ;
+         SEP)})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+
+   DO WHILE LONG
+
+      IF VYB = 0
+
+         MEMVAR->IKEY_TOP := ""
+         MEMVAR->IKEY_BOT := ""
+         MEMVAR->INDEXBLOCK := ""
+
+      ELSEIF VYB = 1 .OR. VYB = 2 .OR. VYB = 5
+
+         MEMVAR->IKEY_TOP := KOD_ + DTOS(DATN_)
+         MEMVAR->IKEY_BOT := KOD_ + DTOS(DATK_)
+         MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 10) ;
+               >= IKEY_TOP .AND. SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 10) ;
+               <= IKEY_BOT}
+
+      ELSEIF VYB = 3
+
+         MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 8) ;
+               == IKEY_TOP}
+
+      ELSEIF VYB = 4
+
+         MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, LEN(;
+               IKEY_TOP)) >= IKEY_TOP .AND. SUBSTR((&(INDEXKEY(INDEXORD()));
+               ), 1, LEN(IKEY_TOP)) <= IKEY_BOT}
+
+      ENDIF
+
+      USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, ;
+            INDEXBLOCK, BL_PR_US)
+      SETCOLOR("w+/w")
+      SCRIO_1()
+      STATUSLINE(BOTIO_1)
+
+      IF VYB > 0
+
+         IF  .NOT. (VYB = 3 .OR. VYB = 5)
+
+            DBSEEK(IKEY_TOP, .T.)
+
+            IF SUBSTR((&(INDEXKEY(INDEXORD()))), 1, LEN(IKEY_TOP)) >= ;
+                  IKEY_TOP .AND. SUBSTR((&(INDEXKEY(INDEXORD()))), 1, LEN(;
+                  IKEY_TOP)) <= IKEY_BOT
+
+            ELSE
+
+               DBGOBOTTOM()
+               DBSKIP()
+
+            ENDIF
+
+         ELSE
+
+            DBSEEK(IKEY_TOP)
+
+         ENDIF
+
+      ENDIF
+
+      OBRIO_1()
+
+   ENDDO
+
+   DBCLOSEALL()
+   WINCLOSE(DESKTOP)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR("W+/W")
+   LOCAL AA, BB
+
+   EF_MERCH->(DBSEEK(EF_SLIP->MERCH))
+   DEVPOS(1, 43)
+   DEVOUTPICT(EF_SLIP->CODE, "99")
+
+   IF EF_SLIP->CODE == "01"
+
+      DEVPOS(1, 48)
+      DEVOUT("Slip           ")
+
+   ELSEIF EF_SLIP->CODE == "03"
+
+      DEVPOS(1, 48)
+      DEVOUT("Cash           ")
+
+   ELSEIF EF_SLIP->CODE == "UP"
+
+      DEVPOS(1, 48)
+      DEVOUT("Коммун. плат.  ")
+
+   ELSEIF EF_SLIP->CODE == "CB"
+
+      DEVPOS(1, 48)
+      DEVOUT("Charge Back ( Sale ) ")
+
+   ELSEIF EF_SLIP->CODE == "CC"
+
+      DEVPOS(1, 48)
+      DEVOUT("Charge Back ( Cash ) ")
+
+   ELSEIF EF_SLIP->CODE == "09"
+
+      DEVPOS(1, 48)
+      DEVOUT("Credit voucher ")
+
+   ENDIF
+
+   DEVPOS(2, 52)
+   DEVOUT(EF_SLIP->TRAN_DATE)
+   DEVPOS(4, 33)
+   DEVOUT(TRANSFORM(EF_SLIP->CH_NO, "@R 9999 9999 9999 9999 999"))
+   DEVPOS(4, 72)
+   DEVOUT(TRANSFORM(EF_SLIP->EXP_DATE, "@R 99/99"))
+   DEVPOS(6, 51)
+   DEVOUTPICT(EF_SLIP->E_NAME, "XXXXXXXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(8, 38)
+   DEVOUTPICT(EF_SLIP->MERCH, "99999999")
+   DEVPOS(8, 51)
+   DEVOUTPICT(EF_MERCH->MERCH_NAME, "XXXXXXXXXXXXXXXXXXXXXXXXX", "gr+/w")
+
+   IF EF_SLIP->CODE == "03"
+
+      DEVPOS(10, 25)
+      DEVOUT("Сумма вместе с процентами        ", "n/w")
+      DEVPOS(11, 25)
+      DEVOUT("Сумма наличных выданных на руки", "n/w")
+      DEVPOS(11, 60)
+      DEVOUTPICT(EF_SLIP->AMOUNT_H, "99999999.99")
+
+   ELSE
+
+      DEVPOS(10, 25)
+      DEVOUT("Сумма авторизации ( Всьго )      ", "n/w")
+      DEVPOS(11, 25)
+      DEVOUT("Сумма в вал. расч. с точкой(TOTAL)", "n/w")
+      DEVPOS(11, 60)
+      DEVOUTPICT(EF_SLIP->AMOUNT_M, "99999999.99")
+
+   ENDIF
+
+   DEVPOS(10, 60)
+   DEVOUTPICT(EF_SLIP->AMOUNT, "99999999.99")
+   DEVPOS(10, 73)
+   DEVOUTPICT(EF_SLIP->CURR, "XXX", "gr+/w")
+   DEVPOS(11, 73)
+   DEVOUTPICT(EF_SLIP->CURR_M, "XXX", "gr+/w")
+   DEVPOS(13, 43)
+   DEVOUTPICT(EF_SLIP->AUTH_NO, "NNNNNN")
+   DEVPOS(13, 56)
+   DEVOUTPICT(EF_SLIP->FIO_OPER, "XXXXXXXXXXXXXXXXXXXX")
+   DEVPOS(15, 55)
+   DEVOUT(EF_SLIP->SENDDATE)
+   DEVPOS(15, 67)
+   DEVOUTPICT(EF_SLIP->IMPORTFILE, "XXXXXXXX")
+   DEVPOS(16, 55)
+   DEVOUT(EF_SLIP->DAT_ACCPT)
+   DEVPOS(17, 55)
+   DEVOUT(EF_SLIP->DAT_A_OPL)
+   DEVPOS(18, 60)
+   DEVOUT(EF_SLIP->PS_DATE)
+   DEVPOS(19, 55)
+   DEVOUT(EF_SLIP->DAT_PAY)
+   DEVPOS(20, 50)
+   DEVOUTPICT(EF_SLIP->AMOUNT_V, "99999999.99")
+   DEVPOS(21, 50)
+   DEVOUTPICT(EF_SLIP->AMOUNT_FIL, "99999999.99")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Logical
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DISPBOX(0, 23, 23, 23, SINGLE)
+   DISPBOX(2, 0, 2, 23, SINGLE)
+   DISPBOX(14, 23, 14, 79, SINGLE)
+   DEVPOS(2, 23)
+   DEVOUT("┤")
+   DEVPOS(2, 0)
+   DEVOUT("├")
+   DEVPOS(22, 23)
+   DEVOUT("┴")
+   DEVPOS(14, 79)
+   DEVOUT("┤")
+   DEVPOS(14, 23)
+   DEVOUT("├")
+   SETCOLOR("n/w")
+   DEVPOS(1, 2)
+   DEVOUT("Дата ввода")
+   DEVPOS(1, 14)
+   DEVOUT("N слипа")
+   DEVPOS(1, 37)
+   DEVOUT("Тип")
+   DEVPOS(2, 33)
+   DEVOUT("Дата транзакции")
+   DEVPOS(4, 25)
+   DEVOUT("N карты")
+   DEVPOS(4, 57)
+   DEVOUT("Дата окончания")
+   DEVPOS(6, 25)
+   DEVOUT("Имя и фамилия владельца")
+   DEVPOS(8, 25)
+   DEVOUT("N мерчанта")
+   DEVPOS(13, 25)
+   DEVOUT("Код авторизации")
+   DEVPOS(15, 25)
+   DEVOUT("Дата отправки в проц. центр")
+   DEVPOS(16, 25)
+   DEVOUT("Дата принятия в проц. центре")
+   DEVPOS(17, 25)
+   DEVOUT("Дата разрешения оплаты")
+   DEVPOS(18, 25)
+   DEVOUT("Дата возмещения из головного банка")
+   DEVPOS(19, 25)
+   DEVOUT("Дата фактической оплаты")
+   DEVPOS(20, 25)
+   DEVOUT("Сумма возмещения точке")
+   DEVPOS(21, 25)
+   DEVOUT("Комиссия филиала")
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Logical
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE, NKEY, PPP, NEW_REC, V_ID_KL, DAT_END, NCHOICE, ACHOICE := {;
+         {" по дате ввода ", .T.}, {" по дате транзакции ", .T.}, {;
+         " по точке           ", .T.}, {" по состоянию слипов ", .T.}}
+
+   LMORE := .T.
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+         MEMVAR->LONG := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY = -39
+
+            NKEY := MENU_POPUP(MS1_POPUP, "Меню операций")
+            IF(EMPTY(NKEY), NIL, NKEY := MEMVAR->MS3_POPUP[NKEY])
+
+         ENDIF
+
+         IF NKEY == -4
+
+            IF MEMVAR->MS1_POPUP[1, 2] .AND. FIND_SLIP()
+
+               MEMVAR->IKEY_TOP := ""
+               MEMVAR->IKEY_BOT := ""
+               SETCOLOR("w+/w")
+               DISPBOX(0, 1, 0, 78, SINGLE)
+               CENTR(NIL, 0, " Все слипы ")
+               MEMVAR->VYB := 0
+               LMORE := .F.
+
+            ENDIF
+
+         ENDIF
+
+         IF NKEY == -5
+
+            IF MEMVAR->MS1_POPUP[3, 2]
+
+               NCHOICE := MENU_POPUP(ACHOICE, " Выборка ")
+
+               IF NCHOICE <> 0
+
+                  IF NCHOICE = 1 .OR. NCHOICE = 2
+
+                     IF VVOD_DAT(NCHOICE)
+
+                        MEMVAR->VYB := NCHOICE
+
+                     ENDIF
+
+                  ELSEIF NCHOICE = 3
+
+                     IF VYB_POINT()
+
+                        MEMVAR->VYB := 3
+
+                     ENDIF
+
+                  ELSEIF NCHOICE = 4 .AND. ZAPROS()
+
+                     MEMVAR->VYB := 4
+
+                  ENDIF
+
+                  LMORE := .F.
+
+               ENDIF
+
+            ENDIF
+
+            LMORE := .F.
+
+         ENDIF
+
+         IF NKEY == -6 .AND. MEMVAR->MS1_POPUP[4, 2]
+
+            MEMVAR->DATN_ := DAT_OD__
+            MEMVAR->DATK_ := DAT_OD__
+            MEMVAR->VYB := 5
+            SETCOLOR("w+/w")
+            DISPBOX(0, 1, 0, 78, SINGLE)
+            CENTR(NIL, 0, " Слипы за " + DTOC(DAT_OD__))
+            DBSETORDER(1)
+            LMORE := .F.
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FIND_SLIP
+   Params: None.
+   Return: Undefined
+  Example: FIND_SLIP()
+  ..........................................................................
+*/
+
+STATIC FUNCTION FIND_SLIP()
+
+   LOCAL REC := EF_SLIP->(RECNO()), RES := .T., OLDORD := INDEXORD()
+
+   DBSETORDER(2)
+   RES := STRFIND(3, 14, 7, "9", "FndCard")
+
+   IF  .NOT. RES
+
+      DISPBEGIN()
+      BROWSE:GOTOP()
+      REFRESH(BROWSE)
+      DBSETORDER(OLDORD)
+      EF_SLIP->(DBGOTO(REC))
+      REFRESH(BROWSE)
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+      DISPEND()
+
+   ELSE
+
+      DISPBEGIN()
+
+      IF EF_SLIP->(EOF())
+
+         RES := .F.
+         DBSETORDER(OLDORD)
+         EF_SLIP->(DBGOTO(REC))
+
+      ENDIF
+
+      REFRESH(BROWSE)
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+      DISPEND()
+
+   ENDIF
+
+
+RETURN RES
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_DAT
+   Params: KK
+   Return: Logical
+  Example: VVOD_DAT(KK)
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD_DAT(KK)
+
+   LOCAL KEY, RET
+
+   PRIVATE DAT1 := DAT_OD__, DAT2 := DAT_OD__
+   SETKEYOF()
+   KEY := GETWIN(NIL, NIL, {"@ Ввод ", IF(KK = 1, " Период ввода: ", ;
+         " Период транзакций: ")}, {" Дата начала ", "dat1", "99.99.9999", ;
+         10, " Дата конца  ", "dat2", "99.99.9999", 10}, {"F10", -9, ;
+         "Записать", "Esc", 27, "Отменить"})
+
+   IF KEY = 0 .OR. KEY = 2
+
+      RETURN .F.
+      RETURN 
+
+   ENDIF
+
+   MEMVAR->DATN_ := DAT1
+   MEMVAR->DATK_ := DAT2
+   SETCOLOR("w+/w")
+   DISPBOX(0, 1, 0, 78, SINGLE)
+
+   IF KK = 1
+
+      CENTR(NIL, 0, " Слипы введенные за " + DTOC(DAT1) + " - " + DTOC(;
+            DAT2))
+      DBSETORDER(1)
+
+   ELSE
+
+      CENTR(NIL, 0, " Транзакции за " + DTOC(DAT1) + " - " + DTOC(DAT2))
+      DBSETORDER(3)
+
+   ENDIF
+
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYB_POINT
+   Params: None.
+   Return: Logical
+  Example: VYB_POINT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYB_POINT()
+
+   LOCAL KEY, RET
+
+   PRIVATE MM := SPACE(8)
+   SETKEYOF()
+   KEY := GETWIN(NIL, NIL, {"@ Ввод ", " "}, {" Код мерчанта ", "mm", ;
+         "99999999", 8}, {"F10", -9, "Записать", "Esc", 27, "Отменить"})
+
+   IF KEY = 0 .OR. KEY = 2
+
+      RETURN .F.
+      RETURN 
+
+   ENDIF
+
+   IF EF_MERCH->(DBSEEK(MM))
+
+      MEMVAR->IKEY_TOP := MM
+      MEMVAR->IKEY_BOT := MM
+      SETCOLOR("w+/w")
+      DISPBOX(0, 1, 0, 78, SINGLE)
+      CENTR(NIL, 0, " Слипы от точки " + EF_MERCH->MERCH_NAME)
+      DBSETORDER(4)
+      RETURN .T.
+      RETURN 
+
+   ENDIF
+
+   ERROR(NIL, NIL, {"@ Ошибка !", "Такой точки ", ;
+         "в справочнике мерчантов нет !"}, {" Выход "})
+
+RETURN .F.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ZAPROS
+   Params: None.
+   Return: Undefined
+  Example: ZAPROS()
+  ..........................................................................
+*/
+
+STATIC FUNCTION ZAPROS()
+
+   LOCAL WIN, OLDC := SETCOLOR(), KEY, RET := .F., AA := ""
+   LOCAL FL_SGB := .T.
+   LOCAL FL_OKGB := .T.
+   LOCAL FL_OR := .T.
+   LOCAL FL_OPL := .T.
+   LOCAL FL_VOZ := .T.
+   LOCAL FL_OK := .T.
+   LOCAL MM := SPACE(8)
+
+   PRIVATE ABUT
+   SETCOLOR("w+/w")
+   WIN := WIN(7, 10, 16, 60, "d", "t")
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   CENTR(NIL, 0, " Выборка ")
+   DEVPOS(5, 10)
+   DEVOUT("Код мерчанта ")
+   MEMVAR->ABUT := BT_CREAT(2)
+   SETKEYON()
+
+   DO WHILE .T.
+
+      AADD(GETLIST, _CHECKBOXE(2, 3, "fl_sgb", NIL, NIL, NIL, "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_SGB) + ;
+            " Отпрален в Г.Б.  ", IF(VALTYPE(L) == "L", FL_SGB := L, ;
+            FL_SGB))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(3, 3, "fl_okgb", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_OKGB) + ;
+            " Принят в Г.Б.    ", IF(VALTYPE(L) == "L", FL_OKGB := L, ;
+            FL_OKGB))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(2, 25, "fl_or", NIL, NIL, NIL, "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_OR) + ;
+            " Оплата разрешена ", IF(VALTYPE(L) == "L", FL_OR := L, FL_OR));
+            }
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(3, 25, "fl_opl", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_OPL) + ;
+            " Оплата выполнена ", IF(VALTYPE(L) == "L", FL_OPL := L, ;
+            FL_OPL))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETPOS(5, 23)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, MM, MM := _1)}, "mm", ;
+            "99999999", NIL, NIL):DISPLAY())
+      ATAIL(GETLIST):COLORDISP(23)
+      ATAIL(GETLIST):READER := {|GET|_GETREADER(GET)}
+      ATAIL(GETLIST):CARGO := GETLIST
+      AADD(GETLIST, _BUTTON(7, 10, 1, ABUT, "aBut", "n/g,w+/g", "F10", ;
+            "Запрос", NIL, NIL, -9))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, "Запрос", IF(VALTYPE(L) == ;
+            "L", _ARRAY_(ABUT, 1, L), _ARRAY_(ABUT, 1)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " F10Запрос ")}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _BUTTON(7, 30, 2, ABUT, "aBut", "n/g,w+/g", "Esc", ;
+            "Выход", NIL, NIL, 27))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, "Выход", IF(VALTYPE(L) == ;
+            "L", _ARRAY_(ABUT, 2, L), _ARRAY_(ABUT, 2)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " EscВыход ")}
+      ATAIL(GETLIST):DISPLAY()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      KEY := LASTKEY()
+
+      IF KEY == 27 .OR. BT_SET(ABUT) == 2
+
+         RET := .F.
+         EXIT
+
+      ELSEIF KEY == -9 .OR. BT_SET(ABUT) == 1
+
+         IF EMPTY(MM) .OR. EF_MERCH->(DBSEEK(MM))
+
+            AA := IF(FL_SGB, "1", "0") + IF(FL_OKGB, "1", "0") + IF(FL_OR, ;
+                  "1", "0") + IF(FL_OPL, "1", "0")
+            MEMVAR->IKEY_TOP := AA + MM
+
+            IF EMPTY(MM)
+
+               MEMVAR->IKEY_BOT := AA + ALLTRIM("999999")
+
+            ELSE
+
+               MEMVAR->IKEY_BOT := AA + ALLTRIM(MM)
+
+            ENDIF
+
+            WSELECT(DESKTOP)
+            SETCOLOR("w+/w")
+            DISPBOX(0, 1, 0, 78, SINGLE)
+
+            IF  .NOT. EMPTY(MM)
+
+               CENTR(NIL, 0, " Слипы от точки " + EF_MERCH->MERCH_NAME)
+
+            ELSE
+
+               CENTR(NIL, 0, " Слипы ")
+
+            ENDIF
+
+            DBSETORDER(5)
+            RET := .T.
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Такой точки ", ;
+                  "в справочнике мерчантов нет !"}, {" Выход "})
+            LOOP
+            RET := .F.
+
+         ENDIF
+
+         RET := .T.
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   SETKEYOF()
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYB_FIRM
+   Params: None.
+   Return: Logical
+  Example: VYB_FIRM()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYB_FIRM()
+
+
+RETURN .F.
+

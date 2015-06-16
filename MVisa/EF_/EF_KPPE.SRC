@@ -1,0 +1,137 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_KPRES
+   Params: None.
+   Return: Nil
+  Example: EF_KPRES()
+  ..........................................................................
+*/
+
+FUNCTION EF_KPRES()
+
+   LOCAL REC, RES := .F., NF := ""
+   LOCAL HOST, WIN, NUM_P
+
+   IF  .NOT. AREA_OPEN({{"ef_jpkpl", NIL}, {"ef_post"}, {"ef_bank"}, {;
+         "ef_sys"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_SYS->FL_KOM
+
+      TONE(125, 3)
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", ;
+            "Отправкка платежей уже состоялась !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(EF_BANK->BRANCH) .OR. EMPTY(EF_BANK->KOD_PVN)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Заполните код Вашего подразделения", ;
+            "в настройке комплекса !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_sys")
+   NF := "N" + EF_BANK->BRANCH + ZERO_STR(DOY(DAT_OD__), 3) + "_." + ;
+         ALLTRIM(EF_BANK->KOD_PVN)
+
+   IF  .NOT. EF_JPKPL->(DBSEEK(DTOS(DAT_OD__)))
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Нет информации", ;
+            "за текущую операционную дату !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_jpkpl")
+   DBGOTOP()
+   __DBCOPYST(NF, {})
+   DBUSEAREA(.T., NIL, NF, "jpkpl", .F., .F.)
+   DBSELECTAR("ef_jpkpl")
+   DBGOTOP()
+   DBSEEK(DTOS(DAT_OD__))
+
+   DO WHILE DAT_BANK == DAT_OD__
+
+      IF JPKPL->(ADDREC(3))
+
+         JPKPL->KOD_VPL := EF_JPKPL->KOD_VPL
+         JPKPL->KOD_PL := EF_JPKPL->KOD_PL
+         JPKPL->KOD_POL := EF_JPKPL->KOD_POL
+         JPKPL->NUM_DOC := EF_JPKPL->NUM_DOC
+         JPKPL->DAT_BANK := EF_JPKPL->DAT_BANK
+         JPKPL->DAT_OPL := EF_JPKPL->DAT_OPL
+         JPKPL->SUMMA := EF_JPKPL->SUMMA
+         JPKPL->SUM_KOM := EF_JPKPL->SUM_KOM
+         JPKPL->NAM_PLAT := EF_JPKPL->NAM_PLAT
+         JPKPL->LS_PLAT := EF_JPKPL->LS_PLAT
+         JPKPL->NUM_TEL := EF_JPKPL->NUM_TEL
+         JPKPL->ADRES := EF_JPKPL->ADRES
+         JPKPL->FIO_OP := EF_JPKPL->FIO_OP
+         JPKPL->NUM_OTPR := EF_JPKPL->NUM_OTPR
+         JPKPL->DAT_OTPR := EF_JPKPL->DAT_OTPR
+         JPKPL->PR_OPL := EF_JPKPL->PR_OPL
+         JPKPL->PR_PK := EF_JPKPL->PR_PK
+         JPKPL->PR_TAR := EF_JPKPL->PR_TAR
+         JPKPL->PR_OTPR := EF_JPKPL->PR_OTPR
+         JPKPL->PR_KOM := EF_JPKPL->PR_KOM
+         JPKPL->KOD_PVN := EF_JPKPL->KOD_PVN
+         JPKPL->KOD_SOV := EF_JPKPL->KOD_SOV
+         JPKPL->PR_N_K := EF_JPKPL->PR_N_K
+         JPKPL->(DBCOMMIT())
+         JPKPL->(DBUNLOCK())
+
+      ENDIF
+
+      DBSELECTAR("ef_jpkpl")
+      DBSKIP()
+
+   ENDDO
+
+   DBSELECTAR("jpkpl")
+   DBCLOSEARE()
+   HOST := "pkzip -m " + OUT_PATH__ + NF + " " + NF
+   WSELECT(0)
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   DISPBOX(0, 0, 24, 79, "         ", "W/N")
+   S_RUN(HOST, -1, .T.)
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   FERASE(NF)
+
+   IF FILE(OUT_PATH__ + NF)
+
+      IF EF_POST->(ADDREC(3)) .AND. EF_SYS->(RECLOCK(3))
+
+         EF_POST->NAM_FILE := NF
+         EF_POST->DAT_POST := DAT_OD__
+         EF_POST->TIME_POST := TIME()
+         EF_POST->PR_V_I := .F.
+         EF_SYS->FL_KOM := .T.
+         EF_POST->(DBCOMMIT())
+         EF_POST->(DBUNLOCK())
+
+      ENDIF
+
+      __COPYFILE(OUT_PATH__ + NF, CP_PATH__ + NF)
+      DIALOG(NIL, NIL, {"@Сообщение", "", "Пакет сформирован успешно !", ;
+            ""}, {" Выход "})
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось сформировать пакет !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+
+   ENDIF
+
+   DBCLOSEALL()
+
+RETURN NIL
+

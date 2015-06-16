@@ -1,0 +1,531 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: MEM_ORD
+   Params: SUM, VAL, NUM, NAM, C_NO
+   Return: Variable
+  Example: MEM_ORD(SUM, VAL, NUM, NAM, C_NO)
+  ..........................................................................
+*/
+
+FUNCTION MEM_ORD(SUM, VAL, NUM, NAM, C_NO)
+
+   LOCAL OLDC := SETCOLOR(), OLDBASE := SELECT(), OLDREC := RECNO()
+   LOCAL NKEY := 0
+   LOCAL LMORE, DESKTOP, ABROWSE
+
+   PRIVATE BROWSE, COLUMN
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~F2-~ввод", "~F9-~печать"}
+   PRIVATE BOTIO_3 := {"~Esc-~выход", "~F9-~печать"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+   PRIVATE OLD_AREA := SELECT(), CF_KK_, NAM_KT_V, SC_KT_V, FL_PP
+   PRIVATE SUM_ := SUM, VAL_ := VAL, NUM_ := NUM, OST_ := SUM, NAM_ := NAM
+   PRIVATE C_NO_ := C_NO, RET := .F.
+   SET(4, "dd.mm.yyyy")
+   MEMVAR->IKEY_TOP := DTOS(DAT_OD__)
+   MEMVAR->IKEY_BOT := DTOS(DAT_OD__)
+   DBSELECTAR("ef_doc")
+   MEMVAR->CFL := {"num_doc", "dat_bank"}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "ef_doc->")
+   MEMVAR->SEP := {" ", "    ", "  "}
+   ABROWSE := CREATTBROW(4, 1, 21, 27, "num_doc", {||CREATSTR(CAL, CFL, ;
+         SEP)})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 8) == ;
+         IKEY_TOP}
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   MEMVAR->WIN := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 28, DOUBLE)
+   DISPBOX(0, 29, 22, 79, SINGLE)
+   SCRIO_1()
+
+   IF SUM_ < 0.009
+
+      STATUSLINE(BOTIO_3)
+
+   ELSE
+
+      STATUSLINE(BOTIO_1)
+
+   ENDIF
+
+   DBSEEK(IKEY_TOP)
+   OBRIO_1()
+   WINCLOSE(DESKTOP)
+   SET(4, "dd.mm.yyyy")
+   DBSELECTAR("ef_slip")
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL OSN := SPLIT(EF_DOC->OSN, 30)
+   LOCAL BANKKT := SPLIT(EF_DOC->BANK_KT, 30), BANKDT := SPLIT(EF_DOC->;
+         BANK_DT, 30)
+
+   SETCOLOR("w+/w")
+   DEVPOS(1, 60)
+   DEVOUTPICT(EF_DOC->SUMMA, "9999999999999.99")
+   DEVPOS(2, 60)
+   DEVOUTPICT(EF_DOC->DAT_KL, "99.99.9999")
+   DEVPOS(3, 44)
+   DEVOUT(IF(LEN(OSN) > 0, PADR(OSN[1], 30), SPACE(30)))
+   DEVPOS(4, 44)
+   DEVOUT(IF(LEN(OSN) > 1, PADR(OSN[2], 30), SPACE(30)))
+   DEVPOS(6, 44)
+   DEVOUTPICT(EF_DOC->NAM_DT, REPLICATE("X", 30))
+   DEVPOS(7, 44)
+   DEVOUTPICT(EF_DOC->SC_DT, REPLICATE("X", 14))
+   DEVPOS(8, 44)
+   DEVOUTPICT(EF_DOC->MFO_DT, "999999999")
+   DEVPOS(9, 44)
+   DEVOUT(IF(LEN(BANKDT) > 0, PADR(BANKDT[1], 30), SPACE(30)))
+   DEVPOS(10, 44)
+   DEVOUT(IF(LEN(BANKDT) > 1, PADR(BANKDT[2], 30), SPACE(30)))
+   DEVPOS(11, 44)
+   DEVOUTPICT(EF_DOC->OKPO_DT, REPLICATE("X", 8))
+   DEVPOS(12, 44)
+   DEVOUTPICT(EF_DOC->INDEX_DT, REPLICATE("X", 6))
+   DEVPOS(14, 44)
+   DEVOUTPICT(EF_DOC->NAM_KT, REPLICATE("X", 30))
+   DEVPOS(15, 44)
+   DEVOUTPICT(EF_DOC->SC_KT, REPLICATE("X", 14))
+   DEVPOS(16, 44)
+   DEVOUTPICT(EF_DOC->MFO_KT, "999999999")
+   DEVPOS(17, 44)
+   DEVOUT(IF(LEN(BANKKT) > 0, PADR(BANKKT[1], 30), SPACE(30)))
+   DEVPOS(18, 44)
+   DEVOUT(IF(LEN(BANKKT) > 1, PADR(BANKKT[2], 30), SPACE(30)))
+   DEVPOS(19, 44)
+   DEVOUTPICT(EF_DOC->OKPO_KT, REPLICATE("X", 8))
+   DEVPOS(20, 44)
+   DEVOUTPICT(EF_DOC->INDEX_KT, REPLICATE("X", 6))
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(3, 0)
+   DEVOUT("╟")
+   DEVPOS(3, 28)
+   DEVOUT("╢")
+   DEVPOS(3, 1)
+   DEVOUT(REPLICATE("─", 27))
+   SETCOLOR("n/w")
+   DEVPOS(1, 3)
+   DEVOUT("  Номер    Дата проводки")
+   DEVPOS(2, 3)
+   DEVOUT("документа    по банку")
+   DEVPOS(1, 32)
+   DEVOUT("Сумма документа           :")
+   DEVPOS(2, 32)
+   DEVOUT("Дата документа предприятия:")
+   DEVPOS(3, 32)
+   DEVOUT("Основание :")
+   DEVPOS(5, 29)
+   DEVOUT("├" + REPLICATE("─", 49) + "┤", "w+/w")
+   DEVPOS(5, 34)
+   DEVOUT(" Плательщик ", "gr+/w")
+   DEVPOS(6, 32)
+   DEVOUT("Плательщик:")
+   DEVPOS(7, 32)
+   DEVOUT("Счет      :")
+   DEVPOS(8, 32)
+   DEVOUT("МФО банка :")
+   DEVPOS(9, 32)
+   DEVOUT("Банк      :")
+   DEVPOS(11, 32)
+   DEVOUT("Код ОКПО  :")
+   DEVPOS(12, 32)
+   DEVOUT("Индекс    :")
+   DEVPOS(13, 29)
+   DEVOUT("├" + REPLICATE("─", 49) + "┤", "w+/w")
+   DEVPOS(13, 34)
+   DEVOUT(" Получатель ", "gr+/w")
+   DEVPOS(14, 32)
+   DEVOUT("Получатель:")
+   DEVPOS(15, 32)
+   DEVOUT("Счет      :")
+   DEVPOS(16, 32)
+   DEVOUT("МФО банка :")
+   DEVPOS(17, 32)
+   DEVOUT("Банк      :")
+   DEVPOS(19, 32)
+   DEVOUT("Код ОКПО  :")
+   DEVPOS(20, 32)
+   DEVOUT("Индекс    :")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(3)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+         IF OST_ > 0.001
+
+            MEMVAR->RET := .F.
+
+         ELSE
+
+            MEMVAR->RET := .T.
+
+         ENDIF
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -1
+
+            IF OST_ > 0.001
+
+               MEMVAR->FL_PP := DIALOG(NIL, NIL, {"Будет введено"}, {;
+                     " Платежное пор. ", " Мемор. ордер "}, 2)
+               MEMVAR->RET := VVOD_MEM()
+               BROWSE:REFRESHALL()
+
+            ENDIF
+
+         ENDIF
+
+         IF NKEY == -8 .AND. .NOT. EOF()
+
+            RECCOLOR("gr+/w")
+
+            IF EF_DOC->TIP_DOC = "л"
+
+               V_PV_PP()
+
+            ELSE
+
+               V_PV_MO()
+
+            ENDIF
+
+            RECCOLOR("w+/bg")
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_MEM
+   Params: None.
+   Return: Logical
+  Example: VVOD_MEM()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD_MEM()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL REC := MEMVAR->CUR_REC := RECNO(), DBERR := .F.
+
+   PRIVATE MAXSUM := 0, FL_PL := .T., FL_POL := .T.
+   PRIVATE NUM_DOC_V, DAT_KL_V, SUMMA_V, OSN_V
+   PRIVATE NAM_DT_V, BANK_DT_V, MFO_DT_V, SC_DT_V, INDEX_DT_V, OKPO_DT_V
+   PRIVATE NAM_KT_V, BANK_KT_V, MFO_KT_V, SC_KT_V, INDEX_KT_V, OKPO_KT_V
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := NEWRECY(BROWSE)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   STATUSLINE(BOTIO_2)
+
+   IF M > BROWSE:NBOTTOM()
+
+      SCROLL(BROWSE:NTOP(), BROWSE:NLEFT(), BROWSE:NBOTTOM(), ;
+            BROWSE:NRIGHT(), 1)
+      M := BROWSE:NBOTTOM()
+
+   ENDIF
+
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   COLORWIN2(M, BROWSE:NLEFT(), M, BROWSE:NRIGHT(), COLORFON)
+   MEMVAR->SUMMA_V := OST_
+   MEMVAR->NUM_DOC_V := 0
+   MEMVAR->DAT_KL_V := DAT_OD__
+   MEMVAR->OSN_V := PADR(ALLTRIM(EF_S_PR->NAM_PROV) + " " + C_NO_, 60)
+   MEMVAR->NAM_DT_V := SPACE(30)
+   MEMVAR->BANK_DT_V := SPACE(50)
+   MEMVAR->MFO_DT_V := SPACE(9)
+   MEMVAR->SC_DT_V := SPACE(14)
+   MEMVAR->INDEX_DT_V := SPACE(6)
+   MEMVAR->OKPO_DT_V := SPACE(8)
+   MEMVAR->NAM_KT_V := SPACE(30)
+   MEMVAR->BANK_KT_V := NAM_B__ + " " + NAM_FIL__
+   MEMVAR->MFO_KT_V := KOD_B__
+   MEMVAR->SC_KT_V := SPACE(14)
+   MEMVAR->INDEX_KT_V := POST_IND__
+   MEMVAR->OKPO_KT_V := KOD_OKPO__
+
+   IF VAL_ == KOD_VUAH__
+
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+      MEMVAR->SC_KT_V := EF_S_SC->SC_NEW
+      MEMVAR->NAM_KT_V := EF_S_SC->NAM_SC
+
+   ELSE
+
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUSD__))
+      MEMVAR->SC_KT_V := EF_S_SC->SC_NEW
+      MEMVAR->NAM_KT_V := EF_S_SC->NAM_SC
+
+   ENDIF
+
+   DEVPOS(M, 16)
+   DEVOUT(DTOC(DAT_OD__))
+   SAYS(4, 44, SPACE(30))
+   SAYS(3, 75, CHR(16))
+   SAYS(10, 44, SPACE(30))
+   SAYS(9, 75, CHR(16))
+   SAYS(18, 44, SPACE(30))
+   SAYS(17, 75, CHR(16))
+
+   DO WHILE .T.
+
+      SETPOS(2, 60)
+      AADD(GETLIST, __GET(NIL, "dat_kl_v", "99.99.9999", NIL, NIL):DISPLAY(;
+            ))
+      SETPOS(3, 44)
+      AADD(GETLIST, __GET(NIL, "osn_v", "@S30", NIL, NIL):DISPLAY())
+      SETPOS(6, 44)
+      AADD(GETLIST, __GET(NIL, "nam_dt_v", REPLICATE("X", 30), NIL, NIL);
+            :DISPLAY())
+      SETPOS(7, 44)
+      AADD(GETLIST, __GET(NIL, "sc_dt_v", REPLICATE("9", 14), NIL, NIL);
+            :DISPLAY())
+      SETPOS(8, 44)
+      AADD(GETLIST, __GET(NIL, "mfo_dt_v", "999999999", NIL, NIL):DISPLAY();
+            )
+      SETPOS(9, 44)
+      AADD(GETLIST, __GET(NIL, "bank_dt_v", "@S30", NIL, NIL):DISPLAY())
+      SETPOS(11, 44)
+      AADD(GETLIST, __GET(NIL, "okpo_dt_v", REPLICATE("9", 8), NIL, NIL);
+            :DISPLAY())
+      SETPOS(12, 44)
+      AADD(GETLIST, __GET(NIL, "index_dt_v", REPLICATE("9", 6), NIL, NIL);
+            :DISPLAY())
+      DEVPOS(1, 60)
+      DEVOUTPICT(SUMMA_V, "9999999999999.99")
+      DEVPOS(14, 44)
+      DEVOUTPICT(NAM_KT_V, REPLICATE("X", 30))
+      DEVPOS(15, 44)
+      DEVOUTPICT(SC_KT_V, REPLICATE("X", 14))
+      DEVPOS(16, 44)
+      DEVOUTPICT(MFO_KT_V, "999999999")
+      DEVPOS(17, 44)
+      DEVOUTPICT(BANK_KT_V, "@S30")
+      DEVPOS(19, 44)
+      DEVOUTPICT(OKPO_KT_V, REPLICATE("X", 8))
+      DEVPOS(20, 44)
+      DEVOUTPICT(INDEX_KT_V, REPLICATE("9", 6))
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         MEMVAR->CUR_REC := RECNO()
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   COLORWIN2(M, BROWSE:NLEFT() - 1, M, BROWSE:NRIGHT(), "w+/w")
+
+   IF KEY = -9
+
+      IF ADDREC(3) .AND. EF_SYS->(RECLOCK(3))
+
+         MEMVAR->NPP := EF_SYS->N_PP + 1
+
+         IF FL_PP = 1
+
+            EF_DOC->TIP_DOC := "л"
+
+         ELSE
+
+            EF_DOC->TIP_DOC := "м"
+
+         ENDIF
+
+         EF_DOC->VID_OP := "06"
+         EF_DOC->NUM_DOC := NPP
+         EF_DOC->DAT_KL := DAT_KL_V
+         EF_DOC->DAT_BANK := DAT_OD__
+         EF_DOC->SUMMA := SUMMA_V
+         EF_DOC->NAM_DT := NAM_DT_V
+         EF_DOC->BANK_DT := BANK_DT_V
+         EF_DOC->MFO_DT := MFO_DT_V
+         EF_DOC->SC_DT := SC_DT_V
+         EF_DOC->INDEX_DT := INDEX_DT_V
+         EF_DOC->OKPO_DT := OKPO_DT_V
+         EF_DOC->NAM_KT := NAM_KT_V
+         EF_DOC->BANK_KT := BANK_KT_V
+         EF_DOC->MFO_KT := MFO_KT_V
+         EF_DOC->SC_KT := SC_KT_V
+         EF_DOC->INDEX_KT := STR(INDEX_KT_V, 6)
+         EF_DOC->OKPO_KT := OKPO_KT_V
+         EF_DOC->OSN := OSN_V
+         EF_DOC->FIO_OP := FIO_OP__
+         EF_DOC->KOD_V := VAL_
+         EF_DOC->NO_SLIP := NUM_
+         EF_DOC->FL_INF := .T.
+         EF_SYS->N_PP := NPP
+         MEMVAR->OST_ := MEMVAR->OST_ - SUM_
+         DBCOMMITAL()
+         DBUNLOCKAL()
+
+      ELSE
+
+         DBUNLOCKAL()
+         DBSELECTAR("ef_doc")
+         DBGOTO(REC)
+         SETCOLOR(OLDCOLOR)
+         STATUSLINE(BOTIO_1)
+         RETURN .F.
+
+      ENDIF
+
+      RESTSCREEN(0, 0, 24, 79, WIN)
+
+   ELSEIF KEY = 27
+
+      RESTSCREEN(0, 0, 24, 79, WIN)
+      RETURN .F.
+
+   ENDIF
+
+   ++M
+   SETCOLOR(OLDC)
+
+RETURN .T.
+

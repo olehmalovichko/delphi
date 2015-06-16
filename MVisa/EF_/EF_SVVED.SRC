@@ -1,0 +1,462 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_SVVED
+   Params: FLAG
+   Return: Nil
+  Example: EF_SVVED(FLAG)
+  ..........................................................................
+*/
+
+FUNCTION EF_SVVED(FLAG)
+
+   LOCAL NKEY := 0, LMORE, ABROWSE, MS_BAZ := {}
+   LOCAL I
+
+   PRIVATE BROWSE, COLUMN, DESKTOP
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+
+   IF  .NOT. AREA_OPEN({{"ef_head"}, {"ef_merch"}, {"ef_slip"}, {"ef_bank"};
+         , {"ef_sys"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(EF_BANK->BRANCH)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Заполните код Вашего подразделения", ;
+            "в настройке комплекса !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_slip")
+   DBSETORDER(4)
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   DBSELECTAR("ef_head")
+   DBGOTOP()
+   VIPISKA(FLAG)
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: PRNVED
+   Params: FNAME
+   Return: Number
+  Example: PRNVED(FNAME)
+  ..........................................................................
+*/
+
+FUNCTION PRNVED(FNAME)
+
+   IF SCANCODE() = -1
+
+      IF PRINTYES()
+
+         PRINTFILE(FNAME, .T.)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN 0
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VIPISKA
+   Params: FLAG
+   Return: Variable
+  Example: VIPISKA(FLAG)
+  ..........................................................................
+*/
+
+STATIC FUNCTION VIPISKA(FLAG)
+
+   LOCAL FNAME, RW, KEY, ARR_F := {}, WIN, OLDC := SETCOLOR()
+
+   PRIVATE DAT_S := DAT_OD__, DAT_PO := DAT_OD__, SEK, BL, N_FILE := SPACE(;
+         12), LIN
+
+   IF FLAG
+
+      KEY := DIALOG(NIL, NIL, {"@Ввод", "Ведомость по дате"}, {;
+            "  Транзакции  ", "   Оплаты   "}, 1)
+
+      IF KEY = 0
+
+         RETURN .T.
+
+      ENDIF
+
+      IF KEY = 1
+
+         EF_SLIP->(DBSETORDER(4))
+         MEMVAR->SEK := {||EF_MERCH->MERCH + DTOS(DAT_S)}
+         MEMVAR->BL := {||EF_MERCH->MERCH == EF_SLIP->MERCH .AND. EF_SLIP->;
+               TRAN_DATE <= DAT_PO .AND. .NOT. EOF()}
+         MEMVAR->BL1 := {||.T.}
+         MEMVAR->STT := " по транзакциям "
+
+      ELSE
+
+         EF_SLIP->(DBSETORDER(6))
+         MEMVAR->SEK := {||EF_MERCH->MERCH + DTOS(DAT_S)}
+         MEMVAR->BL := {||EF_MERCH->MERCH == EF_SLIP->MERCH .AND. EF_SLIP->;
+               DAT_PAY <= DAT_PO .AND. .NOT. EOF()}
+         MEMVAR->BL1 := {||.T.}
+         MEMVAR->STT := " по оплате "
+
+      ENDIF
+
+      SETKEYON()
+      KEY := GETWIN(NIL, NIL, {"Введите период "}, {" с  ", "dat_s", ;
+            "99.99.9999", 10, " по ", "dat_po", "99.99.9999", 10}, {"F10", ;
+            -9, "Записать", "Esc", 27, "Отменить"})
+      SETKEYOF()
+
+      IF KEY = 2 .OR. LASTKEY() = 27
+
+         RETURN NIL
+
+      ENDIF
+
+   ELSE
+
+      EF_SLIP->(DBSETORDER(4))
+      MEMVAR->SEK := {||EF_MERCH->MERCH + DTOS(DAT_S)}
+      MEMVAR->BL := {||EF_MERCH->MERCH == EF_SLIP->MERCH .AND. EF_SLIP->;
+            TRAN_DATE <= DAT_PO .AND. .NOT. EOF()}
+      MEMVAR->BL1 := {||EMPTY(EF_SLIP->DAT_PAY)}
+      MEMVAR->STT := " не оплаченных слипов "
+      SETKEYON()
+      KEY := GETWIN(NIL, NIL, {"Введите период "}, {" с  ", "dat_s", ;
+            "99.99.9999", 10, " по ", "dat_po", "99.99.9999", 10}, {"F10", ;
+            -9, "Записать", "Esc", 27, "Отменить"})
+      SETKEYOF()
+
+      IF KEY = 2 .OR. LASTKEY() = 27
+
+         RETURN NIL
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 10, 15, 69, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, "Ждите, ... ")
+   CENTR(NIL, 3, " Формирование ведомости ", "gr+/w")
+   MEMVAR->LIN := INOTDEAD(4, 18)
+   DBSELECTAR("ef_merch")
+   DBSETORDER(1)
+   DBSELECTAR("ef_head")
+   DBGOTOP()
+
+   DO WHILE  .NOT. EOF()
+
+      IF EF_MERCH->(DBSEEK(EF_HEAD->HO_CODE))
+
+         DO WHILE EF_MERCH->HO_CODE == EF_HEAD->HO_CODE .AND. EF_MERCH->( ;
+               .NOT. EOF())
+
+            DBSELECTAR("ef_slip")
+            DBSEEK(EVAL(SEK), .T.)
+
+            DO WHILE EVAL(BL) .AND. EF_SLIP->( .NOT. EOF())
+
+               IF  .NOT. EF_SLIP->CODE == "CD" .AND. EVAL(BL1)
+
+                  AADD(ARR_F, {EF_HEAD->HO_CODE, EF_MERCH->MERCH})
+                  EXIT
+
+               ENDIF
+
+               EF_SLIP->(DBSKIP())
+
+            ENDDO
+
+            DBSELECTAR("ef_merch")
+            MEMVAR->LIN := INOTDEAD(LIN)
+            EF_MERCH->(DBSKIP())
+
+         ENDDO
+
+      ENDIF
+
+      DBSELECTAR("ef_head")
+      EF_HEAD->(DBSKIP())
+
+   ENDDO
+
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   FNAME := ZERO_STR(RANDOM(), 5) + ".bak"
+   SET(24, ("") + FNAME, .F.)
+   SET(20, "PRINTER")
+   RW := PROW()
+   MEMVAR->H_K := "@@@"
+   MEMVAR->KVO_ := 0
+   MEMVAR->S_SU_ := 0
+   MEMVAR->S_VU_ := 0
+   MEMVAR->S_KU_ := 0
+   MEMVAR->S_SD_ := 0
+   MEMVAR->S_VD_ := 0
+   MEMVAR->S_KD_ := 0
+
+   FOR I := 1 TO LEN(ARR_F)
+
+      IF H_K <> ARR_F[I, 1]
+
+         MEMVAR->H_K := ARR_F[I, 1]
+         EF_HEAD->(DBSEEK(ARR_F[I, 1]))
+         DEVPOS(++RW, 0)
+         DEVOUT(CHR(15))
+         DEVPOS(++RW, 34)
+         DEVOUT("В Ы П И С К А")
+         ++RW
+         DEVPOS(++RW, 30)
+         DEVOUT("по фирме "+CHR(34) + ALLTRIM(EF_HEAD->HEAD_OFICE) + CHR(34);
+               )
+         ++RW
+         DEVPOS(++RW, 20)
+         DEVOUT(STT + "с " + DTOC(DAT_S) + " по " + DTOC(DAT_PO) + " гг")
+         MEMVAR->KVO_SM := 0
+         MEMVAR->S_SMU := 0
+         MEMVAR->S_VMU := 0
+         MEMVAR->S_KMU := 0
+         MEMVAR->S_SMD := 0
+         MEMVAR->S_VMD := 0
+         MEMVAR->S_KMD := 0
+         MEMVAR->KVO_S := 0
+         MEMVAR->S_SU := 0
+         MEMVAR->S_VU := 0
+         MEMVAR->S_KU := 0
+         MEMVAR->S_SD := 0
+         MEMVAR->S_VD := 0
+         MEMVAR->S_KD := 0
+
+      ENDIF
+
+      DBSELECTAR("ef_merch")
+
+      IF DBSEEK(ARR_F[I, 2])
+
+         ++RW
+         ++RW
+         DEVPOS(++RW, 34)
+         DEVOUT("точка " + EF_MERCH->MERCH + " "+CHR(34) + ALLTRIM(EF_MERCH->;
+               MERCH_NAME) + CHR(34))
+         ++RW
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "================================================================================================================";
+               )
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "Дата транз.            N слипа        N карты          Сумма      Код      Сумма     Комиссия  Валюта ";
+               )
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "         Принято в ГБ                                  слипа     автор.  возмещения  Приватбанка     Статус    ";
+               )
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "----------------------------------------------------------------------------------------------------------------";
+               )
+         MEMVAR->KVO_SM := 0
+         MEMVAR->S_SMU := 0
+         MEMVAR->S_VMU := 0
+         MEMVAR->S_KMU := 0
+         MEMVAR->S_SMD := 0
+         MEMVAR->S_VMD := 0
+         MEMVAR->S_KMD := 0
+         DBSELECTAR("ef_slip")
+         DBSEEK(EVAL(SEK), .T.)
+
+         DO WHILE EVAL(BL)
+
+            IF  .NOT. EF_SLIP->CODE == "CD" .AND. EVAL(BL1)
+
+               MEMVAR->SS := IF(EF_SLIP->CODE == "03", EF_SLIP->AMOUNT, IF(;
+                     EMPTY(EF_SLIP->AMOUNT_M), EF_SLIP->AMOUNT, EF_SLIP->;
+                     AMOUNT_M))
+               MEMVAR->PP := ""
+               MEMVAR->PP := DTOC(EF_SLIP->TRAN_DATE) + " " + DTOC(DAT_ACCPT);
+                      + " " + STR(EF_SLIP->NO_SLIP, 10) + " " + EF_SLIP->;
+                     CH_NO + " " + STR(SS, 11, 2) + " " + " " + EF_SLIP->;
+                     AUTH_NO + " " + STR(EF_SLIP->AMOUNT_V, 11, 2) + " " + ;
+                     STR(SS - EF_SLIP->AMOUNT_V, 11, 2) + " " + EF_SLIP->;
+                     CURR_M + " "
+               ++MEMVAR->KVO_SM
+               ++MEMVAR->KVO_S
+               ++MEMVAR->KVO_
+
+               IF EF_SLIP->CURR == KOD_VUAH__
+
+               ENDIF
+
+               IF EF_SLIP->CURR_M == KOD_VUAH__
+
+                  MEMVAR->S_SMU := MEMVAR->S_SMU + SS
+                  MEMVAR->S_SU := MEMVAR->S_SU + SS
+                  MEMVAR->S_VMU := MEMVAR->S_VMU + EF_SLIP->AMOUNT_V
+                  MEMVAR->S_VU := MEMVAR->S_VU + EF_SLIP->AMOUNT_V
+                  MEMVAR->S_KMU := MEMVAR->S_KMU + (SS - EF_SLIP->AMOUNT_V)
+                  MEMVAR->S_KU := MEMVAR->S_KU + (SS - EF_SLIP->AMOUNT_V)
+                  MEMVAR->S_SU_ := MEMVAR->S_SU_ + SS
+                  MEMVAR->S_VU_ := MEMVAR->S_VU_ + EF_SLIP->AMOUNT_V
+                  MEMVAR->S_KU_ := MEMVAR->S_KU_ + (SS - EF_SLIP->AMOUNT_V)
+
+               ELSE
+
+                  MEMVAR->S_SMD := MEMVAR->S_SMD + SS
+                  MEMVAR->S_SD := MEMVAR->S_SD + SS
+                  MEMVAR->S_VMD := MEMVAR->S_VMD + EF_SLIP->AMOUNT_V
+                  MEMVAR->S_VD := MEMVAR->S_VD + EF_SLIP->AMOUNT_V
+                  MEMVAR->S_KMD := MEMVAR->S_KMD + (SS - EF_SLIP->AMOUNT_V)
+                  MEMVAR->S_KD := MEMVAR->S_KD + (SS - EF_SLIP->AMOUNT_V)
+                  MEMVAR->S_SD_ := MEMVAR->S_SD_ + SS
+                  MEMVAR->S_VD_ := MEMVAR->S_VD_ + EF_SLIP->AMOUNT_V
+                  MEMVAR->S_KD_ := MEMVAR->S_KD_ + (SS - EF_SLIP->AMOUNT_V)
+
+               ENDIF
+
+               IF  .NOT. EMPTY(EF_SLIP->DAT_PAY)
+
+                  MEMVAR->PP := PP + " оплачен " + DTOC(EF_SLIP->DAT_PAY) + ;
+                        " г."
+
+               ELSEIF  .NOT. EMPTY(EF_SLIP->DAT_A_OPL)
+
+                  MEMVAR->PP := PP + " оплата разрешена " + DTOC(EF_SLIP->;
+                        DAT_A_OPL) + " г."
+
+               ELSEIF  .NOT. EMPTY(EF_SLIP->DAT_ACCPT)
+
+                  MEMVAR->PP := PP + " принят в ГБ " + DTOC(EF_SLIP->;
+                        DAT_ACCPT) + " г."
+
+                  IF ALLTRIM(EF_SLIP->OPL_KEY) == "HOLD"
+
+                     MEMVAR->PP := PP + " " + "HOLD"
+
+                  ENDIF
+
+               ELSEIF  .NOT. EMPTY(EF_SLIP->PR_DATE)
+
+                  MEMVAR->PP := PP + " введен " + DTOC(EF_SLIP->PR_DATE) + ;
+                        " г."
+
+                  IF ALLTRIM(EF_SLIP->OPL_KEY) == "Забракован"
+
+                     MEMVAR->PP := PP + " " + "Забракован"
+
+                  ENDIF
+
+               ENDIF
+
+               DEVPOS(++RW, 0)
+               DEVOUT(PP)
+
+            ENDIF
+
+            DBSKIP()
+
+         ENDDO
+
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------------------------------------------------------";
+               )
+         DEVPOS(++RW, 0)
+         DEVOUT("Итого по точке                   | Сумма:            " + ;
+               STR(S_SMD, 11, 2) + "         " + STR(S_VMD, 11, 2) + " " + ;
+               STR(S_KMD, 11, 2) + " USD")
+         DEVPOS(++RW, 0)
+         DEVOUT("Количество слипов:      " + STR(KVO_SM, 7) + ;
+               "  |                   " + STR(S_SMU, 11, 2) + "         " +;
+                STR(S_VMU, 11, 2) + " " + STR(S_KMU, 11, 2) + " " + ;
+               KOD_VUAH__)
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "=================================================================================================================";
+               )
+
+      ENDIF
+
+      IF I + 1 > LEN(ARR_F) .OR. ARR_F[I + 1, 1] <> H_K
+
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "-----------------------------------------------------------------------------------------------------------------";
+               )
+         DEVPOS(++RW, 0)
+         DEVOUT("Итого по фирме                   | Сумма:            " + ;
+               STR(S_SD, 11, 2) + "         " + STR(S_VD, 11, 2) + " " + ;
+               STR(S_KD, 11, 2) + " USD")
+         DEVPOS(++RW, 0)
+         DEVOUT("Количество слипов:      " + STR(KVO_S, 7) + ;
+               "  |                   " + STR(S_SU, 11, 2) + "         " + ;
+               STR(S_VU, 11, 2) + " " + STR(S_KU, 11, 2) + " " + ;
+               KOD_VUAH__)
+         DEVPOS(++RW, 0)
+         DEVOUT(;
+               "=================================================================================================================";
+               )
+         DEVPOS(++RW, 0)
+         DEVOUT("")
+         DEVPOS(++RW, 0)
+         DEVOUT("")
+         DEVPOS(++RW, 0)
+         DEVOUT("")
+
+      ENDIF
+
+      SET(20, "SCREEN")
+      MEMVAR->LIN := INOTDEAD(LIN)
+      SET(20, "PRINTER")
+
+   NEXT
+
+   DEVPOS(++RW, 0)
+   DEVOUT(;
+         "-----------------------------------------------------------------------------------------------------------------";
+         )
+   DEVPOS(++RW, 0)
+   DEVOUT("Итого по филиалу                 | Сумма:            " + STR(;
+         S_SD_, 11, 2) + "         " + STR(S_VD_, 11, 2) + " " + STR(S_KD_,;
+          11, 2) + " USD")
+   DEVPOS(++RW, 0)
+   DEVOUT("Количество слипов:      " + STR(KVO_, 7) + ;
+         "  |                   " + STR(S_SU_, 11, 2) + "         " + STR(;
+         S_VU_, 11, 2) + " " + STR(S_KU_, 11, 2) + " " + KOD_VUAH__)
+   DEVPOS(++RW, 0)
+   DEVOUT(;
+         "=================================================================================================================";
+         )
+   SET(24, "")
+   SET(20, "SCREEN")
+   WINCLOSE(WIN)
+   KEY := GETWIN(NIL, NIL, {"@ Ведомость сформирована ", ;
+         " Сохранить в файле "}, {" Имя файла ", "n_file", "XXXXXXXXXXXX", ;
+         12}, {"F10", -9, " Запомнить ", "Esc", 27, "Отменить"})
+
+   IF KEY = 0 .OR. KEY = 2
+
+   ELSE
+
+      __COPYFILE(("") + FNAME, ("") + REP_PATH__ + ALLTRIM(N_FILE))
+
+   ENDIF
+
+   FERASE(FNAME)
+   DBSELECTAR("ef_head")
+
+RETURN NIL
+

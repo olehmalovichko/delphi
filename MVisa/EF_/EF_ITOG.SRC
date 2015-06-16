@@ -1,0 +1,911 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: ITPROVDAY
+   Params: None.
+   Return: Variable
+  Example: ITPROVDAY()
+  ..........................................................................
+*/
+
+FUNCTION ITPROVDAY()
+
+   LOCAL WIN, OLDC := SETCOLOR()
+   LOCAL KEY, RET, I := 0, J := 0, SC_TMP, ARR_ := {}
+
+   PRIVATE DATV := DAT_OD__, SCKASUSD, SCKASUAH, SC_KSUS, SC_KSUA
+   PRIVATE SCKRSUSD, SCKRSUAH, NMKRSUSD, NMKRSUAH, SUM_UA := 0, SUM_US := ;
+         0
+   PRIVATE MS := ARRAY(0), MS_I := ARRAY(0), MS_SALDO := ARRAY(0)
+   PRIVATE LIN, N_CARD, FIO_CARD, JJ, ARR_CH := {}
+   PRIVATE FNAME := REP_PATH__ + DTOS(DATV) + ".rpl"
+
+   IF  .NOT. AREA_OPEN({{"ef_prov"}, {"ef_s_sc"}, {"ef_s_pr"}, {"ef_sys"}, ;
+         {"ef_doc"}, {"ef_slip"}, {"ef_kasp"}, {"ef_jpkpl"}, {"ef_s_gpl"}, ;
+         {"ef_bank"}, {"for_mb", .T.}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EF_SYS->FL_IPD_V .AND. EF_SYS->FL_IPD_N
+
+      KEY := DIALOG(NIL, NIL, {"@ Внимание !", "СВОДНЫЕ ПРОВОДКИ ДНЯ", ;
+            "уже сформированы и отправлены в ОДБ"}, {"   Выйти   ", ;
+            " Продолжить "})
+
+      IF KEY <> 2
+
+         DBCLOSEALL()
+         RETURN NIL
+
+      ENDIF
+
+   ENDIF
+
+   IF EF_S_PR->(DBSEEK("пнк        "))
+
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+      MEMVAR->SC_KSUA := EF_S_SC->SC
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + "USD"))
+      MEMVAR->SC_KSUS := EF_S_SC->SC
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@Внимание !", "В справочнике проводок ", ;
+            "не найдена запись с кодом "+CHR(34)+"пнк"+CHR(34)+" "}, {;
+            " Выход "})
+      RETURN .T.
+
+   ENDIF
+
+   EF_DOC->(DBSETORDER(1))
+   EF_PROV->(DBSETORDER(3))
+   EF_S_SC->(DBSETORDER(1))
+   EF_KASP->(DBSETORDER(2))
+   EF_S_SC->(DBSEEK("кс " + KOD_VUAH__))
+   MEMVAR->SCKASUAH := EF_S_SC->SC
+   EF_S_SC->(DBSEEK("кс USD"))
+   MEMVAR->SCKASUSD := EF_S_SC->SC
+   EF_S_SC->(DBSETORDER(2))
+   SETCOLOR("w+/w")
+   WIN := WIN(10, 10, 15, 69, "d", "t")
+   SETCOLOR("n/w")
+   CENTR(NIL, 1, "Ждите, идет сборка проводок за день ... ")
+   CENTR(NIL, 3, " Сканирование базы проводок ef_PROV.DBF ", "gr+/w")
+   MEMVAR->LIN := INOTDEAD(4, 18)
+   EF_JPKPL->(DBSEEK(DTOS(DATV)))
+
+   DO WHILE EF_JPKPL->DAT_BANK == DATV .AND. EF_JPKPL->( .NOT. EOF())
+
+      IF  .NOT. EF_JPKPL->PR_N_K
+
+         EF_S_GPL->(DBSEEK(STR(EF_JPKPL->KOD_VPL, 3)))
+         MEMVAR->ZZZ := ASCAN(ARR_CH, {|X|X[1] == EF_S_GPL->CH_KPLAN})
+
+         IF ZZZ > 0
+
+            MEMVAR->ARR_CH[ZZZ, 2] := MEMVAR->ARR_CH[ZZZ, 2] + EF_JPKPL->;
+                  SUMMA
+
+         ELSE
+
+            AADD(ARR_CH, {EF_S_GPL->CH_KPLAN, EF_JPKPL->SUMMA})
+
+         ENDIF
+
+      ENDIF
+
+      EF_JPKPL->(DBSKIP())
+
+   ENDDO
+
+   EF_PROV->(DBSEEK(DTOS(DATV)))
+   DBSELECTAR("ef_prov")
+
+   DO WHILE EF_PROV->DAT_BANK == DATV .AND. .NOT. EOF()
+
+      IF  .NOT. EF_PROV->FL_INF
+
+         RET := ASCAN(MS, {|X|X[1] == EF_PROV->SC .AND. X[2] == EF_PROV->;
+               SC_KOR .AND. X[3] == EF_PROV->PR_DT_KT})
+
+         IF RET <> 0
+
+            MEMVAR->MS[RET, 4] := MEMVAR->MS[RET, 4] + EF_PROV->SUMMA
+
+         ELSE
+
+            AADD(MS, {EF_PROV->SC, EF_PROV->SC_KOR, EF_PROV->PR_DT_KT, ;
+                  EF_PROV->SUMMA, EF_PROV->VID_OP, IF( .NOT. EMPTY(EF_PROV->;
+                  VALT), EF_PROV->VALT, KOD_VUAH__), LEN(MS) + 1, SPACE(10),;
+                   ""})
+            RET := LEN(MS)
+
+         ENDIF
+
+         IF EF_PROV->PR_DT_KT == "к" .AND. EF_S_SC->(DBSEEK(SHABLON(EF_PROV->;
+               SC_KOR, SCKASUAH))) .AND. EF_PROV->SC == SC_KSUA
+
+            MEMVAR->SUM_UA := MEMVAR->SUM_UA + EF_PROV->SUMMA
+
+         ELSEIF EF_PROV->PR_DT_KT == "к" .AND. EF_S_SC->(DBSEEK(SHABLON(;
+               EF_PROV->SC_KOR, SCKASUSD))) .AND. EF_PROV->SC == SC_KSUS
+
+            MEMVAR->SUM_US := MEMVAR->SUM_US + EF_PROV->SUMMA
+
+         ENDIF
+
+      ENDIF
+
+      DBSKIP()
+      MEMVAR->LIN := INOTDEAD(LIN)
+
+   ENDDO
+
+   DBSELECTAR("for_mb")
+   __DBZAP()
+   DBSELECTAR("ef_doc")
+   DBSEEK(DTOS(DATV))
+
+   DO WHILE EF_DOC->DAT_BANK == DATV .AND. .NOT. EOF()
+
+      IF  .NOT. EF_DOC->SUMMA <= 0
+
+         IF  .NOT. EF_DOC->FL_INF
+
+            DBSELECTAR("for_mb")
+            DBAPPEND()
+            FOR_MB->TIP := 6
+            FOR_MB->N_D := EF_DOC->NUM_DOC
+            FOR_MB->VAL := EF_DOC->KOD_V
+            FOR_MB->DATE := EF_DOC->DAT_BANK
+            FOR_MB->SUMMA := EF_DOC->SUMMA
+            FOR_MB->NAME_A := EF_DOC->NAM_DT
+            FOR_MB->BANK_A := EF_DOC->BANK_DT
+            FOR_MB->MFO_A := VAL(EF_DOC->MFO_DT)
+            FOR_MB->COUNT_A := VAL(EF_DOC->SC_DT)
+            FOR_MB->NAME_B := EF_DOC->NAM_KT
+            FOR_MB->BANK_B := EF_DOC->BANK_KT
+            FOR_MB->MFO_B := VAL(EF_DOC->MFO_KT)
+            FOR_MB->COUNT_B := VAL(EF_DOC->SC_KT)
+            FOR_MB->N_P := EF_DOC->OSN
+            FOR_MB->USER := EF_DOC->FIO_OP
+            FOR_MB->OKPO_A := VAL(EF_DOC->OKPO_DT)
+            FOR_MB->OKPO_B := VAL(EF_DOC->OKPO_KT)
+            DBSELECTAR("ef_doc")
+
+         ELSEIF EF_DOC->KOD_V == KOD_VUAH__
+
+            MEMVAR->SUM_UA := MEMVAR->SUM_UA + EF_DOC->SUMMA
+
+         ELSEIF EF_DOC->KOD_V == KOD_VUSD__
+
+            MEMVAR->SUM_US := MEMVAR->SUM_US + EF_DOC->SUMMA
+
+         ENDIF
+
+      ENDIF
+
+      DBSKIP()
+      MEMVAR->LIN := INOTDEAD(LIN)
+
+   ENDDO
+
+   J := LEN(MS)
+   EF_S_SC->(DBSETORDER(1))
+
+   IF SUM_UA > 0.001
+
+      DBSELECTAR("for_mb")
+      DBAPPEND()
+      EF_S_PR->(DBSEEK("пнк        "))
+      FOR_MB->TIP := 6
+      FOR_MB->N_D := J + 1
+      FOR_MB->VAL := KOD_VUAH__
+      FOR_MB->DATE := DAT_OD__
+      FOR_MB->SUMMA := SUM_UA
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+      FOR_MB->NAME_A := EF_S_SC->NAM_SC
+      FOR_MB->BANK_A := NAM_B__ + NAM_FIL__
+      FOR_MB->MFO_A := VAL(KOD_B__)
+      FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(EF_S_SC->SC);
+            )
+
+      IF ALLTRIM(KOD_B__) == EF_BANK->MFO_PS
+
+         EF_S_SC->(DBSEEK("ксг" + KOD_VUAH__))
+         FOR_MB->NAME_B := EF_S_SC->NAM_SC
+         FOR_MB->BANK_B := NAM_B__ + NAM_FIL__
+         FOR_MB->MFO_B := VAL(KOD_B__)
+         FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(EF_S_SC->;
+               SC))
+
+      ELSE
+
+         EF_S_SC->(DBSEEK("спс" + KOD_VUAH__))
+         FOR_MB->NAME_B := EF_S_SC->NAM_SC
+         FOR_MB->BANK_B := "КБ "+CHR(34)+"Приватбанк"+CHR(34)
+         FOR_MB->MFO_B := VAL(EF_BANK->MFO_PS)
+         FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(EF_S_SC->;
+               SC))
+
+      ENDIF
+
+      EF_S_SC->(DBSEEK("спс" + KOD_VUAH__))
+      FOR_MB->N_P := "Для зарахування на рахунок " + IF(PR_NEWPL__, EF_S_SC->;
+            SC_NEW, EF_S_SC->SC) + " згiдно реєстру вiд " + DTOC(DAT_OD__) +;
+             " р."
+      FOR_MB->USER := FIO_OP__
+      FOR_MB->PR_INF := .T.
+
+   ENDIF
+
+   IF SUM_US > 0.001
+
+      DBSELECTAR("for_mb")
+      DBAPPEND()
+      EF_S_PR->(DBSEEK("пнк        "))
+      FOR_MB->TIP := 6
+      FOR_MB->N_D := J + 2
+      FOR_MB->VAL := "USD"
+      FOR_MB->DATE := DAT_OD__
+      FOR_MB->SUMMA := SUM_US
+      EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + "USD"))
+      FOR_MB->NAME_A := EF_S_SC->NAM_SC
+      FOR_MB->BANK_A := NAM_B__ + NAM_FIL__
+      FOR_MB->MFO_A := VAL(KOD_B__)
+      FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(EF_S_SC->SC);
+            )
+      EF_S_SC->(DBSEEK("ксгUSD"))
+      FOR_MB->NAME_B := EF_S_SC->NAM_SC
+      FOR_MB->BANK_B := NAM_B__ + NAM_FIL__
+      FOR_MB->MFO_B := VAL(KOD_B__)
+      FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(EF_S_SC->SC);
+            )
+      EF_S_SC->(DBSEEK("спсUSD"))
+      FOR_MB->N_P := "Для зарахування на рахунок " + IF(PR_NEWPL__, EF_S_SC->;
+            SC_NEW, EF_S_SC->SC) + " згiдно реєстру вiд " + DTOC(DAT_OD__) +;
+             " р."
+      FOR_MB->USER := FIO_OP__
+      FOR_MB->PR_INF := .T.
+      FOR_MB->OKPO_A := VAL(KOD_OKPO__)
+      FOR_MB->OKPO_B := VAL(KOD_OKPO__)
+
+   ENDIF
+
+   EF_S_SC->(DBSETORDER(2))
+
+   IF J == 0 .AND. FOR_MB->(LASTREC()) = 0
+
+      WINCLOSE(WIN)
+      SETCOLOR(OLDC)
+      DIALOG(NIL, NIL, {"@ Внимание !", "Проводок за " + DTOC(DATV) + ;
+            " г. по комплексу EF", "не было !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   ASORT(MS, NIL, NIL, {|X,Y|X[6] + X[1] + X[3] < Y[6] + Y[1] + Y[3]})
+   CENTR(NIL, 3, "Создание временной базы сводных проводок", "gr+/w")
+   MEMVAR->JJ := 0
+   DBSELECTAR("for_mb")
+
+   FOR I := 1 TO LEN(MS)
+
+      IF  .NOT. MEMVAR->MS[I, 4] <= 0
+
+         DBAPPEND()
+         FOR_MB->N_D := ++MEMVAR->JJ
+         FOR_MB->DATE := DATV
+         FOR_MB->SUMMA := MEMVAR->MS[I, 4]
+         FOR_MB->OKPO_A := VAL(KOD_OKPO__)
+         FOR_MB->OKPO_B := VAL(KOD_OKPO__)
+         FOR_MB->VAL := MEMVAR->MS[I, 6]
+         FOR_MB->USER := FIO_OP__
+         FOR_MB->SKP := MEMVAR->MS[I, 9]
+
+         IF MEMVAR->MS[I, 8] == SPACE(10)
+
+            FOR_MB->N_P := "Пiдсумкова проводка по комплексу "+CHR(34)+;
+                  "Эмиссия пластиковых карт (филиал)"+CHR(34)
+
+         ENDIF
+
+         IF MEMVAR->MS[I, 3] == "д"
+
+            FOR_MB->TIP := 4
+
+         ELSE
+
+            FOR_MB->TIP := 3
+
+         ENDIF
+
+         IF MEMVAR->MS[I, 3] == "д"
+
+            FOR_MB->BANK_A := NAM_B__
+            FOR_MB->BANK_B := NAM_B__
+            FOR_MB->MFO_A := VAL(KOD_B__)
+            FOR_MB->MFO_B := VAL(KOD_B__)
+
+            IF SHABLON(MEMVAR->MS[I, 2], SCKASUAH) == SCKASUAH
+
+               IF EF_S_SC->(DBSEEK(SHABLON(MEMVAR->MS[I, 2], SCKASUAH)))
+
+                  MEMVAR->MS[I, 9] := SUBSTR(MEMVAR->MS[I, 2], AT("##", ;
+                        SCKASUAH), 2)
+                  MEMVAR->MS[I, 2] := ATREPL("##", SCKASUAH, "00")
+                  FOR_MB->SKP := MEMVAR->MS[I, 9]
+                  FOR_MB->NAME_B := EF_S_SC->NAM_SC
+                  FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), ;
+                        VAL(MEMVAR->MS[I, 2]))
+
+               ELSE
+
+                  FOR_MB->NAME_B := ""
+                  FOR_MB->COUNT_B := 0
+
+               ENDIF
+
+            ELSEIF SHABLON(MEMVAR->MS[I, 2], SCKASUSD) == SCKASUSD
+
+               IF EF_S_SC->(DBSEEK(SHABLON(MEMVAR->MS[I, 2], SCKASUSD)))
+
+                  FOR_MB->NAME_B := EF_S_SC->NAM_SC
+                  FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), ;
+                        VAL(MEMVAR->MS[I, 2]))
+                  MEMVAR->MS[I, 9] := CHKPLNRV__
+                  FOR_MB->SKP := CHKPLNRV__
+
+               ELSE
+
+                  FOR_MB->NAME_B := ""
+                  FOR_MB->COUNT_B := 0
+
+               ENDIF
+
+            ENDIF
+
+            IF EF_S_SC->(DBSEEK(MEMVAR->MS[I, 1]))
+
+               FOR_MB->NAME_A := EF_S_SC->NAM_SC
+               FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                     MEMVAR->MS[I, 1]))
+
+            ELSE
+
+               FOR_MB->NAME_A := ""
+               FOR_MB->COUNT_A := 0
+
+            ENDIF
+
+         ELSEIF MEMVAR->MS[I, 3] == "к"
+
+            FOR_MB->BANK_A := NAM_B__
+            FOR_MB->BANK_B := NAM_B__
+            FOR_MB->MFO_A := VAL(KOD_B__)
+            FOR_MB->MFO_B := VAL(KOD_B__)
+
+            IF EF_S_SC->(DBSEEK(MEMVAR->MS[I, 1]))
+
+               FOR_MB->NAME_B := EF_S_SC->NAM_SC
+               FOR_MB->COUNT_B := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), VAL(;
+                     MEMVAR->MS[I, 1]))
+
+            ELSE
+
+               FOR_MB->NAME_B := ""
+               FOR_MB->COUNT_B := 0
+
+            ENDIF
+
+            IF SHABLON(MEMVAR->MS[I, 2], SCKASUAH) == SCKASUAH
+
+               IF EF_S_SC->(DBSEEK(SHABLON(MEMVAR->MS[I, 2], SCKASUAH)))
+
+                  MEMVAR->MS[I, 9] := SUBSTR(MEMVAR->MS[I, 2], AT("##", ;
+                        SCKASUAH), 2)
+                  MEMVAR->MS[I, 2] := ATREPL("##", SCKASUAH, "00")
+                  FOR_MB->SKP := MEMVAR->MS[I, 9]
+                  FOR_MB->NAME_A := EF_S_SC->NAM_SC
+                  FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), ;
+                        VAL(MEMVAR->MS[I, 2]))
+
+               ELSE
+
+                  FOR_MB->NAME_A := ""
+                  FOR_MB->COUNT_A := 0
+
+               ENDIF
+
+            ELSEIF SHABLON(MEMVAR->MS[I, 2], SCKASUSD) == SCKASUSD
+
+               IF EF_S_SC->(DBSEEK(SHABLON(MEMVAR->MS[I, 2], SCKASUSD)))
+
+                  FOR_MB->NAME_A := EF_S_SC->NAM_SC
+                  FOR_MB->COUNT_A := IF(PR_NEWPL__, VAL(EF_S_SC->SC_NEW), ;
+                        VAL(MEMVAR->MS[I, 2]))
+                  MEMVAR->MS[I, 9] := CHKPLNPV__
+                  FOR_MB->SKP := CHKPLNPV__
+
+               ELSE
+
+                  FOR_MB->NAME_A := ""
+                  FOR_MB->COUNT_A := 0
+
+               ENDIF
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+      MEMVAR->LIN := INOTDEAD(LIN)
+
+   NEXT
+
+   EF_DOC->(DBSETORDER(3))
+
+   IF EF_SLIP->(DBSEEK("CD" + DTOS(DAT_OD__)))
+
+      DO WHILE EF_SLIP->CODE == "CD" .AND. EF_SLIP->PR_DATE == DAT_OD__ ;
+            .AND. EF_SLIP->( .NOT. EOF())
+
+         IF EF_SLIP->WHOSE == "i" .OR. EF_KASP->(DBSEEK(DTOS(DAT_OD__) + STR(;
+               EF_SLIP->NO_SLIP, 10))) .AND. EF_KASP->PR_OPL == "о" .OR. ;
+               EF_DOC->(DBSEEK(DTOS(DAT_OD__) + STR(EF_SLIP->NO_SLIP, 10)))
+
+            AADD(ARR_, {EF_SLIP->CURR, EF_SLIP->CH_NO, EF_SLIP->NO_SLIP, ;
+                  EF_SLIP->AMOUNT})
+
+         ENDIF
+
+         EF_SLIP->(DBSKIP())
+
+      ENDDO
+
+   ENDIF
+
+   ASORT(ARR_, NIL, NIL, {|X,Y|X[1] + X[2] + STR(X[3], 10) < Y[1] + Y[2] + ;
+         STR(Y[3], 10)})
+
+   IF LEN(ARR_) > 0
+
+      MEMVAR->VV := ""
+      I := 1
+      SET(24, ("") + FNAME, .F.)
+      SET(20, "PRINTER")
+      MEMVAR->RW := PROW()
+
+      DO WHILE I <= LEN(ARR_)
+
+         IF VV <> ARR_[I, 1]
+
+            MEMVAR->VV := ARR_[I, 1]
+            MEMVAR->FLAG := .T.
+            MEMVAR->ITOG := 0
+            MEMVAR->KVO := 0
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("                     РЕЕСТР ")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("ПОПОЛНЕНИЕ СРЕДСТВ НА КАРТЫ  " + DTOC(DAT_OD__) + ;
+                  " г.")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("ОТ " + NAM_FIL__)
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("Валюта : " + VV)
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("===================================================")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("!      № карты      ! Номер чека !       Сумма    !")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("!-------------------+------------+----------------!")
+
+         ENDIF
+
+         DEVPOS(++MEMVAR->RW, 2)
+         DEVOUT("!" + ARR_[I, 2] + "! " + STR(ARR_[I, 3], 10) + " !" + STR(;
+               ARR_[I, 4], 16, 2) + "!")
+         MEMVAR->ITOG := MEMVAR->ITOG + ARR_[I, 4]
+         ++MEMVAR->KVO
+         ++I
+
+         IF (I > LEN(ARR_) .OR. VV <> ARR_[I, 1]) .AND. FLAG
+
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("!-------------------+------------+----------------!")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("! Итого :           !            !                !")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("! к-во  : " + STR(KVO, 6) + "    !            !" + STR(;
+                  ITOG, 16, 2) + "!")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("===================================================")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("Бухгалтер")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("           ___________________(__________________)")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("                                       ФИО")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+            DEVPOS(++MEMVAR->RW, 2)
+            DEVOUT("")
+
+         ENDIF
+
+      ENDDO
+
+      SET(24, "")
+      SET(20, "SCREEN")
+      DIALOG(NIL, NIL, {"@ Внимание !", "Сформирован файл "+CHR(34)+;
+            "Реестр поплнений"+CHR(34) + FNAME, ;
+            " не забудте отправить его в головной банк !"}, {" Выход "})
+
+   ENDIF
+
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+   KEY := 1
+
+   DO WHILE KEY <> 0
+
+      KEY := MENU_POPUP({{" ~П~роводки в Операционный день банка ", .T.}, {;
+            "@s", .F.}, {" ~С~водный кассовый журнал по приходу ", .T.}, {;
+            "@s", .F.}, {" С~в~одный кассовый журнал по расходу ", .T.}})
+
+      IF KEY = 1
+
+         PROV_MB()
+
+      ELSEIF KEY = 3
+
+         J_SV_PRIX()
+
+      ELSEIF KEY = 5
+
+         J_SV_RASX()
+
+      ENDIF
+
+   ENDDO
+
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SHABLON
+   Params: SC_, MASKA
+   Return: Undefined
+  Example: SHABLON(SC_, MASKA)
+  ..........................................................................
+*/
+
+FUNCTION SHABLON(SC_, MASKA)
+
+   LOCAL RET := SC_
+   LOCAL I
+
+   DO WHILE .T.
+
+      I := AT("#", MASKA)
+
+      IF I > 0
+
+         RET := POSCHAR(RET, "#", I)
+         MASKA := POSCHAR(MASKA, " ", I)
+
+      ELSE
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: J_SV_PRIX
+   Params: None.
+   Return: Nil
+  Example: J_SV_PRIX()
+  ..........................................................................
+*/
+
+FUNCTION J_SV_PRIX()
+
+   LOCAL WIN, RW, I, J, SUMNAT := 0, CL, JJ := 0, LONG := .T.
+   LOCAL FNAME := REP_PATH__ + DTOS(DATV) + ".kjp"
+
+   MEMVAR->KEY := DIALOG(NIL, NIL, {"Печать сводного кассового журнала", ;
+         "по приходу :"}, {"  Файл  ", " Принтер "})
+
+   IF KEY == 0 .OR. KEY == 2 .AND. .NOT. PRINTYES(1)
+
+      RETURN NIL
+
+   ENDIF
+
+   IF KEY = 1
+
+      SET(24, FNAME, .F.)
+
+   ENDIF
+
+   SET(25, 3)
+   SET(20, "PRINTER")
+   RW := PROW()
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"9")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"@")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"x" + CHR(0))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"3"+CHR(25))
+
+   FOR J := 1 TO 2
+
+      JJ := 0
+      SUMNAT := 0
+      MEMVAR->QQQ := ASCAN(MS, {|X|X[6] == IF(J = 1, KOD_VUAH__, "USD") ;
+            .AND. X[3] == "к" .AND. X[5] == "03"})
+
+      IF QQQ > 0
+
+         RW := RW + 3
+         DEVPOS(RW + 1, 20)
+         DEVOUT("ЗВЕДЕНИЙ КАСОВИЙ ЖУРНАЛ ЗА ПРИБУТКАМИ")
+         CL := INT((80 - LEN("за " + DTOC(DATV) + " р.")) / 2)
+         DEVPOS(RW + 2, CL)
+         DEVOUT("за " + DTOC(DATV) + " р.")
+         DEVPOS(RW + 4, 3)
+         DEVOUT("  Д Е Б Е Т       К Р Е Д И Т   Символ    Сума(" + IF(J = ;
+               1, KOD_VUAH__, "USD") + ")      Примiтки  ")
+         DEVPOS(RW + 5, 1)
+         DEVOUT(;
+               "==========================================================================";
+               )
+         RW := RW + 6
+
+         FOR I := 1 TO LEN(MS)
+
+            IF MEMVAR->MS[I, 3] == "к" .AND. MEMVAR->MS[I, 5] == "03" .AND. ;
+                  MEMVAR->MS[I, 6] == IF(J = 1, KOD_VUAH__, "USD")
+
+               EF_S_SC->(DBSETORDER(2))
+
+               IF J = 1
+
+                  EF_S_SC->(DBSEEK(SCKASUAH))
+
+               ELSE
+
+                  EF_S_SC->(DBSEEK(SCKASUSD))
+
+               ENDIF
+
+               MEMVAR->SC_D := IF(PR_NEWPL__, EF_S_SC->SC_NEW, PADR(MEMVAR->;
+                     MS[I, 2], 14))
+               EF_S_SC->(DBSEEK(MEMVAR->MS[I, 1]))
+               MEMVAR->SC_K := IF(PR_NEWPL__, EF_S_SC->SC_NEW, PADR(EF_S_SC->;
+                     SC, 14))
+
+               IF MEMVAR->MS[I, 9] == EF_BANK->CH_KPL_K
+
+                  FOR PP := 1 TO LEN(ARR_CH)
+
+                     DEVPOS(RW++, 3)
+                     DEVOUT(SC_D + "   " + SC_K + "   " + MEMVAR->ARR_CH[PP,;
+                            1] + "   " + STR(MEMVAR->ARR_CH[PP, 2], 16, 2))
+                     SUMNAT := SUMNAT + MEMVAR->ARR_CH[PP, 2]
+                     ++JJ
+
+                  NEXT
+
+               ELSE
+
+                  DEVPOS(RW++, 3)
+                  DEVOUT(SC_D + "   " + SC_K + "   " + MEMVAR->MS[I, 9] + ;
+                        "   " + STR(MEMVAR->MS[I, 4], 16, 2))
+                  SUMNAT := SUMNAT + MEMVAR->MS[I, 4]
+                  ++JJ
+
+               ENDIF
+
+               DEVPOS(RW++, 1)
+               DEVOUT(;
+                     "--------------------------------------------------------------------------";
+                     )
+
+            ENDIF
+
+         NEXT
+
+         RW := PROW() + 1
+         DEVPOS(RW++, 3)
+         DEVOUT("Разом проводок " + STR(JJ, 2) + "   Сума  " + STR(SUMNAT, ;
+               16, 2))
+         DEVPOS(RW++, 1)
+         DEVOUT(;
+               "======================================================================";
+               )
+         DEVPOS(RW++, 3)
+         DEVOUT("Бугалтер - операцiонiст")
+         DEVPOS(RW++, 3)
+         DEVOUT("Касир")
+         RW := PROW()
+
+      ENDIF
+
+   NEXT
+
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"9")
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"@")
+   SET(20, "SCREEN")
+   SET(24, "")
+
+   IF KEY = 1
+
+      DIALOG(NIL, NIL, {"Форма записана в файл", UPPER(FNAME)}, {;
+            " Продолжить "})
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: J_SV_RASX
+   Params: None.
+   Return: Nil
+  Example: J_SV_RASX()
+  ..........................................................................
+*/
+
+FUNCTION J_SV_RASX()
+
+   LOCAL WIN, RW, I, J, SUMNAT := 0, CL, JJ := 0, LONG := .T.
+   LOCAL FNAME := REP_PATH__ + DTOS(DATV) + ".kjr"
+
+   MEMVAR->KEY := DIALOG(NIL, NIL, {"Печать сводного кассового журнала", ;
+         "по приходу :"}, {"  Файл  ", " Принтер "})
+
+   IF KEY == 0 .OR. KEY == 2 .AND. .NOT. PRINTYES(1)
+
+      RETURN NIL
+
+   ENDIF
+
+   IF KEY = 1
+
+      SET(24, FNAME, .F.)
+
+   ENDIF
+
+   SET(25, 3)
+   SET(20, "PRINTER")
+   RW := PROW()
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"9")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"@")
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"x" + CHR(0))
+   DEVPOS(RW + 0, 0)
+   DEVOUT(CHR(27)+"3"+CHR(25))
+
+   FOR J := 1 TO 2
+
+      JJ := 0
+      SUMNAT := 0
+      MEMVAR->QQQ := ASCAN(MS, {|X|X[6] == IF(J = 1, KOD_VUAH__, "USD") ;
+            .AND. X[3] == "д" .AND. X[5] == "03"})
+
+      IF QQQ > 0
+
+         RW := RW + 3
+         DEVPOS(RW + 1, 20)
+         DEVOUT("ЗВЕДЕНИЙ КАСОВИЙ ЖУРНАЛ ЗА ВИДАТКАМИ")
+         CL := INT((80 - LEN("за " + DTOC(DATV) + " р.")) / 2)
+         DEVPOS(RW + 2, CL)
+         DEVOUT("за " + DTOC(DATV) + " р.")
+         DEVPOS(RW + 4, 3)
+         DEVOUT("  Д Е Б Е Т       К Р Е Д И Т   Символ    Сума(" + IF(J = ;
+               1, KOD_VUAH__, "USD") + ")      Примiтки  ")
+         DEVPOS(RW + 5, 1)
+         DEVOUT(;
+               "==========================================================================";
+               )
+         RW := RW + 6
+
+         FOR I := 1 TO LEN(MS)
+
+            IF MEMVAR->MS[I, 3] == "д" .AND. MEMVAR->MS[I, 5] == "03" .AND. ;
+                  MEMVAR->MS[I, 6] == IF(J = 1, KOD_VUAH__, "USD")
+
+               ++JJ
+               EF_S_SC->(DBSETORDER(2))
+
+               IF J = 1
+
+                  EF_S_SC->(DBSEEK(SCKASUAH))
+
+               ELSE
+
+                  EF_S_SC->(DBSEEK(SCKASUSD))
+
+               ENDIF
+
+               MEMVAR->SC_K := IF(PR_NEWPL__, EF_S_SC->SC_NEW, PADR(MEMVAR->;
+                     MS[I, 2], 14))
+               EF_S_SC->(DBSEEK(MEMVAR->MS[I, 1]))
+               MEMVAR->SC_D := IF(PR_NEWPL__, EF_S_SC->SC_NEW, PADR(EF_S_SC->;
+                     SC, 14))
+               DEVPOS(RW++, 3)
+               DEVOUT(SC_D + "   " + SC_K + "   " + MEMVAR->MS[I, 9] + ;
+                     "   " + STR(MEMVAR->MS[I, 4], 16, 2))
+               DEVPOS(RW++, 1)
+               DEVOUT(;
+                     "--------------------------------------------------------------------------";
+                     )
+               SUMNAT := SUMNAT + MEMVAR->MS[I, 4]
+
+            ENDIF
+
+         NEXT
+
+         RW := PROW() + 1
+         DEVPOS(RW++, 3)
+         DEVOUT("Разом проводок " + STR(JJ, 2) + "   Сума        " + STR(;
+               SUMNAT, 16, 2))
+         DEVPOS(RW++, 1)
+         DEVOUT(;
+               "==========================================================================";
+               )
+         DEVPOS(RW++, 3)
+         DEVOUT("Бугалтер - операцiонiст")
+         DEVPOS(RW++, 3)
+         DEVOUT("Касир")
+         RW := PROW()
+
+      ENDIF
+
+   NEXT
+
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"9")
+   DEVPOS(PROW(), 0)
+   DEVOUT(CHR(27)+"@")
+   SET(20, "SCREEN")
+   SET(24, "")
+
+   IF KEY = 1
+
+      DIALOG(NIL, NIL, {"Форма записана в файл", UPPER(FNAME)}, {;
+            " Продолжить "})
+
+   ENDIF
+
+
+RETURN NIL
+

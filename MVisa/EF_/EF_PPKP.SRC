@@ -1,0 +1,260 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_PPKP
+   Params: None.
+   Return: Nil
+  Example: EF_PPKP()
+  ..........................................................................
+*/
+
+FUNCTION EF_PPKP()
+
+   LOCAL OLDC := SETCOLOR(), KEY, LMORE := .T.
+   LOCAL WIN, WIN2, BL, SUMM_P := 0, KOD_V, KOD_P := "кмп"
+   LOCAL N_D := "", S_DN := "", N_K := "", S_KN := ""
+   LOCAL HOST, NAME_ARC
+
+   IF  .NOT. AREA_OPEN({{"ef_bank"}, {"ef_sys"}, {"ef_merch"}, {"ef_post"},;
+          {"ef_doc"}, {"ef_s_pr"}, {"ef_s_sc"}, {"ef_s_gpl"}, {"ef_s_ppl"},;
+          {"ef_jpkpl"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_s_ppl")
+   DBSETORDER(2)
+
+   IF  .NOT. FILE(IN_PATH__ + "N" + KOD_OTD__ + "*.*")
+
+      TONE(125, 3)
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", "Не найден ни один пакет !"}, {;
+            " Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Выполнить прием пакета ?"}, {"  Нет ", " Да "};
+         , 1)
+
+   IF KEY = 1
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   SETCOLOR("w+/w")
+   WIN2 := WIN(8, 20, 14, 60, "d", "t")
+   SETCOLOR("n/w")
+   DEVPOS(1, 5)
+   DEVOUT("    Принимаю файл ")
+   NAME_ARC := FILESEEK(IN_PATH__ + "N" + KOD_OTD__ + "*.*")
+
+   DO WHILE  .NOT. EMPTY(NAME_ARC)
+
+      MEMVAR->QQQ := EF_POST->(DBSEEK(NAME_ARC))
+
+      IF  .NOT. QQQ .OR. QQQ .AND. YEAR(EF_POST->DAT_POST) < YEAR(DAT_OD__)
+
+         DEVPOS(3, 5)
+         DEVOUT(NAME_ARC)
+         HOST := "pkunzip -d " + IN_PATH__ + NAME_ARC
+         WSELECT(0)
+         WIN := SAVESCREEN(0, 0, 24, 79)
+         DISPBOX(0, 0, 24, 79, "         ", "W/N")
+         S_RUN(HOST, -1, .T.)
+         RESTSCREEN(0, 0, 24, 79, WIN)
+         WSELECT(WIN2)
+
+         IF FILE("N" + KOD_OTD__ + "*.*")
+
+            MEMVAR->NAME_F := FILESEEK("N" + KOD_OTD__ + "*.*")
+            DBUSEAREA(.T., NIL, ("") + NAME_F, "w_tmp", .F., .F.)
+            DBGOTOP()
+            KOD_V := SUBSTR(NAME_F, 10, 3)
+
+            IF EF_S_PR->(DBSEEK(KOD_P + PADR(KOD_V, 8)))
+
+               IF EF_S_SC->(DBSEEK(EF_S_PR->SC_KT + KOD_VUAH__))
+
+                  S_KN := EF_S_SC->SC_NEW
+                  N_K := EF_S_SC->NAM_SC
+
+                  IF EF_S_SC->(DBSEEK(EF_S_PR->SC_DT + KOD_VUAH__))
+
+                     S_DN := EF_S_SC->SC_NEW
+                     N_D := EF_S_SC->NAM_SC
+
+                  ELSE
+
+                     ERROR(NIL, NIL, {"@ Ошибка !", "В справочнике счетов",;
+                            "не найден счет с кодом "+CHR(34) + EF_S_PR->;
+                           SC_DT + CHR(34), "Пакет не принят !"}, {;
+                           " Выход "})
+                     LMORE := .F.
+
+                  ENDIF
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@ Ошибка !", "В справочнике счетов", ;
+                        "не найден счет с кодом "+CHR(34) + EF_S_PR->SC_KT +;
+                         CHR(34), "Пакет не принят !"}, {" Выход "})
+                  LMORE := .F.
+
+               ENDIF
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "В справочнике проводок", ;
+                     "не найдена проводка  с кодом "+CHR(34) + KOD_P + CHR(;
+                     34), "и ПВН "+CHR(34) + KOD_V + CHR(34)+" !", ;
+                     "Пакет не принят !"}, {" Выход "})
+               LMORE := .F.
+
+            ENDIF
+
+            DO WHILE  .NOT. EOF() .AND. LMORE
+
+               IF EF_S_GPL->(DBSEEK(STR(W_TMP->KOD_VPL, 3)))
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@ Ошибка !", ;
+                        "В справочнике видов платежей", ;
+                        "не найден код оплаты "+CHR(34) + STR(W_TMP->;
+                        KOD_VPL, 3) + CHR(34), "Пакет не принят !"}, {;
+                        " Выход "})
+                  LMORE := .F.
+
+               ENDIF
+
+               IF EF_S_PPL->(DBSEEK(W_TMP->KOD_POL))
+
+               ELSE
+
+                  ERROR(NIL, NIL, {"@ Ошибка !", ;
+                        "В справочнике получателей", ;
+                        "не найден получатель с кодом "+CHR(34) + STR(;
+                        W_TMP->KOD_POL, 3) + CHR(34), "Пакет не принят !"}, ;
+                        {" Выход "})
+                  LMORE := .F.
+
+               ENDIF
+
+               IF RECLOCK(3)
+
+                  W_TMP->KOD_PVN := SUBSTR(NAME_F, 10, 3)
+
+               ENDIF
+
+               IF W_TMP->PR_TAR
+
+                  IF  .NOT. EF_S_GPL->PR_KOM
+
+                     SUMM_P := SUMM_P + (W_TMP->SUMMA - W_TMP->SUM_KOM)
+
+                  ELSE
+
+                     SUMM_P := SUMM_P + W_TMP->SUMMA
+
+                  ENDIF
+
+               ELSE
+
+                  SUMM_P := SUMM_P + W_TMP->SUMMA
+
+               ENDIF
+
+               DBCOMMIT()
+               DBUNLOCK()
+               DBSKIP()
+
+            ENDDO
+
+            DBSELECTAR("w_tmp")
+            DBCLOSEARE()
+
+            IF LMORE
+
+               IF EF_DOC->(ADDREC(3)) .AND. EF_SYS->(RECLOCK(3))
+
+                  EF_DOC->VID_OP := "06"
+                  EF_DOC->TIP_DOC := "м"
+                  EF_DOC->NUM_DOC := EF_SYS->N_PP + 1
+                  EF_DOC->KOD_V := KOD_VUAH__
+                  EF_DOC->DAT_KL := DAT_OD__
+                  EF_DOC->DAT_BANK := DAT_OD__
+                  EF_DOC->SUMMA := SUMM_P
+                  EF_DOC->NAM_DT := N_D
+                  EF_DOC->BANK_DT := NAM_B__
+                  EF_DOC->MFO_DT := PADR(ALLTRIM(KOD_B__), 9)
+                  EF_DOC->SC_DT := S_DN
+                  EF_DOC->INDEX_DT := STR(POST_IND__, 6)
+                  EF_DOC->OKPO_DT := KOD_OKPO__
+                  EF_DOC->NAM_KT := N_K
+                  EF_DOC->BANK_KT := NAM_B__
+                  EF_DOC->MFO_KT := PADR(ALLTRIM(KOD_B__), 9)
+                  EF_DOC->SC_KT := S_KN
+                  EF_DOC->OKPO_KT := KOD_OKPO__
+                  EF_DOC->INDEX_KT := STR(POST_IND__, 6)
+                  EF_DOC->OSN := "Коммунальные платежи от граждан "
+                  EF_DOC->FIO_OP := FIO_OP__
+                  ++EF_SYS->N_PP
+                  DBCOMMITAL()
+                  DBUNLOCKAL()
+
+               ENDIF
+
+               DBSELECTAR("ef_jpkpl")
+               __DBAPP(NAME_F, {}, NIL, NIL, NIL, NIL, .F., NIL)
+               DBCOMMITAL()
+               DIALOG(NIL, NIL, {"@Сообщение", "", ;
+                     "Пакет принят успешно !", ""}, {" Выход "})
+
+            ENDIF
+
+            FILEDELETE(("") + NAME_F)
+
+         ENDIF
+
+         __COPYFILE(IN_PATH__ + NAME_ARC, CP_PATH__ + NAME_ARC)
+
+         IF FILE(CP_PATH__ + NAME_ARC)
+
+            FERASE(("") + IN_PATH__ + NAME_ARC)
+
+         ENDIF
+
+         IF EF_POST->(ADDREC(3))
+
+            EF_POST->NAM_FILE := NAME_ARC
+            EF_POST->DAT_POST := DAT_OD__
+            EF_POST->TIME_POST := TIME()
+            EF_POST->PR_V_I := .T.
+            EF_POST->(DBCOMMIT())
+            EF_POST->(DBUNLOCK())
+
+         ENDIF
+
+      ELSE
+
+         ERROR(NIL, NIL, {"@ Ошибка !", "Файл "+CHR(34) + NAME_ARC + CHR(;
+               34), "уже обрабатывался " + DTOC(EF_POST->DAT_POST) + " в " +;
+                EF_POST->TIME_POST + " !"}, {" Выход "})
+         FERASE(("") + IN_PATH__ + NAME_ARC)
+
+      ENDIF
+
+      NAME_ARC := FILESEEK()
+
+   ENDDO
+
+   WINCLOSE(WIN2)
+   SETCOLOR(OLDC)
+   DBCLOSEALL()
+
+RETURN NIL
+

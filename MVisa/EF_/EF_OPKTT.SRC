@@ -1,0 +1,570 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_OPKTT
+   Params: None.
+   Return: Nil
+  Example: EF_OPKTT()
+  ..........................................................................
+*/
+
+FUNCTION EF_OPKTT()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, ABROWSE, BOTIO_1 := {"~Esc-~выход", ;
+         "~F10-~сформировать и отправить пакет", "~+,-,Ins-~отметить"}
+
+   PRIVATE BROWSE, COLUMN, DESKTOP
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := SPACE(9), IKEY_BOT := SPACE(9)
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+
+   IF  .NOT. AREA_OPEN({{"ef_merch"}, {"ef_mrchz", .T.}, {"ef_post"}, {;
+         "ef_bank"}, {"ef_sys"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(EF_BANK->BRANCH)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Заполните код Вашего подразделения", ;
+            "в настройке комплекса !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_merch")
+   DBSETORDER(4)
+   DBSELECTAR("ef_mrchz")
+
+   IF  .NOT. DBSEEK(SPACE(9))
+
+      DBCLOSEALL()
+      ERROR(NIL, NIL, {"@ Внимание !", ;
+            "Нет ни одной заявки для отправки !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   ABROWSE := CREATTBROW(3, 2, 18, 77, "Nam_Pkt", {||VYVSTR()})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := {||SUBSTR((&(INDEXKEY(INDEXORD()))), 1, 9) == ;
+         SPACE(9)}
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   MEMVAR->DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " ОТПРАВКА ПАКЕТОВ НА РЕГИСТРАЦИЮ ТОЧЕК ")
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   OBRIO_1()
+   WINCLOSE(DESKTOP)
+   DBCLOSEALL()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYVSTR
+   Params: None.
+   Return: Undefined
+  Example: VYVSTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYVSTR()
+
+   LOCAL CSTR, CTMP
+
+   IF DBEMPTY()
+
+      CSTR := SPACE(76)
+
+   ELSE
+
+      IF EF_MRCHZ->FL_INS
+
+         CSTR := " √"
+
+      ELSE
+
+         CSTR := "  "
+
+      ENDIF
+
+      IF EF_MERCH->(DBSEEK(STR(EF_MRCHZ->KEY_SP, 6)))
+
+         CSTR := CSTR + (" " + IF(EMPTY(EF_MERCH->MERCH), "б/номера", ;
+               EF_MERCH->MERCH))
+         CSTR := CSTR + ("  " + IF(EF_MERCH->TYPE == "1", "ACQIRING", IF(;
+               EF_MERCH->TYPE == "2", "CASH    ", "????????")))
+         CSTR := CSTR + ("  " + EF_MERCH->MERCH_NAME)
+         CSTR := CSTR + ("  " + EF_MERCH->ADRESS + " ")
+
+      ELSE
+
+         CSTR := CSTR + SPACE(76)
+
+      ENDIF
+
+   ENDIF
+
+
+RETURN CSTR
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+   LOCAL CSTR
+
+   SETCOLOR("w+/w")
+
+   IF DBEMPTY()
+
+      DEVPOS(20, 41)
+      DEVOUT(SPACE(34))
+      DEVPOS(21, 21)
+      DEVOUT(SPACE(13))
+      DEVPOS(21, 63)
+      DEVOUT(SPACE(12))
+
+   ELSE
+
+      DEVPOS(20, 41)
+      DEVOUT(EF_MERCH->HO_CODE + " " + EF_MERCH->HEAD_OFICE)
+      DEVPOS(21, 21)
+      DEVOUT(IF(EF_MRCHZ->NEW, "РЕГИСТРАЦИЯ", "КОРРЕКТИРОВКА"))
+      DEVPOS(21, 63)
+      DEVOUT(EF_MRCHZ->NAM_PKT)
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(2, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   DEVPOS(19, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 7)
+   DEVOUT("Код       Тип             Название                     Адрес")
+   DEVPOS(20, 9)
+   DEVOUT("Код и название фирмы-владельца")
+   DEVPOS(21, 9)
+   DEVOUT("Тип заявки                                    Пакет N")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY, REC
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(10)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         REC := RECNO()
+         DBGOTOP()
+
+         DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+            EF_MRCHZ->FL_INS := .F.
+            EF_MRCHZ->(DBSKIP())
+
+         ENDDO
+
+         DBGOTO(REC)
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -9
+
+            OUT_PKT()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+               EF_MRCHZ->FL_INS := .F.
+               EF_MRCHZ->(DBSKIP())
+
+            ENDDO
+
+            LMORE := .F.
+
+         ELSEIF NKEY == 43
+
+            REC := RECNO()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+               EF_MRCHZ->FL_INS := .T.
+               EF_MRCHZ->(DBSKIP())
+
+            ENDDO
+
+            DBGOTO(REC)
+
+         ELSEIF NKEY == 45
+
+            REC := RECNO()
+            DBGOTOP()
+
+            DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+               EF_MRCHZ->FL_INS := .F.
+               EF_MRCHZ->(DBSKIP())
+
+            ENDDO
+
+            DBGOTO(REC)
+
+         ELSEIF NKEY == 22 .AND. EMPTY(EF_MRCHZ->NAM_PKT)
+
+            EF_MRCHZ->FL_INS :=  .NOT. EF_MRCHZ->FL_INS
+
+         ENDIF
+
+         BROWSE:REFRESHALL()
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OUT_PKT
+   Params: None.
+   Return: Nil
+  Example: OUT_PKT()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OUT_PKT()
+
+   LOCAL REC, RES := .F., NF := ""
+   LOCAL HOST, WIN
+
+   DBSELECTAR("ef_sys")
+   MEMVAR->NUM_P := NUM_PAK(2)
+
+   IF NUM_P > "z"
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "На сегодня свободные", ;
+            "N для отправки пакетов кончились !"}, {" Выход "})
+      DBSELECTAR("ef_mrchz")
+      RETURN NIL
+
+   ENDIF
+
+   IF RECLOCK(3)
+
+      NF := "A" + EF_BANK->BRANCH + ZERO_STR(DOY(DAT_OD__), 3) + NUM_P
+      EF_SYS->N_T := ASC(NUM_P)
+      DBCOMMIT()
+      DBUNLOCK()
+
+   ELSE
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось получить", ;
+            "N пакета для отправки !"}, {" Выход "})
+      DBSELECTAR("ef_mrchz")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_mrchz")
+   REC := RECNO()
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+      IF EF_MRCHZ->FL_INS
+
+         RES := .T.
+         EXIT
+
+      ENDIF
+
+      EF_MRCHZ->(DBSKIP())
+
+   ENDDO
+
+   DBGOTO(REC)
+
+   IF  .NOT. RES
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Нет ни одной отмеченной заявки !", ;
+            "Пакет не сформирован !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. HIDDEN_OPE("t_tmp", .T.)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось открыть временную базу !",;
+             "Пакет не сформирован !"}, {" Выход "})
+      DBSELECTAR("ef_mrchz")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("t_tmp")
+   __DBZAP()
+   DBSELECTAR("ef_mrchz")
+   DBGOTOP()
+
+   DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+      IF  .NOT. EF_MRCHZ->FL_INS
+
+         EF_MRCHZ->(DBSKIP())
+         LOOP
+
+      ENDIF
+
+      DBSELECTAR("t_tmp")
+
+      IF  .NOT. ADDREC(3)
+
+         LOOP
+
+      ENDIF
+
+      EF_MERCH->(DBSEEK(STR(EF_MRCHZ->KEY_SP, 6)))
+      T_TMP->KEY_SP := EF_MERCH->KEY_SP
+      T_TMP->NEW := EF_MRCHZ->NEW
+      T_TMP->HO_CODE := EF_MERCH->HO_CODE
+      T_TMP->BRANCH := EF_BANK->BRANCH
+      T_TMP->MERCH := EF_MERCH->MERCH
+      T_TMP->TYPE := EF_MERCH->TYPE
+      T_TMP->CITY := EF_MERCH->CITY
+      T_TMP->HEAD_OFICE := EF_MERCH->HEAD_OFICE
+      T_TMP->MERCH_NAME := EF_MERCH->MERCH_NAME
+      T_TMP->RUS_NAME := EF_MERCH->RUS_NAME
+      T_TMP->ADRESS := EF_MERCH->ADRESS
+      T_TMP->ADRESS_R := EF_MERCH->ADRESS_R
+      T_TMP->TEL := EF_MERCH->TEL
+      T_TMP->CONT_PERSO := EF_MERCH->CONT_PERSO
+      T_TMP->VID := EF_MERCH->VID
+      T_TMP->MCC := EF_MERCH->MCC
+      T_TMP->VERIFY_LIM := EF_MERCH->VERIFY_LIM
+      T_TMP->LIM_PB := EF_MERCH->LIM_PB
+      T_TMP->LIM_V := EF_MERCH->LIM_V
+      T_TMP->LIM_EM := EF_MERCH->LIM_EM
+      T_TMP->COM_PB := EF_MERCH->COM_PB
+      T_TMP->COM_V := EF_MERCH->COM_V
+      T_TMP->COM_EM := EF_MERCH->COM_EM
+      T_TMP->PRO_PB := EF_MERCH->PRO_PB
+      T_TMP->PRO_V := EF_MERCH->PRO_V
+      T_TMP->PRO_EM := EF_MERCH->PRO_EM
+      T_TMP->VOZM_PB := EF_MERCH->VOZM_PB
+      T_TMP->VOZM_V := EF_MERCH->VOZM_V
+      T_TMP->VOZM_EM := EF_MERCH->VOZM_EM
+      T_TMP->CURR := EF_MERCH->CURR
+      T_TMP->CURR_M := EF_MERCH->CURR_M
+      T_TMP->IMPRINTER := EF_MERCH->IMPRINTER
+      T_TMP->POS := EF_MERCH->POS
+      T_TMP->PC_POS := EF_MERCH->PC_POS
+      T_TMP->DAT_RAB := EF_MERCH->DAT_RAB
+      T_TMP->DAT_EMB := EF_MERCH->DAT_EMB
+      T_TMP->DISCOUTN := EF_MERCH->DISCOUTN
+      T_TMP->STEP := EF_MRCHZ->STEP
+      T_TMP->TYPE1 := EF_MERCH->TYPE1
+      T_TMP->CREDIT := EF_MERCH->CREDIT
+      T_TMP->MANUAL := EF_MERCH->MANUAL
+      T_TMP->MULTICASH := EF_MERCH->MULTICASH
+      T_TMP->PREAUTH := EF_MERCH->PREAUTH
+      DBSELECTAR("ef_mrchz")
+      EF_MRCHZ->(DBSKIP())
+
+   ENDDO
+
+   T_TMP->(DBCLOSEARE())
+
+   IF FRENAME("t_tmp.dbf", NF + ".dbf") = -1
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось переименовть файл !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+      RETURN NIL
+
+   ENDIF
+
+   HOST := "pkzip -a " + OUT_PATH__ + NF + ".zip " + NF + ".dbf"
+   WSELECT(0)
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   DISPBOX(0, 0, 24, 79, "         ", "W/N")
+   S_RUN(HOST, -1, .T.)
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   WSELECT(DESKTOP)
+   FERASE(NF + ".dbf")
+
+   IF FILE(OUT_PATH__ + NF + ".zip")
+
+      IF EF_POST->(ADDREC(3))
+
+         EF_POST->NAM_FILE := NF + ".zip"
+         EF_POST->DAT_POST := DAT_OD__
+         EF_POST->TIME_POST := TIME()
+         EF_POST->PR_V_I := .F.
+         EF_POST->(DBCOMMIT())
+         EF_POST->(DBUNLOCK())
+
+      ENDIF
+
+      __COPYFILE(OUT_PATH__ + NF + ".zip", CP_PATH__ + NF + ".zip")
+      DBSELECTAR("ef_mrchz")
+      DBGOTOP()
+
+      DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+         IF EF_MRCHZ->FL_INS
+
+            EF_MRCHZ->FL_INS := .F.
+            EF_MRCHZ->DAT_PKT := DAT_OD__
+            EF_MRCHZ->NAM_PKT := NF + ".zip"
+            EF_MRCHZ->(DBGOTOP())
+
+         ELSE
+
+            EF_MRCHZ->(DBSKIP())
+
+         ENDIF
+
+      ENDDO
+
+      DIALOG(NIL, NIL, {"@Сообщение", "", "Пакет сформирован успешно !", ;
+            ""}, {" Выход "})
+
+   ELSE
+
+      DBSELECTAR("ef_mrchz")
+      DBGOTOP()
+
+      DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+         EF_MRCHZ->FL_INS := .F.
+         EF_MRCHZ->(DBSKIP())
+
+      ENDDO
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось сформировать пакет !", ;
+            "Попробуйте сформировать пакет еще раз !"}, {" Выход "})
+
+   ENDIF
+
+
+RETURN NIL
+

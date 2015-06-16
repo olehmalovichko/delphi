@@ -1,0 +1,631 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SPRSC
+   Params: None.
+   Return: Nil
+  Example: SPRSC()
+  ..........................................................................
+*/
+
+FUNCTION SPRSC()
+
+   LOCAL NKEY := 0
+   LOCAL LMORE, DESKTOP, ABROWSE
+
+   PRIVATE BROWSE, COLUMN
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~F2-~ввод", "~F3-~редактирование", ;
+         "~F4-~удаление"}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+
+   IF  .NOT. AREA_OPEN("ef_s_sc")
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_s_sc")
+   MEMVAR->CFL := {"Kod_sc", "Valt", "Sc", "Sc_new", "Nam_sc"}
+   MEMVAR->CAL := ARRAY(LEN(CFL))
+   AFILL(CAL, "ef_s_sc->")
+   MEMVAR->SEP := {" ", SPACE(5), SPACE(5), SPACE(2), SPACE(2), " "}
+   ABROWSE := CREATTBROW(3, 5, 21, 75, "Kod_sc", {||CREATSTR(CAL, CFL, SEP);
+         })
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := ""
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := ""
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " СПРАВОЧНИК СЧЕТОВ ")
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   OBRIO_1()
+   DBCLOSEALL()
+   WINCLOSE(DESKTOP)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(2, 0)
+   DEVOUT("╟" + REPLICATE("─", 78) + "╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 2)
+   DEVOUT(;
+         "Код счета  Код вал.   Счет     Новый счет          Наименование счета";
+         )
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(10)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -1
+
+            VVOD_SC()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+            RED_SC()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -3
+
+            RECCOLOR("gr+/w")
+            UDL_SC()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD_SC
+   Params: None.
+   Return: Logical
+  Example: VVOD_SC()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD_SC()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL REC := MEMVAR->CUR_REC := RECNO(), DBERR := .F.
+
+   PRIVATE KOD_SC_V, VALT_V, NAM_SC_V, SC_V, SCN_V
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := NEWRECY(BROWSE)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   STATUSLINE(BOTIO_2)
+
+   DO WHILE  .NOT. KEY == 27
+
+      IF M > BROWSE:NBOTTOM()
+
+         SCROLL(BROWSE:NTOP(), BROWSE:NLEFT(), BROWSE:NBOTTOM(), ;
+               BROWSE:NRIGHT(), 1)
+         M := BROWSE:NBOTTOM()
+
+      ENDIF
+
+      SETCOLOR("n/w,w+/b,,,w+/bg")
+      COLORWIN2(M, BROWSE:NLEFT(), M, BROWSE:NRIGHT(), COLORFON)
+      MEMVAR->KOD_SC_V := "   "
+      MEMVAR->VALT_V := "   "
+      MEMVAR->NAM_SC_V := SPACE(25)
+      MEMVAR->SC_V := SPACE(10)
+      MEMVAR->SCN_V := SPACE(14)
+
+      DO WHILE .T.
+
+         SETPOS(M, 6)
+         AADD(GETLIST, __GET(NIL, "kod_sc_v", "XXX", NIL, NIL):DISPLAY())
+         SETPOS(M, 14)
+         AADD(GETLIST, __GET(NIL, "valt_v", "@!AK XXX", {||VALT_V == "USD" ;
+               .OR. VALT_V == KOD_VUAH__}, NIL):DISPLAY())
+         SETPOS(M, 22)
+         AADD(GETLIST, __GET(NIL, "sc_v", "@!K XXXXXXXXXX", NIL, NIL);
+               :DISPLAY())
+         SETPOS(M, 34)
+         AADD(GETLIST, __GET(NIL, "scn_v", "@!K XXXXXXXXXXXXXX", NIL, NIL);
+               :DISPLAY())
+         SETPOS(M, 50)
+         AADD(GETLIST, __GET(NIL, "nam_sc_v", "!" + REPLICATE("X", 24), ;
+               NIL, NIL):DISPLAY())
+         SETKEYON()
+         SETCURSOR(1)
+         READMODAL(GETLIST)
+         MEMVAR->GETLIST := {}
+         SETCURSOR(0)
+         SETKEYOF()
+         KEY := LASTKEY()
+
+         IF KEY = -9
+
+            IF EMPTY(KOD_SC_V)
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Поле кода счета должно быть", "заполнено !"}, {;
+                     " Выход "})
+               LOOP
+
+            ENDIF
+
+            IF EMPTY(VALT_V)
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Поле кода валюты должно быть", "заполнено !"}, {;
+                     " Выход "})
+               LOOP
+
+            ENDIF
+
+            IF  .NOT. (VALT_V == "USD" .OR. VALT_V == KOD_VUAH__)
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Поле кода валюты должно быть", "заполнено или "+CHR(;
+                     34)+"USD"+CHR(34)+" или " + KOD_VUAH__ + " !"}, {;
+                     " Выход "})
+               LOOP
+
+            ENDIF
+
+            IF EMPTY(SC_V)
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Поле счета должно быть", ;
+                     "заполнено !"}, {" Выход "})
+               LOOP
+
+            ENDIF
+
+            IF EMPTY(SCN_V)
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Поле нового счета должно быть", "заполнено !"}, {;
+                     " Выход "})
+               LOOP
+
+            ENDIF
+
+            IF EMPTY(NAM_SC_V)
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Поле наименование счета должно быть", "заполнено !"},;
+                      {" Выход "})
+               LOOP
+
+            ENDIF
+
+            MEMVAR->CUR_REC := RECNO()
+            DBERR := DBSEEK(KOD_SC_V + VALT_V)
+            DBGOTO(CUR_REC)
+
+            IF DBERR
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Запись с данным кодом счета и валюты", ;
+                     "уже есть в справочнике !"}, {" Выход "})
+               LOOP
+
+            ENDIF
+
+            EXIT
+
+         ELSEIF KEY = 27
+
+            EXIT
+
+         ENDIF
+
+      ENDDO
+
+      COLORWIN2(M, BROWSE:NLEFT() - 1, M, BROWSE:NRIGHT(), "w+/w")
+
+      IF KEY = -9
+
+         IF ADDREC(3)
+
+            EF_S_SC->KOD_SC := KOD_SC_V
+            EF_S_SC->VALT := VALT_V
+            EF_S_SC->SC := SC_V
+            EF_S_SC->SC_NEW := SCN_V
+            EF_S_SC->NAM_SC := NAM_SC_V
+            DBCOMMIT()
+            DBUNLOCK()
+            REC := RECNO()
+
+         ELSE
+
+            RESTSCREEN(0, 0, 24, 79, WIN)
+
+         ENDIF
+
+      ELSEIF KEY = 27
+
+         RESTSCREEN(0, 0, 24, 79, WIN)
+
+      ENDIF
+
+      ++M
+
+   ENDDO
+
+   DBGOTO(REC)
+   SETCOLOR(OLDC)
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RED_SC
+   Params: None.
+   Return: Nil
+  Example: RED_SC()
+  ..........................................................................
+*/
+
+STATIC FUNCTION RED_SC()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0
+   LOCAL CUR_REC := RECNO()
+
+   PRIVATE KOD_SC_V, VALT_V, NAM_SC_V, SC_V, SVN_V
+
+   IF DBEMPTY()
+
+      TONE(125, 1)
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. RECLOCK(3)
+
+      RETURN NIL
+
+   ENDIF
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := BROWSE:ROWPOS() + (BROWSE:NTOP() - 1)
+   STATUSLINE(BOTIO_2)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   MEMVAR->KOD_SC_V := EF_S_SC->KOD_SC
+   MEMVAR->VALT_V := EF_S_SC->VALT
+   MEMVAR->SC_V := EF_S_SC->SC
+   MEMVAR->SCN_V := EF_S_SC->SC_NEW
+   MEMVAR->NAM_SC_V := EF_S_SC->NAM_SC
+
+   DO WHILE .T.
+
+      SETPOS(M, 6)
+      AADD(GETLIST, __GET(NIL, "kod_sc_v", "XXX", NIL, NIL):DISPLAY())
+      SETPOS(M, 14)
+      AADD(GETLIST, __GET(NIL, "valt_v", "@!AK XXX", {||VALT_V == "USD" ;
+            .OR. VALT_V == KOD_VUAH__}, NIL):DISPLAY())
+      SETPOS(M, 22)
+      AADD(GETLIST, __GET(NIL, "sc_v", "@!K XXXXXXXXXX", NIL, NIL):DISPLAY(;
+            ))
+      SETPOS(M, 34)
+      AADD(GETLIST, __GET(NIL, "scn_v", "@!K XXXXXXXXXXXXXX", NIL, NIL);
+            :DISPLAY())
+      SETPOS(M, 50)
+      AADD(GETLIST, __GET(NIL, "nam_sc_v", "!" + REPLICATE("X", 24), NIL, ;
+            NIL):DISPLAY())
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF EMPTY(KOD_SC_V)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Поле кода счета должно быть", ;
+                  "заполнено !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         IF EMPTY(VALT_V)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Поле кода валюты должно быть", ;
+                  "заполнено !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         IF  .NOT. (VALT_V == "USD" .OR. VALT_V == KOD_VUAH__)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Поле кода валюты должно быть", ;
+                  "заполнено или "+CHR(34)+"USD"+CHR(34)+" или " + ;
+                  KOD_VUAH__ + " !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         IF EMPTY(SC_V)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Поле счета должно быть", ;
+                  "заполнено !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         IF EMPTY(SCN_V)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Поле нового счета должно быть",;
+                   "заполнено !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         IF EMPTY(NAM_SC_V)
+
+            ERROR(NIL, NIL, {"@ Ошибка !", ;
+                  "Поле наименование счета должно быть", "заполнено !"}, {;
+                  " Выход "})
+            LOOP
+
+         ENDIF
+
+         CUR_REC := RECNO()
+
+         IF DBSEEK(KOD_SC_V + VALT_V)
+
+            MEMVAR->DBERR := .T.
+
+            IF RECNO() == CUR_REC
+
+               DBSKIP()
+
+               IF  .NOT. (KOD_SC_V == EF_S_SC->KOD_SC .AND. VALT_V == ;
+                     EF_S_SC->VALT)
+
+                  MEMVAR->DBERR := .F.
+
+               ENDIF
+
+            ENDIF
+
+         ELSE
+
+            MEMVAR->DBERR := .F.
+
+         ENDIF
+
+         DBGOTO(CUR_REC)
+
+         IF DBERR
+
+            ERROR(NIL, NIL, {"@ Ошибка !", ;
+                  "Запись с данным кодом счета и валюты", ;
+                  "уже есть в справочнике !"}, {" Выход "})
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY = -9
+
+      EF_S_SC->KOD_SC := KOD_SC_V
+      EF_S_SC->VALT := VALT_V
+      EF_S_SC->SC := SC_V
+      EF_S_SC->SC_NEW := SCN_V
+      EF_S_SC->NAM_SC := NAM_SC_V
+      DBCOMMIT()
+
+   ENDIF
+
+   DBUNLOCK()
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: UDL_SC
+   Params: None.
+   Return: Nil
+  Example: UDL_SC()
+  ..........................................................................
+*/
+
+STATIC FUNCTION UDL_SC()
+
+   LOCAL KEY
+
+   IF DBEMPTY()
+
+      TONE(125, 1)
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. RECLOCK(3)
+
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Удалять строку ?"}, {"  Да ", " Нет "}, 2)
+
+   IF KEY = 1
+
+      DBDELETE()
+      DBCOMMIT()
+      DBUNLOCK()
+
+   ELSE
+
+      DBUNLOCK()
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   DISPBEGIN()
+   BROWSE:REFRESHALL()
+
+   DO WHILE  .NOT. BROWSE:STABILIZE()
+
+   ENDDO
+
+   IF BROWSE:ROWPOS() = 1
+
+      BROWSE:REFRESHALL()
+
+      DO WHILE  .NOT. BROWSE:STABILIZE()
+
+      ENDDO
+
+   ENDIF
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+
+RETURN NIL
+

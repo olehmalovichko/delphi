@@ -1,0 +1,1813 @@
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: EF_MERCH
+   Params: None.
+   Return: Nil
+  Example: EF_MERCH()
+  ..........................................................................
+*/
+
+FUNCTION EF_MERCH()
+
+   LOCAL NKEY := 0, LMORE, ABROWSE, MS_BAZ := {}
+   LOCAL I
+
+   PRIVATE BROWSE, COLUMN, DESKTOP
+   PRIVATE INDEXBLOCK, BL_PR_US
+   PRIVATE IKEY_TOP := "", IKEY_BOT := ""
+   PRIVATE COLORFON, COLORCUR, VYVBLOCK, CAL, CFL, SEP
+   PRIVATE BOTIO_1 := {"~Esc-~выход", "~F2-~ввод", "~F3-~редактирование", ;
+         "~F4-~удаление", "~F5-~поиск", "~F6-~POS-терм."}
+   PRIVATE BOTIO_2 := {"~Esc-~выход", "~F10-~запомнить"}
+
+   IF  .NOT. AREA_OPEN({{"ef_merch"}, {"ef_mrchz"}, {"ef_head"}, {;
+         "ef_slip"}, {"ef_bank"}, {"ef_sys"}})
+
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   IF EMPTY(EF_BANK->BRANCH)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "Заполните код Вашего подразделения", ;
+            "в настройке комплекса !"}, {" Выход "})
+      DBCLOSEALL()
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_slip")
+   DBSETORDER(4)
+   DBSELECTAR("ef_merch")
+   DBSETORDER(2)
+   DBGOTOP()
+   ABROWSE := CREATTBROW(3, 1, 21, 8, "Merch", {||VYVSTR()})
+   MEMVAR->BROWSE := ABROWSE[1]
+   MEMVAR->COLUMN := ABROWSE[2]
+   MEMVAR->COLORFON := "N/W"
+   MEMVAR->COLORCUR := "W+/GB"
+   MEMVAR->VYVBLOCK := {||VVIO1()}
+   MEMVAR->BL_PR_US := ""
+   MEMVAR->INDEXBLOCK := ""
+   USTANTBROW(BROWSE, COLORFON, COLORCUR, IKEY_TOP, IKEY_BOT, INDEXBLOCK, ;
+         BL_PR_US)
+   SETCOLOR("w+/w")
+   MEMVAR->DESKTOP := WIN(1, 0, 24, 79)
+   DISPBOX(0, 0, 22, 79, DOUBLE)
+   CENTR(NIL, 0, " ТОРГОВЫЕ ТОЧКИ ")
+   SCRIO_1()
+   STATUSLINE(BOTIO_1)
+   OBRIO_1()
+   DBCLOSEALL()
+   WINCLOSE(DESKTOP)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SKIPFNDM
+   Params: STF, WINSELECT1, WINSELECT2
+   Return: Logical
+  Example: SKIPFNDM(STF, WINSELECT1, WINSELECT2)
+  ..........................................................................
+*/
+
+FUNCTION SKIPFNDM(STF, WINSELECT1, WINSELECT2)
+
+   IF RET_FIND = 1
+
+      STF := PADR(STF, 8)
+
+   ELSEIF RET_FIND = 2
+
+      STF := PADR(STF, 25)
+
+   ENDIF
+
+   DISPBEGIN()
+   WSELECT(DESKTOP)
+   BROWSE:GOTOP()
+   EF_MERCH->(DBSEEK(STF, .T.))
+   REFRESH(BROWSE)
+   IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+   WSELECT(WINSELECT1)
+   WSELECT(WINSELECT2)
+   DISPEND()
+
+RETURN .T.
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VYVSTR
+   Params: None.
+   Return: Variable
+  Example: VYVSTR()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VYVSTR()
+
+   IF DBEMPTY()
+
+      RETURN SPACE(8)
+
+   ELSE
+
+      RETURN IF(EMPTY(EF_MERCH->MERCH), "б/номера", EF_MERCH->MERCH)
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVIO1
+   Params: None.
+   Return: Nil
+  Example: VVIO1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVIO1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+
+   IF DBEMPTY()
+
+      DEVPOS(1, 33)
+      DEVOUT(SPACE(13))
+      DEVPOS(2, 12)
+      DEVOUT(SPACE(1))
+      DEVPOS(2, 49)
+      DEVOUT(SPACE(25))
+      DEVPOS(3, 12)
+      DEVOUT(SPACE(1))
+      DEVPOS(3, 49)
+      DEVOUT(SPACE(34))
+      DEVPOS(4, 44)
+      DEVOUT(SPACE(34))
+      DEVPOS(5, 21)
+      DEVOUT(SPACE(4))
+      DEVPOS(5, 44)
+      DEVOUT(SPACE(30))
+      DEVPOS(6, 17)
+      DEVOUT(SPACE(25))
+      DEVPOS(6, 52)
+      DEVOUT(SPACE(25))
+      DEVPOS(7, 17)
+      DEVOUT(SPACE(25))
+      DEVPOS(8, 30)
+      DEVOUT(SPACE(20))
+      DEVPOS(11, 47)
+      DEVOUT(SPACE(24))
+      DEVPOS(12, 48)
+      DEVOUT(SPACE(24))
+      DEVPOS(13, 48)
+      DEVOUT(SPACE(24))
+      DEVPOS(14, 48)
+      DEVOUT(SPACE(24))
+      DEVPOS(16, 35)
+      DEVOUT(SPACE(3))
+      DEVPOS(16, 58)
+      DEVOUT(SPACE(3))
+      DEVPOS(17, 58)
+      DEVOUT(SPACE(5))
+      DEVPOS(18, 53)
+      DEVOUT(SPACE(1))
+      DEVPOS(18, 73)
+      DEVOUT(SPACE(1))
+      DEVPOS(19, 37)
+      DEVOUT(SPACE(10))
+      DEVPOS(19, 73)
+      DEVOUT(SPACE(1))
+      DEVPOS(19, 37)
+      DEVOUT(SPACE(10))
+      DEVPOS(20, 35)
+      DEVOUT(" ")
+      DEVPOS(20, 67)
+      DEVOUT(" ")
+      DEVPOS(21, 35)
+      DEVOUT(" ")
+      DEVPOS(21, 77)
+      DEVOUT(" ")
+
+   ELSE
+
+      DEVPOS(1, 33)
+      DEVOUT(EF_MERCH->CITY)
+
+      IF EF_MERCH->TYPE == "1"
+
+         DEVPOS(2, 12)
+         DEVOUT(CHR(7))
+         DEVPOS(3, 12)
+         DEVOUT(" ")
+
+      ELSEIF EF_MERCH->TYPE == "2"
+
+         DEVPOS(2, 12)
+         DEVOUT(" ")
+         DEVPOS(3, 12)
+         DEVOUT(CHR(7))
+
+      ELSE
+
+         DEVPOS(2, 12)
+         DEVOUT(" ")
+         DEVPOS(3, 12)
+         DEVOUT(" ")
+
+      ENDIF
+
+      DEVPOS(2, 49)
+      DEVOUT(EF_MERCH->MERCH_NAME)
+      DEVPOS(3, 49)
+      DEVOUT(EF_MERCH->RUS_NAME)
+      DEVPOS(4, 44)
+      DEVOUT(EF_MERCH->HO_CODE)
+      DEVPOS(4, 48)
+      DEVOUT(EF_MERCH->HEAD_OFICE)
+      DEVPOS(5, 21)
+      DEVOUT(EF_MERCH->MCC)
+      DEVPOS(5, 44)
+      DEVOUT(EF_MERCH->VID)
+      DEVPOS(6, 17)
+      DEVOUT(EF_MERCH->ADRESS)
+      DEVPOS(6, 52)
+      DEVOUT(EF_MERCH->TEL)
+      DEVPOS(7, 17)
+      DEVOUT(EF_MERCH->ADRESS_R)
+      DEVPOS(8, 30)
+      DEVOUT(EF_MERCH->CONT_PERSO)
+      DEVPOS(11, 47)
+      DEVOUT(STR(EF_MERCH->LIM_PB, 3))
+      DEVPOS(11, 58)
+      DEVOUT(STR(EF_MERCH->LIM_V, 3))
+      DEVPOS(11, 66)
+      DEVOUT(STR(EF_MERCH->LIM_EM, 3))
+      DEVPOS(12, 35)
+      DEVOUT(STR(EF_MERCH->VERIFY_LIM, 4))
+      DEVPOS(13, 48)
+      DEVOUT(STR(EF_MERCH->COM_PB, 5, 2))
+      DEVPOS(13, 59)
+      DEVOUT(STR(EF_MERCH->COM_V, 5, 2))
+      DEVPOS(13, 67)
+      DEVOUT(STR(EF_MERCH->COM_EM, 5, 2))
+      DEVPOS(14, 48)
+      DEVOUT(STR(EF_MERCH->VOZM_PB, 2))
+      DEVPOS(14, 59)
+      DEVOUT(STR(EF_MERCH->VOZM_V, 2))
+      DEVPOS(14, 67)
+      DEVOUT(STR(EF_MERCH->VOZM_EM, 2))
+      DEVPOS(16, 35)
+      DEVOUT(EF_MERCH->CURR_M)
+      DEVPOS(16, 63)
+      DEVOUT(EF_MERCH->CURR)
+      DEVPOS(17, 58)
+      DEVOUT(STR(EF_MERCH->DISCOUTN, 5, 2))
+
+      IF EF_MERCH->IMPRINTER
+
+         DEVPOS(18, 53)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(18, 53)
+         DEVOUT(" ")
+
+      ENDIF
+
+      IF EF_MERCH->POS
+
+         DEVPOS(18, 73)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(18, 73)
+         DEVOUT(" ")
+
+      ENDIF
+
+      DEVPOS(19, 37)
+      DEVOUT(DTOC(EF_MERCH->DAT_RAB))
+
+      IF EF_MERCH->PC_POS
+
+         DEVPOS(19, 73)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(19, 73)
+         DEVOUT(" ")
+
+      ENDIF
+
+      IF EF_MERCH->CREDIT
+
+         DEVPOS(20, 35)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(20, 35)
+         DEVOUT(" ")
+
+      ENDIF
+
+      IF EF_MERCH->MANUAL
+
+         DEVPOS(20, 67)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(20, 67)
+         DEVOUT(" ")
+
+      ENDIF
+
+      IF EF_MERCH->MULTICASH
+
+         DEVPOS(21, 35)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(21, 35)
+         DEVOUT(" ")
+
+      ENDIF
+
+      IF EF_MERCH->PREAUTH
+
+         DEVPOS(21, 77)
+         DEVOUT("√")
+
+      ELSE
+
+         DEVPOS(21, 77)
+         DEVOUT(" ")
+
+      ENDIF
+
+   ENDIF
+
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: SCRIO_1
+   Params: None.
+   Return: Nil
+  Example: SCRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION SCRIO_1()
+
+   LOCAL OLDC := SETCOLOR()
+
+   SETCOLOR("w+/w")
+   DEVPOS(0, 9)
+   DEVOUT("╤")
+   DISPBOX(1, 9, 21, 9, "┌─┐│┘─└│ ")
+   DEVPOS(22, 9)
+   DEVOUT("╧")
+   DEVPOS(2, 0)
+   DEVOUT("╟" + REPLICATE("─", 8) + "┤")
+   DEVPOS(9, 9)
+   DEVOUT("├" + REPLICATE("─", 69) + "╢")
+   DEVPOS(15, 9)
+   DEVOUT("├" + REPLICATE("─", 69) + "╢")
+   SETCOLOR("n/w")
+   DEVPOS(1, 1)
+   DEVOUT("N точки")
+   DEVPOS(1, 11)
+   DEVOUT("Тип точки       Город")
+   DEVPOS(2, 11)
+   DEVOUT("( ) ACQIRING    Название точки англ.")
+   DEVPOS(3, 11)
+   DEVOUT("( ) CASH        Название точки рус. ")
+   DEVPOS(4, 11)
+   DEVOUT("                Фирма-владелец")
+   DEVPOS(5, 11)
+   DEVOUT("Категория       Вид деятельности")
+   DEVPOS(6, 11)
+   DEVOUT("Адрес                            Телефон")
+   DEVPOS(7, 11)
+   DEVOUT("Адрес (рус) ")
+   DEVPOS(8, 11)
+   DEVOUT("ФИО ответственного")
+   DEVPOS(10, 46)
+   DEVOUT("Приватбанк   VISA    EC/MC")
+   DEVPOS(11, 11)
+   DEVOUT("Лимит авторизации по карточкам")
+   DEVPOS(12, 11)
+   DEVOUT("Лимит верификации ")
+   DEVPOS(13, 11)
+   DEVOUT("Комиссионный сбор по карточкам")
+   DEVPOS(14, 11)
+   DEVOUT("Срок возмещения по карточкам")
+   DEVPOS(16, 11)
+   DEVOUT("Валюта расчета с точкой         Валюта авторизации ")
+   DEVPOS(17, 11)
+   DEVOUT("Скидка, предоставл. по картам "+CHR(34)+"Приватбанка"+CHR(34))
+   DEVPOS(18, 11)
+   DEVOUT(;
+         "Отметка о регистрации в точке импринтера [ ]   POS-терминала [ ]";
+         )
+   DEVPOS(19, 11)
+   DEVOUT(;
+         "Дата ввода заявки                              POS-эмулятора [ ]";
+         )
+   DEVPOS(20, 11)
+   DEVOUT("      Возврат средств  [ ]")
+   DEVPOS(20, 40)
+   DEVOUT("      Ручной  ввод  карты [ ]")
+   DEVPOS(21, 11)
+   DEVOUT("     Мультикассирность [ ]")
+   DEVPOS(21, 40)
+   DEVOUT("Преавторизация и завершение продажи [ ]")
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: OBRIO_1
+   Params: None.
+   Return: Nil
+  Example: OBRIO_1()
+  ..........................................................................
+*/
+
+STATIC FUNCTION OBRIO_1()
+
+   LOCAL LMORE := .T.
+   LOCAL NKEY
+
+   DISPBEGIN()
+
+   DO WHILE LMORE
+
+      NKEY := 0
+
+      DO WHILE NKEY == 0 .AND. .NOT. BROWSE:STABLE()
+
+         BROWSE:STABILIZE()
+         NKEY := INKEY()
+
+      ENDDO
+
+      DISPEND()
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+      IF BROWSE:STABLE()
+
+         IF BROWSE:HITTOP() .OR. BROWSE:HITBOTTOM()
+
+            BROWSE:HITTOP := .F.
+            BROWSE:HITBOTTOM := .F.
+
+         ENDIF
+
+         NKEY := INKEY(10)
+
+         IF NKEY = 0
+
+            DISPBEGIN()
+            BROWSE:REFRESHALL()
+            LOOP
+
+         ENDIF
+
+      ENDIF
+
+      DO CASE
+
+      CASE NKEY == 27
+
+         LMORE := .F.
+
+      CASE NKEY == 24
+
+         BROWSE:DOWN()
+
+      CASE NKEY == 5
+
+         BROWSE:UP()
+
+      CASE NKEY == 1
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOTOP(), "")
+
+      CASE NKEY == 6
+
+         IF( .NOT. DBEMPTY(), BROWSE:GOBOTTOM(), "")
+
+      CASE NKEY == 3
+
+         BROWSE:PAGEDOWN()
+
+      CASE NKEY == 18
+
+         BROWSE:PAGEUP()
+
+      OTHERWISE
+
+         DO WHILE  .NOT. BROWSE:STABILIZE()
+
+         ENDDO
+
+         IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+
+         IF NKEY == -1
+
+            VVOD()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -2
+
+            RECCOLOR("gr+/w")
+            RED()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+         IF NKEY == -3
+
+            RECCOLOR("gr+/w")
+            UDL()
+
+         ENDIF
+
+         IF NKEY == -4
+
+            FIND_FIO()
+
+         ENDIF
+
+         IF NKEY == -5
+
+            IF EF_MERCH->TYPE1 == "H"
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Данная запись уже является ", ;
+                     " заявкой на POS - терминал !"}, {" Выход "})
+
+            ENDIF
+
+            RECCOLOR("gr+/w")
+            POS_TERM()
+            BROWSE:REFRESHALL()
+
+         ENDIF
+
+      END CASE
+
+      DISPBEGIN()
+
+   ENDDO
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: VVOD
+   Params: None.
+   Return: Nil
+  Example: VVOD()
+  ..........................................................................
+*/
+
+STATIC FUNCTION VVOD()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0, DBERR := .F.
+   LOCAL REC := RECNO()
+   LOCAL REC1, V_CITY, V_MERCH_NA, V_HO_CODE, V_HEAD_OFI, V_MCC, V_VID, ;
+         V_ADRESS, V_TEL, V_CONT_PER, V_LIM_PB, V_LIM_V, V_LIM_EM, ;
+         V_COM_PB, V_COM_V, V_COM_EM, V_PRO_PB, V_PRO_V, V_PRO_EM, ;
+         V_VOZM_PB, V_VOZM_V, V_VOZM_EM, V_CURR, V_CURR_M, V_DISCOUTN, ;
+         V_DAT_RAB, V_DAT_EMB, V_KEY_SP, V_RUS
+
+   PRIVATE V_TYPE, V_IMPRINTE, V_POS, V_PC_POS
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := NEWRECY(BROWSE)
+   COLORWIN2(BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NLEFT(), ;
+         BROWSE:ROWPOS() + (BROWSE:NTOP() - 1), BROWSE:NRIGHT(), COLORFON)
+   STATUSLINE(BOTIO_2)
+
+   IF M > BROWSE:NBOTTOM()
+
+      SCROLL(BROWSE:NTOP(), BROWSE:NLEFT(), BROWSE:NBOTTOM(), ;
+            BROWSE:NRIGHT(), 1)
+      M := BROWSE:NBOTTOM()
+
+   ENDIF
+
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   COLORWIN2(M, BROWSE:NLEFT(), M, BROWSE:NRIGHT(), COLORFON)
+   V_CITY := CITY__
+   MEMVAR->V_TYPE := RB_CREAT(2, 1)
+   V_MERCH_NA := SPACE(25)
+   V_RUS := SPACE(25)
+   V_HO_CODE := SPACE(3)
+   V_HEAD_OFI := SPACE(30)
+   V_MCC := SPACE(4)
+   V_VID := SPACE(30)
+   V_ADRESS := SPACE(25)
+   MEMVAR->V_ADRESSR := SPACE(25)
+   V_TEL := SPACE(25)
+   V_CONT_PER := SPACE(20)
+   V_LIM_PB := 0
+   V_LIM_V := 0
+   V_LIM_EM := 0
+   V_COM_PB := 0
+   V_COM_V := 0
+   V_COM_EM := 0
+   V_PRO_PB := 0
+   V_PRO_V := 0
+   V_PRO_EM := 0
+   V_VOZM_PB := 0
+   V_VOZM_V := 0
+   V_VOZM_EM := 0
+   V_CURR := SPACE(3)
+   V_CURR_M := SPACE(3)
+   V_DISCOUTN := 0
+   MEMVAR->V_IMPRINTE := .F.
+   MEMVAR->V_POS := .F.
+   V_DAT_RAB := DAT_OD__
+   MEMVAR->V_PC_POS := .F.
+   V_DAT_EMB := CTOD("")
+   MEMVAR->V_VERIF := EF_BANK->VERIFY_LIM
+   DEVPOS(1, 33)
+   DEVOUT(V_CITY)
+   DEVPOS(4, 48)
+   DEVOUT(V_HEAD_OFI)
+   DEVPOS(6, 21)
+   DEVOUT(V_MCC)
+   DEVPOS(12, 35)
+   DEVOUT(V_VERIF)
+   DEVPOS(20, 37)
+   DEVOUT(V_DAT_RAB)
+
+   DO WHILE .T.
+
+      AADD(GETLIST, _RADIOBUTT(2, 11, 1, V_TYPE, "v_type", NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(V_TYPE, ;
+            1)) + (""), IF(VALTYPE(L) == "L", _ARRAY_(V_TYPE, 1, L), ;
+            _ARRAY_(V_TYPE, 1)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _RADIOBUTT(3, 11, 2, V_TYPE, "v_type", NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(V_TYPE, ;
+            2)) + (""), IF(VALTYPE(L) == "L", _ARRAY_(V_TYPE, 2, L), ;
+            _ARRAY_(V_TYPE, 2)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETPOS(2, 49)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_MERCH_NA, V_MERCH_NA := _1)};
+            , "v_merch_name", "@! " + REPLICATE("X", 25), {||CHK_ENG(;
+            V_MERCH_NA, CHR(34)+"Название точки"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(3, 49)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_RUS, V_RUS := _1)}, "v_rus",;
+             REPLICATE("X", 25), {||CHK_RUS(V_RUS, CHR(34)+;
+            "Название точки"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(4, 44)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_HO_CODE, V_HO_CODE := _1)}, ;
+            "v_ho_code", REPLICATE("X", 3), {||CHK_HO_COD(V_HO_CODE, ;
+            @V_HEAD_OFI)}, NIL):DISPLAY())
+      SETPOS(5, 44)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VID, V_VID := _1)}, "v_vid",;
+             REPLICATE("X", 30), {||CHK_RUS(V_VID, CHR(34)+;
+            "Вид деятельности"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(6, 17)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_ADRESS, V_ADRESS := _1)}, ;
+            "v_adress", "@! " + REPLICATE("X", 25), {||CHK_ENG(V_ADRESS, ;
+            CHR(34)+"Адрес точки"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(6, 52)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_TEL, V_TEL := _1)}, "v_tel",;
+             REPLICATE("X", 25), {|| .NOT. EMPTY(V_TEL)}, NIL):DISPLAY())
+      SETPOS(7, 17)
+      AADD(GETLIST, __GET(NIL, "v_adressr", "@! " + REPLICATE("X", 25), {||;
+             .NOT. EMPTY(V_ADRESSR)}, NIL):DISPLAY())
+      SETPOS(8, 30)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_CONT_PER, V_CONT_PER := _1)};
+            , "v_cont_person", "@! " + REPLICATE("X", 20), {|| .NOT. EMPTY(;
+            V_CONT_PER)}, NIL):DISPLAY())
+      SETPOS(11, 47)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_LIM_PB, V_LIM_PB := _1)}, ;
+            "v_lim_pb", REPLICATE("9", 3), {||V_LIM_PB >= 0}, NIL):DISPLAY(;
+            ))
+      SETPOS(11, 58)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_LIM_V, V_LIM_V := _1)}, ;
+            "v_lim_v", REPLICATE("9", 3), {||V_LIM_V >= 0}, NIL):DISPLAY())
+      SETPOS(11, 66)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_LIM_EM, V_LIM_EM := _1)}, ;
+            "v_lim_em", REPLICATE("9", 3), {||V_LIM_EM >= 0}, NIL):DISPLAY(;
+            ))
+      SETPOS(13, 48)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_COM_PB, V_COM_PB := _1)}, ;
+            "v_com_pb", "99.99", {||V_COM_PB >= 0}, NIL):DISPLAY())
+      SETPOS(13, 59)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_COM_V, V_COM_V := _1)}, ;
+            "v_com_v", "99.99", {||V_COM_V >= 0}, NIL):DISPLAY())
+      SETPOS(13, 67)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_COM_EM, V_COM_EM := _1)}, ;
+            "v_com_em", "99.99", {||V_COM_EM >= 0}, NIL):DISPLAY())
+      SETPOS(14, 48)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VOZM_PB, V_VOZM_PB := _1)}, ;
+            "v_vozm_pb", REPLICATE("9", 2), {||V_VOZM_PB >= 0}, NIL);
+            :DISPLAY())
+      SETPOS(14, 59)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VOZM_V, V_VOZM_V := _1)}, ;
+            "v_vozm_v", REPLICATE("9", 2), {||V_VOZM_V >= 0}, NIL):DISPLAY(;
+            ))
+      SETPOS(14, 67)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VOZM_EM, V_VOZM_EM := _1)}, ;
+            "v_vozm_em", REPLICATE("9", 2), {||V_VOZM_EM >= 0}, NIL);
+            :DISPLAY())
+      SETPOS(16, 35)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_CURR_M, V_CURR_M := _1)}, ;
+            "v_curr_m", "@! " + REPLICATE("X", 3), {||V_CURR_M == "USD" ;
+            .OR. V_CURR_M == KOD_VUAH__}, NIL):DISPLAY())
+      SETPOS(16, 63)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_CURR, V_CURR := _1)}, ;
+            "v_curr", "@! " + REPLICATE("X", 3), {||V_CURR == "USD" .OR. ;
+            V_CURR == KOD_VUAH__}, NIL):DISPLAY())
+      SETPOS(17, 58)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_DISCOUTN, V_DISCOUTN := _1)};
+            , "v_discoutn", "99.99", NIL, NIL):DISPLAY())
+      AADD(GETLIST, _CHECKBOXE(19, 52, "v_imprinter", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_IMPRINTE) + (;
+            ""), IF(VALTYPE(L) == "L", MEMVAR->V_IMPRINTE := L, V_IMPRINTE));
+            }
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(19, 72, "v_pos", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_POS) + (""), ;
+            IF(VALTYPE(L) == "L", MEMVAR->V_POS := L, V_POS))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(20, 72, "v_pc_pos", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_PC_POS) + (""),;
+             IF(VALTYPE(L) == "L", MEMVAR->V_PC_POS := L, V_PC_POS))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF  .NOT. (CHK_ENG(V_MERCH_NA, CHR(34)+"Название точки"+CHR(34)) ;
+               .AND. CHK_HO_COD(V_HO_CODE, @V_HEAD_OFI) .AND. CHK_RUS(;
+               V_RUS, CHR(34)+"Название точки"+CHR(34)) .AND. CHK_RUS(;
+               V_VID, CHR(34)+"Вид деятельности"+CHR(34)) .AND. CHK_ENG(;
+               V_ADRESS, CHR(34)+"Адрес точки"+CHR(34)) .AND. .NOT. EMPTY(;
+               V_TEL) .AND. CHK_ENG(V_CONT_PER, CHR(34)+;
+               "ФИО ответственного"+CHR(34)) .AND. V_LIM_PB >= 0 .AND. ;
+               V_LIM_V >= 0 .AND. V_LIM_EM >= 0 .AND. V_COM_PB >= 0 .AND. ;
+               V_COM_V >= 0 .AND. V_COM_EM >= 0 .AND. V_VOZM_PB >= 0 .AND. ;
+               V_VOZM_V >= 0 .AND. V_VOZM_EM >= 0 .AND. (V_CURR == "USD" ;
+               .OR. V_CURR == KOD_VUAH__) .AND. (V_CURR_M == "USD" .OR. ;
+               V_CURR_M == KOD_VUAH__) .AND. .NOT. EMPTY(V_DAT_RAB) .AND. ;
+               .NOT. EMPTY(V_ADRESSR) .AND. .NOT. EMPTY(V_CONT_PER))
+
+            LOOP
+
+         ENDIF
+
+         DBSELECTAR("ef_sys")
+
+         IF RECLOCK(3)
+
+            DBSELECTAR("ef_merch")
+            REC1 := RECNO()
+            DBSETORDER(4)
+            DBERR := DBSEEK(STR(EF_SYS->KEY_SP, 6))
+            DBSETORDER(2)
+            DBGOTO(REC1)
+
+            IF DBERR
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Обнаружено дублирование", ;
+                     "внутреннего N точки !", ;
+                     "Это очень серьезная ошибка,", ;
+                     "обратитесь к администратору !"}, {" Выход "})
+               DBSELECTAR("ef_sys")
+               DBUNLOCK()
+               DBSELECTAR("ef_merch")
+               KEY := 27
+               EXIT
+
+            ENDIF
+
+            V_KEY_SP := EF_SYS->KEY_SP
+            ++EF_SYS->KEY_SP
+            DBSELECTAR("ef_sys")
+            DBCOMMIT()
+            DBUNLOCK()
+            DBSELECTAR("ef_merch")
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось получить", ;
+                  "внутренний номер точки !"}, {" Выход "})
+            DBSELECTAR("ef_merch")
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   COLORWIN2(M, BROWSE:NLEFT() - 1, M, BROWSE:NRIGHT(), "w+/w")
+
+   IF KEY = -9
+
+      IF ADDREC(3)
+
+         EF_MERCH->KEY_SP := V_KEY_SP
+         EF_MERCH->CITY := V_CITY
+
+         IF BT_SET(V_TYPE) = 1
+
+            EF_MERCH->TYPE := "1"
+            EF_MERCH->VERIFY_LIM := EF_BANK->VERIFY_LIM
+
+         ELSEIF BT_SET(V_TYPE) = 2
+
+            EF_MERCH->TYPE := "2"
+
+         ENDIF
+
+         EF_MERCH->MERCH_NAME := V_MERCH_NA
+         EF_MERCH->RUS_NAME := V_RUS
+         EF_MERCH->HO_CODE := V_HO_CODE
+         EF_MERCH->HEAD_OFICE := V_HEAD_OFI
+         EF_MERCH->VID := V_VID
+         EF_MERCH->ADRESS := V_ADRESS
+         EF_MERCH->ADRESS_R := V_ADRESSR
+         EF_MERCH->TEL := V_TEL
+         EF_MERCH->CONT_PERSO := V_CONT_PER
+         EF_MERCH->LIM_PB := V_LIM_PB
+         EF_MERCH->LIM_V := V_LIM_V
+         EF_MERCH->LIM_EM := V_LIM_EM
+         EF_MERCH->COM_PB := V_COM_PB
+         EF_MERCH->COM_V := V_COM_V
+         EF_MERCH->COM_EM := V_COM_EM
+         EF_MERCH->PRO_PB := V_PRO_PB
+         EF_MERCH->PRO_V := V_PRO_V
+         EF_MERCH->PRO_EM := V_PRO_EM
+         EF_MERCH->VOZM_PB := V_VOZM_PB
+         EF_MERCH->VOZM_V := V_VOZM_V
+         EF_MERCH->VOZM_EM := V_VOZM_EM
+         EF_MERCH->CURR := V_CURR
+         EF_MERCH->CURR_M := V_CURR_M
+         EF_MERCH->DISCOUTN := V_DISCOUTN
+         EF_MERCH->IMPRINTER := V_IMPRINTE
+         EF_MERCH->POS := V_POS
+         EF_MERCH->DAT_RAB := V_DAT_RAB
+         EF_MERCH->PC_POS := V_PC_POS
+         EF_MERCH->DAT_EMB := V_DAT_EMB
+         DBSELECTAR("ef_mrchz")
+
+         IF ADDREC(3)
+
+            EF_MRCHZ->KEY_SP := V_KEY_SP
+            EF_MRCHZ->DAT_BANK := DAT_OD__
+            EF_MRCHZ->STEP := "R"
+            EF_MRCHZ->NEW := .T.
+
+         ENDIF
+
+         DBSELECTAR("ef_merch")
+         DBCOMMITAL()
+         DBUNLOCKAL()
+         REC := RECNO()
+         STATUSLINE(BOTIO_1)
+
+      ELSE
+
+         RESTSCREEN(0, 0, 24, 79, WIN)
+
+      ENDIF
+
+   ELSEIF KEY = 27
+
+      RESTSCREEN(0, 0, 24, 79, WIN)
+
+   ENDIF
+
+   DBGOTO(REC)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: RED
+   Params: None.
+   Return: Nil
+  Example: RED()
+  ..........................................................................
+*/
+
+STATIC FUNCTION RED()
+
+   LOCAL KEY := 0, OLDC := SETCOLOR(), WIN, M := 0, DBERR := .F.
+   LOCAL V_CITY, V_MERCH_NA, V_HO_CODE, V_HEAD_OFI, V_MCC, V_VID, ;
+         E_CITY, E_MERCH_NA, E_HO_CODE, E_HEAD_OFI, E_MCC, E_VID, V_ADRESS,;
+          V_TEL, V_CONT_PER, V_LIM_PB, V_LIM_V, V_LIM_EM, E_ADRESS, E_TEL, ;
+         E_CONT_PER, E_LIM_PB, E_LIM_V, E_LIM_EM, V_COM_PB, V_COM_V, ;
+         V_COM_EM, V_PRO_PB, V_PRO_V, V_PRO_EM, E_COM_PB, E_COM_V, ;
+         E_COM_EM, E_PRO_PB, E_PRO_V, E_PRO_EM, V_VOZM_PB, V_VOZM_V, ;
+         V_VOZM_EM, V_CURR, V_CURR_M, V_DISCOUTN, E_VOZM_PB, E_VOZM_V, ;
+         E_VOZM_EM, E_CURR, E_CURR_M, E_DISCOUTN, V_DAT_RAB, V_DAT_EMB, ;
+         V_KEY_SP, V_RUS, E_DAT_RAB, E_DAT_EMB, E_KEY_SP, V_FL_CR, ;
+         V_FL_MAN, V_FL_MULTI, V_FL_PRE, E_FL_CR, E_FL_MAN, E_FL_MULTI, ;
+         E_FL_PRE
+
+   PRIVATE V_TYPE, V_IMPRINTE, V_POS, V_PC_POS
+   PRIVATE E_TYPE, E_IMPRINTE, E_POS, E_PC_POS
+
+   IF DBEMPTY()
+
+      TONE(125, 1)
+      RETURN NIL
+
+   ENDIF
+
+   IF  .NOT. RECLOCK(3)
+
+      RETURN NIL
+
+   ENDIF
+
+   WIN := SAVESCREEN(0, 0, 24, 79)
+   M := BROWSE:ROWPOS() + (BROWSE:NTOP() - 1)
+   STATUSLINE(BOTIO_2)
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   V_CITY := EF_MERCH->CITY
+
+   IF EF_MERCH->TYPE == "1"
+
+      MEMVAR->V_T := "1"
+      MEMVAR->V_TYPE := RB_CREAT(2, 1)
+
+   ELSEIF EF_MERCH->TYPE == "2"
+
+      MEMVAR->V_T := "2"
+      MEMVAR->V_TYPE := RB_CREAT(2, 2)
+
+   ELSE
+
+      MEMVAR->V_T := "1"
+      MEMVAR->V_TYPE := RB_CREAT(2, 1)
+
+   ENDIF
+
+   V_MERCH_NA := EF_MERCH->MERCH_NAME
+   V_RUS := EF_MERCH->RUS_NAME
+   V_HO_CODE := EF_MERCH->HO_CODE
+   V_HEAD_OFI := EF_MERCH->HEAD_OFICE
+   V_MCC := EF_MERCH->MCC
+   V_VID := EF_MERCH->VID
+   V_ADRESS := EF_MERCH->ADRESS
+   MEMVAR->V_ADRESSR := EF_MERCH->ADRESS_R
+   V_TEL := EF_MERCH->TEL
+   V_CONT_PER := EF_MERCH->CONT_PERSO
+   V_LIM_PB := EF_MERCH->LIM_PB
+   V_LIM_V := EF_MERCH->LIM_V
+   V_LIM_EM := EF_MERCH->LIM_EM
+   V_COM_PB := EF_MERCH->COM_PB
+   V_COM_V := EF_MERCH->COM_V
+   V_COM_EM := EF_MERCH->COM_EM
+   V_PRO_PB := EF_MERCH->PRO_PB
+   V_PRO_V := EF_MERCH->PRO_V
+   V_PRO_EM := EF_MERCH->PRO_EM
+   V_VOZM_PB := EF_MERCH->VOZM_PB
+   V_VOZM_V := EF_MERCH->VOZM_V
+   V_VOZM_EM := EF_MERCH->VOZM_EM
+   V_CURR := EF_MERCH->CURR
+   V_CURR_M := EF_MERCH->CURR_M
+   V_DISCOUTN := EF_MERCH->DISCOUTN
+   MEMVAR->V_IMPRINTE := EF_MERCH->IMPRINTER
+   MEMVAR->V_POS := EF_MERCH->POS
+   V_DAT_RAB := EF_MERCH->DAT_RAB
+   MEMVAR->V_PC_POS := EF_MERCH->PC_POS
+   V_DAT_EMB := EF_MERCH->DAT_EMB
+   V_CITY := EF_MERCH->CITY
+   V_FL_CR := EF_MERCH->CREDIT
+   V_FL_MAN := EF_MERCH->MANUAL
+   V_FL_MULTI := EF_MERCH->MULTICASH
+   V_FL_PRE := EF_MERCH->PREAUTH
+   E_CITY := V_CITY
+   MEMVAR->E_TYPE := V_T
+   E_MERCH_NA := V_MERCH_NA
+   MEMVAR->E_RUS := V_RUS
+   E_HO_CODE := V_HO_CODE
+   E_HEAD_OFI := V_HEAD_OFI
+   E_MCC := V_MCC
+   E_VID := V_VID
+   E_ADRESS := V_ADRESS
+   MEMVAR->E_ADRESSR := V_ADRESSR
+   E_TEL := V_TEL
+   E_CONT_PER := V_CONT_PER
+   E_LIM_PB := V_LIM_PB
+   E_LIM_V := V_LIM_V
+   E_LIM_EM := V_LIM_EM
+   E_COM_PB := V_COM_PB
+   E_COM_V := V_COM_V
+   E_COM_EM := V_COM_EM
+   E_PRO_PB := V_PRO_PB
+   E_PRO_V := V_PRO_V
+   E_PRO_EM := V_PRO_EM
+   E_VOZM_PB := V_VOZM_PB
+   E_VOZM_V := V_VOZM_V
+   E_VOZM_EM := V_VOZM_EM
+   E_CURR := V_CURR
+   E_CURR_M := V_CURR_M
+   E_DISCOUTN := V_DISCOUTN
+   MEMVAR->E_IMPRINTE := V_IMPRINTE
+   MEMVAR->E_POS := V_POS
+   E_DAT_RAB := V_DAT_RAB
+   MEMVAR->E_PC_POS := V_PC_POS
+   E_DAT_EMB := V_DAT_EMB
+   E_FL_CR := EF_MERCH->CREDIT
+   E_FL_MAN := EF_MERCH->MANUAL
+   E_FL_MULTI := EF_MERCH->MULTICASH
+   E_FL_PRE := EF_MERCH->PREAUTH
+   DEVPOS(1, 33)
+   DEVOUT(V_CITY)
+   DEVPOS(4, 48)
+   DEVOUT(V_HEAD_OFI)
+   DEVPOS(6, 21)
+   DEVOUT(V_MCC)
+   DEVPOS(19, 37)
+   DEVOUT(V_DAT_RAB)
+
+   DO WHILE .T.
+
+      AADD(GETLIST, _RADIOBUTT(2, 11, 1, V_TYPE, "v_type", NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(V_TYPE, ;
+            1)) + (""), IF(VALTYPE(L) == "L", _ARRAY_(V_TYPE, 1, L), ;
+            _ARRAY_(V_TYPE, 1)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _RADIOBUTT(3, 11, 2, V_TYPE, "v_type", NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARR(_ARRAY_(V_TYPE, ;
+            2)) + (""), IF(VALTYPE(L) == "L", _ARRAY_(V_TYPE, 2, L), ;
+            _ARRAY_(V_TYPE, 2)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETPOS(2, 49)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_MERCH_NA, V_MERCH_NA := _1)};
+            , "v_merch_name", "@! " + REPLICATE("X", 25), {||CHK_ENG(;
+            V_MERCH_NA, CHR(34)+"Название точки"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(3, 49)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_RUS, V_RUS := _1)}, "v_rus",;
+             REPLICATE("X", 25), {||CHK_RUS(V_RUS, CHR(34)+;
+            "Название точки"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(4, 44)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_HO_CODE, V_HO_CODE := _1)}, ;
+            "v_ho_code", REPLICATE("X", 3), {||CHK_HO_COD(V_HO_CODE, ;
+            @V_HEAD_OFI)}, NIL):DISPLAY())
+      SETPOS(5, 44)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VID, V_VID := _1)}, "v_vid",;
+             REPLICATE("X", 30), {||CHK_RUS(V_VID, CHR(34)+;
+            "Вид деятельности"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(6, 17)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_ADRESS, V_ADRESS := _1)}, ;
+            "v_adress", "@! " + REPLICATE("X", 25), {||CHK_ENG(V_ADRESS, ;
+            CHR(34)+"Адрес точки"+CHR(34))}, NIL):DISPLAY())
+      SETPOS(6, 52)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_TEL, V_TEL := _1)}, "v_tel",;
+             REPLICATE("X", 25), {|| .NOT. EMPTY(V_TEL)}, NIL):DISPLAY())
+      SETPOS(7, 17)
+      AADD(GETLIST, __GET(NIL, "v_adressr", "@! " + REPLICATE("X", 25), {||;
+             .NOT. EMPTY(V_ADRESSR)}, NIL):DISPLAY())
+      SETPOS(8, 30)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_CONT_PER, V_CONT_PER := _1)};
+            , "v_cont_person", "@! " + REPLICATE("X", 20), {|| .NOT. EMPTY(;
+            V_CONT_PER)}, NIL):DISPLAY())
+      SETPOS(11, 47)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_LIM_PB, V_LIM_PB := _1)}, ;
+            "v_lim_pb", REPLICATE("9", 3), {||V_LIM_PB >= 0}, NIL):DISPLAY(;
+            ))
+      SETPOS(11, 58)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_LIM_V, V_LIM_V := _1)}, ;
+            "v_lim_v", REPLICATE("9", 3), {||V_LIM_V >= 0}, NIL):DISPLAY())
+      SETPOS(11, 66)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_LIM_EM, V_LIM_EM := _1)}, ;
+            "v_lim_em", REPLICATE("9", 3), {||V_LIM_EM >= 0}, NIL):DISPLAY(;
+            ))
+      SETPOS(13, 48)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_COM_PB, V_COM_PB := _1)}, ;
+            "v_com_pb", "99.99", {||V_COM_PB >= 0}, NIL):DISPLAY())
+      SETPOS(13, 59)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_COM_V, V_COM_V := _1)}, ;
+            "v_com_v", "99.99", {||V_COM_V >= 0}, NIL):DISPLAY())
+      SETPOS(13, 67)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_COM_EM, V_COM_EM := _1)}, ;
+            "v_com_em", "99.99", {||V_COM_EM >= 0}, NIL):DISPLAY())
+      SETPOS(14, 48)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VOZM_PB, V_VOZM_PB := _1)}, ;
+            "v_vozm_pb", REPLICATE("9", 2), {||V_VOZM_PB >= 0}, NIL);
+            :DISPLAY())
+      SETPOS(14, 59)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VOZM_V, V_VOZM_V := _1)}, ;
+            "v_vozm_v", REPLICATE("9", 2), {||V_VOZM_V >= 0}, NIL):DISPLAY(;
+            ))
+      SETPOS(14, 67)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_VOZM_EM, V_VOZM_EM := _1)}, ;
+            "v_vozm_em", REPLICATE("9", 2), {||V_VOZM_EM >= 0}, NIL);
+            :DISPLAY())
+      SETPOS(16, 35)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_CURR_M, V_CURR_M := _1)}, ;
+            "v_curr_m", "@! " + REPLICATE("X", 3), {||V_CURR_M == "USD" ;
+            .OR. V_CURR_M == KOD_VUAH__}, NIL):DISPLAY())
+      SETPOS(16, 63)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_CURR, V_CURR := _1)}, ;
+            "v_curr", "@! " + REPLICATE("X", 3), {||V_CURR == "USD" .OR. ;
+            V_CURR == KOD_VUAH__}, NIL):DISPLAY())
+      SETPOS(17, 58)
+      AADD(GETLIST, __GET({|_1|IF(_1 == NIL, V_DISCOUTN, V_DISCOUTN := _1)};
+            , "v_discoutn", "99.99", NIL, NIL):DISPLAY())
+      AADD(GETLIST, _CHECKBOXE(18, 52, "v_imprinter", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_IMPRINTE) + (;
+            ""), IF(VALTYPE(L) == "L", MEMVAR->V_IMPRINTE := L, V_IMPRINTE));
+            }
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(18, 72, "v_pos", NIL, NIL, NIL, "n/w,gr+/w");
+            )
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_POS) + (""), ;
+            IF(VALTYPE(L) == "L", MEMVAR->V_POS := L, V_POS))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(19, 72, "v_pc_pos", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_PC_POS) + (""),;
+             IF(VALTYPE(L) == "L", MEMVAR->V_PC_POS := L, V_PC_POS))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(20, 34, "v_fl_cr", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_FL_CR) + (""), ;
+            IF(VALTYPE(L) == "L", V_FL_CR := L, V_FL_CR))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(20, 66, "v_fl_man", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_FL_MAN) + (""),;
+             IF(VALTYPE(L) == "L", V_FL_MAN := L, V_FL_MAN))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(21, 34, "v_fl_multi", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_FL_MULTI) + (;
+            ""), IF(VALTYPE(L) == "L", V_FL_MULTI := L, V_FL_MULTI))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(21, 76, "v_fl_pre", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(V_FL_PRE) + (""),;
+             IF(VALTYPE(L) == "L", V_FL_PRE := L, V_FL_PRE))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      SETKEYON()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      SETKEYOF()
+      KEY := LASTKEY()
+
+      IF KEY = -9
+
+         IF  .NOT. (CHK_ENG(V_MERCH_NA, CHR(34)+"Название точки"+CHR(34)) ;
+               .AND. CHK_RUS(V_RUS, CHR(34)+"Название точки"+CHR(34)) ;
+               .AND. CHK_HO_COD(V_HO_CODE, @V_HEAD_OFI) .AND. CHK_RUS(;
+               V_VID, CHR(34)+"Вид деятельности"+CHR(34)) .AND. CHK_ENG(;
+               V_ADRESS, CHR(34)+"Адрес точки"+CHR(34)) .AND. .NOT. EMPTY(;
+               V_TEL) .AND. CHK_ENG(V_CONT_PER, CHR(34)+;
+               "ФИО ответственного"+CHR(34)) .AND. V_LIM_PB >= 0 .AND. ;
+               V_LIM_V >= 0 .AND. V_LIM_EM >= 0 .AND. V_COM_PB >= 0 .AND. ;
+               V_COM_V >= 0 .AND. V_COM_EM >= 0 .AND. V_VOZM_PB >= 0 .AND. ;
+               V_VOZM_V >= 0 .AND. V_VOZM_EM >= 0 .AND. (V_CURR == "USD" ;
+               .OR. V_CURR == KOD_VUAH__) .AND. (V_CURR_M == "USD" .OR. ;
+               V_CURR_M == KOD_VUAH__) .AND. .NOT. EMPTY(V_DAT_RAB) .AND. ;
+               .NOT. EMPTY(V_ADRESSR) .AND. .NOT. EMPTY(V_CONT_PER))
+
+            LOOP
+
+         ENDIF
+
+         EXIT
+
+      ELSEIF KEY = 27
+
+         EXIT
+
+      ENDIF
+
+   ENDDO
+
+   IF KEY = -9
+
+      IF BT_SET(V_TYPE) = 1
+
+         MEMVAR->V_T := "1"
+
+      ELSEIF BT_SET(V_TYPE) = 2
+
+         MEMVAR->V_T := "2"
+
+      ENDIF
+
+      IF E_CITY <> V_CITY .OR. E_TYPE <> V_T .OR. E_MERCH_NA <> V_MERCH_NA ;
+            .OR. E_RUS <> V_RUS .OR. E_HO_CODE <> V_HO_CODE .OR. ;
+            E_HEAD_OFI <> V_HEAD_OFI .OR. E_MCC <> V_MCC .OR. E_VID <> ;
+            V_VID .OR. E_ADRESS <> V_ADRESS .OR. E_ADRESSR <> V_ADRESSR ;
+            .OR. E_TEL <> V_TEL .OR. E_CONT_PER <> V_CONT_PER .OR. ;
+            E_LIM_PB <> V_LIM_PB .OR. E_LIM_V <> V_LIM_V .OR. E_LIM_EM <> ;
+            V_LIM_EM .OR. E_COM_PB <> V_COM_PB .OR. E_COM_V <> V_COM_V ;
+            .OR. E_COM_EM <> V_COM_EM .OR. E_VOZM_PB <> V_VOZM_PB .OR. ;
+            E_VOZM_V <> V_VOZM_V .OR. E_VOZM_EM <> V_VOZM_EM .OR. E_CURR ;
+            <> V_CURR .OR. E_CURR_M <> V_CURR_M .OR. E_DISCOUTN <> ;
+            V_DISCOUTN .OR. E_IMPRINTE <> V_IMPRINTE .OR. E_FL_CR <> ;
+            V_FL_CR .OR. E_FL_MAN <> V_FL_MAN .OR. E_FL_MULTI <> ;
+            V_FL_MULTI .OR. E_FL_PRE <> V_FL_PRE .OR. E_POS <> V_POS .OR. ;
+            E_DAT_RAB <> V_DAT_RAB
+
+         DBERR := .T.
+         DBSELECTAR("ef_mrchz")
+         DBGOTOP()
+
+         DO WHILE EMPTY(EF_MRCHZ->NAM_PKT) .AND. .NOT. EOF()
+
+            IF EF_MRCHZ->KEY_SP = EF_MERCH->KEY_SP
+
+               DBERR := .F.
+               EXIT
+
+            ENDIF
+
+            DBSKIP()
+
+         ENDDO
+
+         IF DBERR
+
+            IF ADDREC(3)
+
+               EF_MRCHZ->KEY_SP := EF_MERCH->KEY_SP
+               EF_MRCHZ->DAT_BANK := DAT_OD__
+               EF_MRCHZ->STEP := "M"
+               EF_MRCHZ->NEW := .F.
+
+            ELSE
+
+               ERROR(NIL, NIL, {"@ Ошибка !", ;
+                     "Не удалось записать изменния", "по точке в базу "+;
+                     CHR(34)+"EF_MRCHZ"+CHR(34)+" !", ;
+                     "Изменения по фирме в БД не записаны !"}, {" Выход "})
+               DBSELECTAR("ef_merch")
+               DBERR := .F.
+
+            ENDIF
+
+         ELSEIF RECLOCK(3)
+
+            EF_MRCHZ->DAT_BANK := DAT_OD__
+            DBERR := .T.
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось записать изменния", ;
+                  "по точке в базу "+CHR(34)+"EF_MRCHZ"+CHR(34)+" !", ;
+                  "Изменения по фирме в БД не записаны !"}, {" Выход "})
+            DBSELECTAR("ef_head")
+
+         ENDIF
+
+         DBSELECTAR("ef_merch")
+
+         IF DBERR
+
+            IF BT_SET(V_TYPE) = 1
+
+               EF_MERCH->TYPE := "1"
+               EF_MERCH->VERIFY_LIM := EF_BANK->VERIFY_LIM
+
+            ELSEIF BT_SET(V_TYPE) = 2
+
+               EF_MERCH->TYPE := "2"
+
+            ENDIF
+
+            EF_MERCH->MERCH_NAME := V_MERCH_NA
+            EF_MERCH->RUS_NAME := V_RUS
+            EF_MERCH->HO_CODE := V_HO_CODE
+            EF_MERCH->HEAD_OFICE := V_HEAD_OFI
+            EF_MERCH->VID := V_VID
+            EF_MERCH->ADRESS := V_ADRESS
+            EF_MERCH->ADRESS_R := V_ADRESSR
+            EF_MERCH->TEL := V_TEL
+            EF_MERCH->CONT_PERSO := V_CONT_PER
+            EF_MERCH->LIM_PB := V_LIM_PB
+            EF_MERCH->LIM_V := V_LIM_V
+            EF_MERCH->LIM_EM := V_LIM_EM
+            EF_MERCH->COM_PB := V_COM_PB
+            EF_MERCH->COM_V := V_COM_V
+            EF_MERCH->COM_EM := V_COM_EM
+            EF_MERCH->PRO_PB := V_PRO_PB
+            EF_MERCH->PRO_V := V_PRO_V
+            EF_MERCH->PRO_EM := V_PRO_EM
+            EF_MERCH->VOZM_PB := V_VOZM_PB
+            EF_MERCH->VOZM_V := V_VOZM_V
+            EF_MERCH->VOZM_EM := V_VOZM_EM
+            EF_MERCH->CURR := V_CURR
+            EF_MERCH->CURR_M := V_CURR_M
+            EF_MERCH->DISCOUTN := V_DISCOUTN
+            EF_MERCH->IMPRINTER := V_IMPRINTE
+            EF_MERCH->POS := V_POS
+            EF_MERCH->DAT_RAB := V_DAT_RAB
+            EF_MERCH->PC_POS := V_PC_POS
+            EF_MERCH->DAT_EMB := V_DAT_EMB
+            EF_MERCH->CREDIT := V_FL_CR
+            EF_MERCH->MANUAL := V_FL_MAN
+            EF_MERCH->MULTICASH := V_FL_MULTI
+            EF_MERCH->PREAUTH := V_FL_PRE
+
+         ENDIF
+
+      ENDIF
+
+      DBCOMMITAL()
+
+   ENDIF
+
+   DBUNLOCKAL()
+   RESTSCREEN(0, 0, 24, 79, WIN)
+   SETCOLOR(OLDC)
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: UDL
+   Params: None.
+   Return: Nil
+  Example: UDL()
+  ..........................................................................
+*/
+
+STATIC FUNCTION UDL()
+
+   LOCAL KEY
+
+   IF DBEMPTY()
+
+      TONE(125, 1)
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_slip")
+
+   IF DBSEEK(EF_MERCH->MERCH)
+
+      ERROR(NIL, NIL, {"@ Ошибка !", "У этой точки в рабочей БД", ;
+            "есть слипы !"}, {" Выход "})
+      RECCOLOR("w+/bg")
+      DBSELECTAR("ef_merch")
+      RETURN NIL
+
+   ENDIF
+
+   DBSELECTAR("ef_merch")
+
+   IF  .NOT. RECLOCK(3)
+
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   KEY := DIALOG(NIL, NIL, {"Удалять строку ?"}, {"  Да ", " Нет "}, 2)
+
+   IF KEY = 1
+
+      DBSELECTAR("ef_mrchz")
+      DBSETORDER(2)
+      DBSEEK(STR(EF_MERCH->KEY_SP, 6))
+
+      DO WHILE EF_MRCHZ->KEY_SP = EF_MERCH->KEY_SP .AND. .NOT. EOF()
+
+         IF RECLOCK(3)
+
+            DBDELETE()
+
+         ENDIF
+
+         DBSKIP()
+
+      ENDDO
+
+      DBSETORDER(1)
+      DBSELECTAR("ef_merch")
+      DBDELETE()
+      DBCOMMITAL()
+      DBUNLOCKAL()
+
+   ELSE
+
+      DBUNLOCK()
+      RECCOLOR("w+/bg")
+      RETURN NIL
+
+   ENDIF
+
+   DISPBEGIN()
+   BROWSE:REFRESHALL()
+
+   DO WHILE  .NOT. BROWSE:STABILIZE()
+
+   ENDDO
+
+   IF BROWSE:ROWPOS() = 1
+
+      BROWSE:REFRESHALL()
+
+      DO WHILE  .NOT. BROWSE:STABILIZE()
+
+      ENDDO
+
+   ENDIF
+
+   DISPEND()
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: FIND_FIO
+   Params: None.
+   Return: Nil
+  Example: FIND_FIO()
+  ..........................................................................
+*/
+
+STATIC FUNCTION FIND_FIO()
+
+   LOCAL REC := EF_MERCH->(RECNO()), RES := .T.
+   LOCAL AFIND := {{" по "+CHR(34)+"N точки"+CHR(34)+" ", .T.}, {" по "+;
+         CHR(34)+"Название точки"+CHR(34)+" ", .T.}}
+
+   PRIVATE RET_FIND
+   MEMVAR->RET_FIND := MENU_POPUP(AFIND, " Поиск точки ")
+
+   IF RET_FIND = 1
+
+      RES := STRFIND(3, 1, 8, "X", "SkipFndM")
+
+   ELSEIF RET_FIND = 2
+
+      EF_MERCH->(DBSETORDER(3))
+      RES := STRFIND(2, 44, 25, "X", "SkipFndM")
+      EF_MERCH->(DBSETORDER(2))
+
+   ENDIF
+
+   IF  .NOT. RES
+
+      DISPBEGIN()
+      BROWSE:GOTOP()
+      REFRESH(BROWSE)
+      EF_MERCH->(DBGOTO(REC))
+      REFRESH(BROWSE)
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+      DISPEND()
+
+   ELSE
+
+      DISPBEGIN()
+
+      IF EF_MERCH->(EOF())
+
+         EF_MERCH->(DBGOBOTTOM())
+
+      ENDIF
+
+      REFRESH(BROWSE)
+      IF(VALTYPE(VYVBLOCK) == "B", EVAL(VYVBLOCK), NIL)
+      DISPEND()
+
+   ENDIF
+
+
+RETURN NIL
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: POS_TERM
+   Params: None.
+   Return: Variable
+  Example: POS_TERM()
+  ..........................................................................
+*/
+
+STATIC FUNCTION POS_TERM()
+
+   LOCAL KEY, WIN, OLDC := SETCOLOR()
+
+   MEMVAR->V_CITY := EF_MERCH->CITY
+
+   IF EF_MERCH->TYPE == "1"
+
+      MEMVAR->V_T := "1"
+
+   ELSEIF EF_MERCH->TYPE == "2"
+
+      MEMVAR->V_T := "2"
+
+   ELSE
+
+      MEMVAR->V_T := "1"
+
+   ENDIF
+
+   MEMVAR->V_MERCH_NA := EF_MERCH->MERCH_NAME
+   MEMVAR->V_RUS := EF_MERCH->RUS_NAME
+   MEMVAR->V_HO_CODE := EF_MERCH->HO_CODE
+   MEMVAR->V_HEAD_OFI := EF_MERCH->HEAD_OFICE
+   MEMVAR->V_MCC := EF_MERCH->MCC
+   MEMVAR->V_VID := EF_MERCH->VID
+   MEMVAR->V_ADRESS := EF_MERCH->ADRESS
+   MEMVAR->V_ADRESSR := EF_MERCH->ADRESS_R
+   MEMVAR->V_TEL := EF_MERCH->TEL
+   MEMVAR->V_CONT_PER := EF_MERCH->CONT_PERSO
+   MEMVAR->V_LIM_PB := EF_MERCH->LIM_PB
+   MEMVAR->V_LIM_V := EF_MERCH->LIM_V
+   MEMVAR->V_LIM_EM := EF_MERCH->LIM_EM
+   MEMVAR->V_COM_PB := EF_MERCH->COM_PB
+   MEMVAR->V_COM_V := EF_MERCH->COM_V
+   MEMVAR->V_COM_EM := EF_MERCH->COM_EM
+   MEMVAR->V_PRO_PB := EF_MERCH->PRO_PB
+   MEMVAR->V_PRO_V := EF_MERCH->PRO_V
+   MEMVAR->V_PRO_EM := EF_MERCH->PRO_EM
+   MEMVAR->V_VOZM_PB := EF_MERCH->VOZM_PB
+   MEMVAR->V_VOZM_V := EF_MERCH->VOZM_V
+   MEMVAR->V_VOZM_EM := EF_MERCH->VOZM_EM
+   MEMVAR->V_CURR := EF_MERCH->CURR
+   MEMVAR->V_CURR_M := EF_MERCH->CURR_M
+   MEMVAR->V_DISCOUTN := EF_MERCH->DISCOUTN
+   MEMVAR->V_IMPRINTE := EF_MERCH->IMPRINTER
+   MEMVAR->V_POS := EF_MERCH->POS
+   MEMVAR->V_DAT_RAB := EF_MERCH->DAT_RAB
+   MEMVAR->V_PC_POS := EF_MERCH->PC_POS
+   MEMVAR->V_DAT_EMB := EF_MERCH->DAT_EMB
+   MEMVAR->V_CITY := EF_MERCH->CITY
+   MEMVAR->V_VERI := EF_MERCH->VERIFY_LIM
+   MEMVAR->FL_CR := .F.
+   MEMVAR->FL_MAN := .F.
+   MEMVAR->FL_MULTI := .F.
+   MEMVAR->FL_PRE := .F.
+   SETCOLOR("w+/w")
+   WIN := WIN(7, 10, 16, 60, "d", "t")
+   SETCOLOR("n/w,w+/b,,,w+/bg")
+   DEVPOS(1, 10)
+   DEVOUT("Введите реквизиты POS-терминала")
+   MEMVAR->ABUT := BT_CREAT(2)
+   SETKEYON()
+
+   DO WHILE .T.
+
+      AADD(GETLIST, _CHECKBOXE(2, 3, "fl_cr", NIL, NIL, NIL, "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_CR) + ;
+            " Возврат средств (Credit Voucher)", IF(VALTYPE(L) == "L", ;
+            MEMVAR->FL_CR := L, FL_CR))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(3, 3, "fl_man", NIL, NIL, NIL, "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_MAN) + ;
+            " Ручной ввод карты               ", IF(VALTYPE(L) == "L", ;
+            MEMVAR->FL_MAN := L, FL_MAN))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(4, 3, "fl_multi", NIL, NIL, NIL, ;
+            "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_MULTI) + ;
+            " Мультикассировка                ", IF(VALTYPE(L) == "L", ;
+            MEMVAR->FL_MULTI := L, FL_MULTI))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _CHECKBOXE(5, 3, "fl_pre", NIL, NIL, NIL, "n/w,gr+/w"))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, _GETSEPARC(FL_PRE) + ;
+            " Преавторизация и заверш. продажи", IF(VALTYPE(L) == "L", ;
+            MEMVAR->FL_PRE := L, FL_PRE))}
+      ATAIL(GETLIST):READER := {|O|_CHBOXREAD(O, GETLIST)}
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _BUTTON(7, 10, 1, ABUT, "aBut", "n/g,w+/g", "F10", ;
+            "Запомнить", NIL, NIL, -9))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, "Запомнить", IF(VALTYPE(L) ;
+            == "L", _ARRAY_(ABUT, 1, L), _ARRAY_(ABUT, 1)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " F10Запомнить ");
+            }
+      ATAIL(GETLIST):DISPLAY()
+      AADD(GETLIST, _BUTTON(7, 30, 2, ABUT, "aBut", "n/g,w+/g", "Esc", ;
+            "Выход", NIL, NIL, 27))
+      ATAIL(GETLIST):BLOCK := {|L|IF(L == NIL, "Выход", IF(VALTYPE(L) == ;
+            "L", _ARRAY_(ABUT, 2, L), _ARRAY_(ABUT, 2)))}
+      ATAIL(GETLIST):READER := {|O|_RDBUTTONR(O, GETLIST, " EscВыход ")}
+      ATAIL(GETLIST):DISPLAY()
+      SETCURSOR(1)
+      READMODAL(GETLIST)
+      MEMVAR->GETLIST := {}
+      SETCURSOR(0)
+      KEY := LASTKEY()
+
+      IF KEY == 27 .OR. BT_SET(ABUT) == 2
+
+         MEMVAR->RET := .F.
+         EXIT
+
+      ELSEIF KEY == -9 .OR. BT_SET(ABUT) == 1
+
+         MEMVAR->RET := .T.
+         DBSELECTAR("ef_sys")
+
+         IF RECLOCK(3)
+
+            DBSELECTAR("ef_merch")
+            MEMVAR->REC1 := RECNO()
+            DBSETORDER(4)
+            MEMVAR->DBERR := DBSEEK(STR(EF_SYS->KEY_SP, 6))
+            DBSETORDER(2)
+            DBGOTO(REC1)
+
+            IF DBERR
+
+               ERROR(NIL, NIL, {"@ Ошибка !", "Обнаружено дублирование", ;
+                     "внутреннего N точки !", ;
+                     "Это очень серьезная ошибка,", ;
+                     "обратитесь к администратору !"}, {" Выход "})
+               DBSELECTAR("ef_sys")
+               DBUNLOCK()
+               DBSELECTAR("ef_merch")
+               MEMVAR->RET := .F.
+               EXIT
+
+            ENDIF
+
+            MEMVAR->V_KEY_SP := EF_SYS->KEY_SP
+            ++EF_SYS->KEY_SP
+            DBSELECTAR("ef_sys")
+            DBCOMMIT()
+            DBUNLOCK()
+            DBSELECTAR("ef_merch")
+
+         ELSE
+
+            ERROR(NIL, NIL, {"@ Ошибка !", "Не удалось получить", ;
+                  "внутренний номер точки !"}, {" Выход "})
+            DBSELECTAR("ef_merch")
+            MEMVAR->RET := .F.
+            EXIT
+
+         ENDIF
+
+         IF RET
+
+            IF ADDREC(3)
+
+               EF_MERCH->KEY_SP := V_KEY_SP
+               EF_MERCH->CITY := V_CITY
+               EF_MERCH->TYPE := V_T
+               EF_MERCH->MCC := V_MCC
+               EF_MERCH->MERCH_NAME := V_MERCH_NA
+               EF_MERCH->RUS_NAME := V_RUS
+               EF_MERCH->HO_CODE := V_HO_CODE
+               EF_MERCH->HEAD_OFICE := V_HEAD_OFI
+               EF_MERCH->VID := V_VID
+               EF_MERCH->ADRESS := V_ADRESS
+               EF_MERCH->ADRESS_R := V_ADRESSR
+               EF_MERCH->TEL := V_TEL
+               EF_MERCH->CONT_PERSO := V_CONT_PER
+               EF_MERCH->LIM_PB := V_LIM_PB
+               EF_MERCH->LIM_V := V_LIM_V
+               EF_MERCH->LIM_EM := V_LIM_EM
+               EF_MERCH->COM_PB := V_COM_PB
+               EF_MERCH->COM_V := V_COM_V
+               EF_MERCH->COM_EM := V_COM_EM
+               EF_MERCH->PRO_PB := V_PRO_PB
+               EF_MERCH->PRO_V := V_PRO_V
+               EF_MERCH->PRO_EM := V_PRO_EM
+               EF_MERCH->VOZM_PB := V_VOZM_PB
+               EF_MERCH->VOZM_V := V_VOZM_V
+               EF_MERCH->VOZM_EM := V_VOZM_EM
+               EF_MERCH->CURR := V_CURR
+               EF_MERCH->CURR_M := V_CURR_M
+               EF_MERCH->DISCOUTN := V_DISCOUTN
+               EF_MERCH->IMPRINTER := V_IMPRINTE
+               EF_MERCH->DAT_RAB := V_DAT_RAB
+               EF_MERCH->PC_POS := V_PC_POS
+               EF_MERCH->DAT_EMB := V_DAT_EMB
+               EF_MERCH->VERIFY_LIM := V_VERI
+               EF_MERCH->TYPE1 := "H"
+               EF_MERCH->POS := .T.
+               EF_MERCH->CREDIT := FL_CR
+               EF_MERCH->MANUAL := FL_MAN
+               EF_MERCH->MULTICASH := FL_MULTI
+               EF_MERCH->PREAUTH := FL_PRE
+               DBSELECTAR("ef_mrchz")
+
+               IF ADDREC(3)
+
+                  EF_MRCHZ->KEY_SP := V_KEY_SP
+                  EF_MRCHZ->DAT_BANK := DAT_OD__
+                  EF_MRCHZ->STEP := "R"
+                  EF_MRCHZ->NEW := .T.
+
+               ENDIF
+
+               DBSELECTAR("ef_merch")
+               DBCOMMITAL()
+               DBUNLOCKAL()
+               EXIT
+
+            ELSE
+
+               RESTSCREEN(0, 0, 24, 79, WIN)
+
+            ENDIF
+
+         ENDIF
+
+      ENDIF
+
+   ENDDO
+
+   SETKEYOF()
+   WINCLOSE(WIN)
+   SETCOLOR(OLDC)
+
+RETURN RET
+
+/* ------ Rescue5 1.00(d) (c) APTware 1993,94 ------
+     Name: CHK_HO_COD
+   Params: V_HO_CODE, V_HEAD_OFI
+   Return: Undefined
+  Example: CHK_HO_COD(V_HO_CODE, V_HEAD_OFI)
+  ..........................................................................
+*/
+
+STATIC FUNCTION CHK_HO_COD(V_HO_CODE, V_HEAD_OFI)
+
+   LOCAL FL_OK := .F.
+
+   IF EF_HEAD->(DBSEEK(V_HO_CODE))
+
+      FL_OK := .T.
+      V_HEAD_OFI := EF_HEAD->HEAD_OFICE
+      DEVPOS(4, 48)
+      DEVOUT(V_HEAD_OFI)
+
+   ELSE
+
+      V_HEAD_OFI := SPACE(30)
+      DEVPOS(4, 48)
+      DEVOUT(V_HEAD_OFI)
+      ERROR(NIL, NIL, {"@ Ошибка !", "Фирма с кодом "+CHR(34) + V_HO_CODE +;
+             CHR(34), "не найдена в справочнике фирм !"}, {" Продолжить "})
+
+   ENDIF
+
+
+RETURN FL_OK
+
