@@ -1,0 +1,36 @@
+unit Unit3;
+
+interface
+
+uses Windows, SysUtils, Messages, Classes, Graphics, Controls,
+  StdCtrls, ExtCtrls, Forms, Quickrpt, QRCtrls,Unit1;
+
+type
+  TReport = class(TQuickRep)
+    QRBand1: TQRBand;
+    QRBand2: TQRBand;
+    QRBand3: TQRBand;
+    QRDBText1: TQRDBText;
+    QRDBText2: TQRDBText;
+    QRDBText3: TQRDBText;
+    QRLabel1: TQRLabel;
+    QRLabel2: TQRLabel;
+    QRLabel3: TQRLabel;
+    QRDBText4: TQRDBText;
+    QRLabel4: TQRLabel;
+    QRDBText5: TQRDBText;
+    QRLabel5: TQRLabel;
+  private
+
+  public
+
+  end;
+
+var
+  Report: TReport;
+
+implementation
+
+{$R *.DFM}
+
+end.

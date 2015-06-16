@@ -1,0 +1,710 @@
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  BseMain, SqaMain, Db, StdCtrls, Buttons, Grids, DBGrids, ComCtrls,
+  ExtCtrls, ImgList, ToolWin, MUtils, nwbase, nwlib, TimerLst, TrayIcon,
+  StrUtils,IniFiles, Mask, ToolEdit, DBTables,BSEERRS, MSybr, RxDBComb,
+  RXCtrls, Menus;
+const
+crSearch = 1;
+crSearch2 = 2;
+Skob = chr(39) ;
+type
+  TForm1 = class(TForm)
+    tsQuery1: TtsQuery;
+    tsDatabase1: TtsDatabase;
+    DataSource1: TDataSource;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    StatusBar1: TStatusBar;
+    ToolBar1: TToolBar;
+    ToolButProv: TToolButton;
+    ToolButton2: TToolButton;
+    ImageList1: TImageList;
+    Utils1: TUtils;
+    Panel5: TPanel;
+    NWBase1: TNWBase;
+    RxTimerList1: TRxTimerList;
+    RxTimerEvent1: TRxTimerEvent;
+    TrayIcon1: TTrayIcon;
+    Panel13: TPanel;
+    Panel4: TPanel;
+    PageControl1: TPageControl;
+    TabSheet1: TTabSheet;
+    Panel6: TPanel;
+    PanelRight0: TPanel;
+    Label1: TLabel;
+    LMin: TLabel;
+    Label2: TLabel;
+    LMax: TLabel;
+    Label3: TLabel;
+    LCou: TLabel;
+    Label4: TLabel;
+    LNotr: TLabel;
+    BitBtn2: TBitBtn;
+    TabSheet4: TTabSheet;
+    Panel10: TPanel;
+    PanelRight: TPanel;
+    Label7: TLabel;
+    LLastRepl: TLabel;
+    Label6: TLabel;
+    Label8: TLabel;
+    LNotRepl: TLabel;
+    BitBtn1: TBitBtn;
+    DateTimePicker1: TDateTimePicker;
+    Panel12: TPanel;
+    TreeView1: TTreeView;
+    ToolBar2: TToolBar;
+    ToolButton3: TToolButton;
+    TabSheet5: TTabSheet;
+    SpeedButton1: TSpeedButton;
+    Panel9: TPanel;
+    LRepl: TLabel;
+    CheckRepl: TCheckBox;
+    FilenameLog: TFilenameEdit;
+    ERepl: TEdit;
+    Panel11: TPanel;
+    LProt: TLabel;
+    EPodtv: TEdit;
+    CheckProtON: TCheckBox;
+    Panel14: TPanel;
+    Label5: TLabel;
+    ETimerInt: TEdit;
+    Memo1: TMemo;
+    CheckMes: TCheckBox;
+    CheckProt: TCheckBox;
+    Memo2: TMemo;
+    Label9: TLabel;
+    LPhase: TLabel;
+    ToolButRepl: TToolButton;
+    Sybr1: TSybr;
+    Panel7: TPanel;
+    Panel8: TPanel;
+    DBGrid1: TDBGrid;
+    PanelTOP: TPanel;
+    BPL_A_NANC: TEdit;
+    Label10: TLabel;
+    BPL_A_KEY: TEdit;
+    Label11: TLabel;
+    BPL_A_AN: TEdit;
+    Label12: TLabel;
+    Label13: TLabel;
+    BPL_A_AS: TEdit;
+    BPL_A_NAM: TEdit;
+    Label14: TLabel;
+    BPL_B_NANC: TEdit;
+    Label15: TLabel;
+    BPL_B_KEY: TEdit;
+    Label16: TLabel;
+    BPL_B_AN: TEdit;
+    Label17: TLabel;
+    Label18: TLabel;
+    BPL_B_AS: TEdit;
+    BPL_B_NAM: TEdit;
+    Label19: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
+    ToolBar3: TToolBar;
+    ToolButton4: TToolButton;
+    Bevel1: TBevel;
+    Bevel2: TBevel;
+    BPL_BRNM: TEdit;
+    Label22: TLabel;
+    BPL_CCY: TEdit;
+    Label23: TLabel;
+    BPL_USID_OP: TEdit;
+    Label24: TLabel;
+    Label25: TLabel;
+    BPL_OSND: TEdit;
+    BPL_PR_SYS: TEdit;
+    Label26: TLabel;
+    Bevel3: TBevel;
+    ComboBox1: TComboBox;
+    PopupMenu1: TPopupMenu;
+    N2: TMenuItem;
+    ToolButton1: TToolButton;
+    BitBtn3: TBitBtn;
+    PopMenuTray: TPopupMenu;
+    ToolButton5: TToolButton;
+    N1: TMenuItem;
+    N3: TMenuItem;
+    Panel15: TPanel;
+    Bevel4: TBevel;
+    DateTimePicker2: TDateTimePicker;
+    Label27: TLabel;
+    procedure ToolButton2Click(Sender: TObject);
+    procedure ToolButProvClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure CheckMesClick(Sender: TObject);
+    procedure TrayIcon1DblClick(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure RxTimerEvent1Timer(Sender: TObject);
+    procedure CheckReplClick(Sender: TObject);
+    procedure TabSheet2Show(Sender: TObject);
+    procedure ToolButton3Click(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure CheckProtONClick(Sender: TObject);
+    procedure TabSheet5Show(Sender: TObject);
+    procedure CheckProtClick(Sender: TObject);
+    procedure ToolButton4Click(Sender: TObject);
+    procedure ToolButReplClick(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
+    procedure DBGrid1TitleClick(Column: TColumn);
+    procedure ToolButton1Click(Sender: TObject);
+    procedure ToolButton5Click(Sender: TObject);
+    procedure N3Click(Sender: TObject);
+    procedure BitBtn3Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+    procedure Send(Mes: String); //послать сообщение
+    function  SverkaLoga(PathLog:String;DateLog:TDateTime;Sender:TObject):Bool; {сверка лога репликации}
+    function  SverkaProv():String {сверка проводок};
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+uses Unit3;
+
+var
+Flag,FlagNoSend : Bool;
+IniFile: TIniFile;
+Mess,ReplMess,TMPFile,sWhere,SortSQL: String;
+
+
+{$R *.DFM}
+
+
+procedure TForm1.ToolButton2Click(Sender: TObject);
+begin
+ Close;
+end;
+{---------------------сверка проводок------------------}
+function TForm1.SverkaProv():String ; //сверка проводок
+var
+notr :TDateTime;
+Year, Month, Day, Hour, Min, Sec, MSec: Word;
+Phase :String;
+begin
+ screen.Cursor := crSearch;
+ Sybr1.sWhere:=''; //формирую строку дл€ запроса
+ Sybr1.SQLWhere([BPL_PR_SYS,BPL_BRNM,BPL_CCY,BPL_USID_OP,BPL_OSND,
+            BPL_A_NANC,BPL_A_KEY,BPL_A_AN,BPL_A_AS,BPL_A_NAM,
+            BPL_B_NANC,BPL_B_KEY,BPL_B_AN,BPL_B_AS,BPL_B_NAM]);
+
+
+with tsQuery1 do
+  begin //к-во неподтвержденных
+    DisableControls;
+    Active:=False;
+    Sql.Clear;
+    Sql.Add('select count(*) cou,max(timestamp) tmax,min(timestamp) tmin  from plpb where bpl_pr_sys='+chr(39)+'s'+chr(39));
+    Active:=True;
+  end; {with}
+
+  if tsQuery1.FieldbyName('cou').AsInteger<>0 then
+   begin
+    Form1.StatusBar1.Panels[0].Text:= 'Ќе подтверждено проводок - '+tsQuery1.FieldbyName('cou').AsString;
+    Form1.LMin.Caption := tsQuery1.FieldbyName('tmin').AsString;
+    Form1.LMax.Caption := tsQuery1.FieldbyName('tmax').AsString;
+    Form1.LCou.Caption := tsQuery1.FieldbyName('cou').AsString+' шт.';
+
+     Notr:= Now-tsQuery1.FieldbyName('tmin').AsDateTime;
+     DecodeTime(Notr, Hour, Min, Sec, MSec);
+
+     Form1.LNotr.Caption :=
+     IntToStr(Hour)+' час. '+IntToStr(Min) +' мин. '+IntToStr(Sec) +' сек.' ;
+
+      if (StrToInt(EPodtv.Text) < Min) OR (Hour>0) then
+         Mess:= 'Ќет подтвержд. проводок ('+Trim(Form1.LCou.Caption)+') '+Form1.LNotr.Caption;
+
+
+
+   end else //-----------------------------------------------
+   begin
+    Form1.LCou.Caption := '0 шт.';
+    Mess:='Ok';
+   end;
+
+with tsQuery1 do
+  begin //список неподтвержденных
+    Active:=False;
+    Sql.Clear;
+    Sql.Add('select * from plpb '+Sybr1.sWhere+
+    ' AND DATEFORMAT(timestamp,' +Skob+'ddmmyyyy'+Skob+') = :Dat '+ SortSQL  );
+    ParamByName('Dat').AsString:= FormatDatetime('ddmmyyyy',DateTimePicker2.DateTime);
+//    showmessage(sql.text);
+    Active:=True;
+    EnableControls;
+  end; {with}
+
+
+//Form1.StatusBar1.Panels[0].Text:= 'ѕроверка проводок -'+ Mess;
+
+if CheckRepl.Checked then Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' (сверка проводок) - '+Mess);
+Result:=Mess;
+
+
+screen.Cursor:=crDefault;
+end;{function}
+
+procedure TForm1.ToolButProvClick(Sender: TObject);
+var
+TimeStart: TDateTime;
+begin
+if (Sender is TBitBtn) OR (Sender is TToolButton) then
+ FlagNosend:=True else FlagNosend:=False; //не посылать сообщ. если запуск по кнопке
+
+TabSheet1.PageControl.ActivePage:=TabSheet1.PageControl.Pages[0] ;
+
+{проверка возможности работы с Sybridge}
+Mess:='Ok';
+if Sybr1.IsBlockSybridge(False) then
+begin
+ LPhase.Caption:=Sybr1.PhaseODB(tsDataBase1,'kmh0');
+
+ if UpperCase(LPhase.Caption)='WRK' then  //можно работать
+  begin
+
+   if CheckProtON.Checked  then //делать сверку проводок
+    begin
+     Form1.SverkaProv();//проверка неподтв. проводок
+     if (CheckMes.Checked) AND (Mess<>'Ok')
+       And (Flag=True) AND NOT FlagNoSend  then Form1.Send(StrToOEM(Mess));
+    end;
+
+  end else
+  if UpperCase(LPhase.Caption)='NOTLOGIN' then Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' Ќе могу подключитьс€ к базе данных !')
+   else
+  begin //нет фазы WRK
+    Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' Ќет фазы WRK !');
+ end;{if WRK}
+
+end else //Sybridge заблокирован
+begin
+  Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' Sybridge заблокирован !');
+end;
+
+screen.Cursor := crDefault;
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+
+ IniFile := TInifile.Create('not_s.ini'); {ini должен лежать в SYSTEM}
+
+ Utils1.LoadANICursor('vojagf.ani',crSearch);
+ Utils1.LoadANICursor('sportf.ani',crSearch2);
+
+ Utils1.FormSizeLoad(Sender) ;
+ Application.ProcessMessages;
+ Memo1.Lines.LoadFromFile('Users.txt');
+
+ CheckProt.Checked:=IniFile.ReadBool(Name,'CheckProt',True);
+ CheckMes.Checked:=IniFile.ReadBool(Name,'CheckMes',True);
+ CheckRepl.Checked:=IniFile.ReadBool(Name,'CheckRepl',False);
+ CheckProtON.Checked:=IniFile.ReadBool(Name,'CheckProtON',False);
+ ERepl.Text:= IniFile.ReadString(Name,'ERepl','59');
+ ETimerInt.Text:= IniFile.ReadString(Name,'ETimerInt','10');
+ EPodtv.Text:= IniFile.ReadString(Name,'EPodtv','59');
+
+
+ FileNameLog.Text:= IniFile.ReadString(Name,'FileNameLog','ѕуть к логу реприкации');
+
+
+ IniFile.Free ;
+
+ DateTimePicker1.Date:=Now;
+ DateTimePicker2.Date:=Now;
+
+  TMPFile:=Utils1.GetEnvVar('TMP');
+  if TMPFile='' then  TMPFile:=Utils1.GetEnvVar('TEMP');
+  TMPFile:=TMPFile+'\tmp.log';
+
+   if (UpperCase(ParamStr(1))='/START') OR ( UpperCase(ParamStr(1))='/AUTO' )then
+    begin
+        SpeedButton1.Click;
+        SpeedButton1.Down:=True;
+        Form1.Tag:=1;//свернуть
+    end;
+
+   ComboBox1.ItemIndex := 0 ;
+   SortSQL:=' ORDER BY Timestamp '; //пор€док сортировки
+
+
+end;
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+ IniFile := TInifile.Create('not_s.ini'); {ini должен лежать в SYSTEM}
+
+ IniFile.WriteBool(Name,'CheckProt',CheckProt.Checked);
+ IniFile.WriteBool(Name,'CheckMes',CheckMes.Checked);
+ IniFile.WriteBool(Name,'CheckRepl',CheckRepl.Checked);
+ IniFile.WriteBool(Name,'CheckProtON',CheckProtON.Checked);
+
+ IniFile.WriteString(Name,'ERepl',ERepl.Text);
+ IniFile.WriteString(Name,'ETimerInt',ETimerInt.Text);
+ IniFile.WriteString(Name,'EPodtv',EPodtv.Text);
+ IniFile.WriteString(Name,'FilenameLog',FilenameLog.Text);
+
+ IniFile.Free;
+
+Utils1.FormSizeSave(Sender);{сохран€ю положение окна}
+Memo1.Lines.SaveToFile('Users.txt');
+end;
+
+procedure TForm1.Send(Mes: String); //послать сообщение
+var
+i : Integer;
+begin
+ if CheckMes.Checked then begin
+   for i:=0  to Memo1.Lines.Count-1  do
+     begin
+      if TRIM(Memo1.Lines.Strings[i])<>'' then
+       SendLineMessage(0,TRIM(Memo1.Lines.Strings[i]),Mes)
+      end;
+     end;
+
+ end;
+
+procedure TForm1.CheckMesClick(Sender: TObject);
+begin
+if CheckMes.Checked then Memo1.Enabled:=True
+ else Memo1.Enabled:=False;
+
+end;
+
+procedure TForm1.TrayIcon1DblClick(Sender: TObject);
+begin
+ Application.Restore;
+ Application.BringToFront;
+
+end;
+
+procedure TForm1.FormActivate(Sender: TObject);
+begin
+ Form1.Resize;
+ if Form1.Tag=1 then  begin
+  Form1.Tag:=0;
+  Application.Minimize;
+ end;
+
+end;
+
+procedure TForm1.SpeedButton1Click(Sender: TObject);
+var
+TimeStart: TDateTime;
+begin
+ if RxTimerList1.Active then
+ begin
+  RxTimerList1.Active:=False;
+  SpeedButton1.Caption:='Timer OFF';
+  Flag:= False; //флаг работы на таймере
+  Form1.StatusBar1.Panels[1].Text:='“аймер остановлен';
+ end else begin
+  RxTimerEvent1.Interval:=STRToInt(Form1.ETimerInt.Text)*1000*60;
+  Flag:= True; //флаг работы на таймере
+  RxTimerList1.Active:=True;
+  SpeedButton1.Caption:='Timer ON';
+  TimeStart:=EncodeTime(00,STRToInt(Form1.ETimerInt.Text), 00, 00);
+  Form1.StatusBar1.Panels[1].Text:='след. запуск в '+TimeToStr(Time+TimeStart);
+ end;
+end;
+
+procedure TForm1.RxTimerEvent1Timer(Sender: TObject);
+var
+TimeStart :TDateTime;
+begin
+ Form1.ToolButProvClick(Sender); //сверка проводок
+ Form1.ToolButReplClick(Sender); //сверка лога
+
+ TimeStart:=EncodeTime(00,STRToInt(Form1.ETimerInt.Text), 00, 00);
+ Form1.StatusBar1.Panels[1].Text:='след. запуск в '+TimeToStr(Time+TimeStart);
+
+end;
+
+procedure TForm1.CheckReplClick(Sender: TObject);
+begin
+if CheckRepl.Checked then
+   begin
+    FileNameLog.Enabled:=True;
+    ERepl.Enabled:=True;
+    LRepl.Enabled:=True;
+   end else begin
+    FileNameLog.Enabled:=False;
+    ERepl.Enabled:=False;
+    LRepl.Enabled:=False;
+   end;
+end;
+
+procedure TForm1.TabSheet2Show(Sender: TObject);
+begin
+CheckMes.OnClick(Sender);
+CheckRepl.OnClick(Sender);
+end;
+
+
+{-----------------сверка лога репликации-------------------------}
+function TForm1.SverkaLoga(PathLog:String;DateLog:TDateTime;Sender:TObject ):Bool;
+var
+ LogStream,OutStream :TFileStream;
+ TMPFile:String;
+ F: TextFile;
+ S,Today: String;
+ TNode,TNodChild :TTreeNode;
+ Flag :Bool;
+ rTime,Year,Month,Day :String;
+ Hour, Min, Sec, MSec :Word;
+ LastRepl, NotRepl :TDateTime;
+begin
+
+if (Sender is TBitBtn) OR (Sender is TToolButton) then
+ FlagNosend:=True else FlagNosend:=False; //не посылать сообщ. если запуск по кнопке
+
+
+ Flag:=False;
+ if not FileExists(PathLog) then
+  begin
+   if CheckProt.Checked then Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' (сверка репликации) - Ќе могу открыть файл '+PathLog);
+  end else begin
+//------------------
+ screen.Cursor:=crSearch2;
+ TMPFile:=Utils1.GetEnvVar('TMP');
+ if TMPFile='' then   TMPFile:=Utils1.GetEnvVar('TEMP');
+ TMPFile:=TMPFile+'\tmp.log';
+ LogStream := TFileStream.Create(FilenameLog.Text, fmShareDenyNone);
+ OutStream := TFileStream.Create( TMPFile, fmCreate );
+try
+ LogStream.Seek( 0, soFromBeginning );
+ OutStream.CopyFrom( LogStream, 0 );
+finally
+ LogStream.Free;
+ OutStreaM.Free;
+end; {try}
+//------------------
+     screen.Cursor:=crSearch;
+     TreeView1.Items.Clear;
+     TNode:=  TreeView1.Items.Add(nil,'ѕротокол - '+PathLog);
+     AssignFile(F,TMPFile);
+
+     FileMode := 0;  { Set file access to read only }
+     Reset(F);
+      {поиск текущей даты 1999-07-28 21:43:22.531000}
+      Today:=FormatDatetime('yyyy-mm-dd',DateLog);
+
+      While not eof(F) do
+        begin
+           Readln(F,s);
+           if StrPos(PChar(S),PChar(Today)) <> nil then {есть дата}
+              begin
+                 TNode:=  TreeView1.Items.Add(nil,Copy(S,0,19));
+                 Flag:=True;
+              end else
+              begin
+                 if Flag then
+                   begin
+                  TNodChild:=TreeView1.Items.AddChild(TNode,S);
+
+                     if ( StrPos(PChar(UPPERCase(S)),PChar('ERROR')) <> nil  ) OR {есть ошибка}
+                        ( StrPos(PChar(UPPERCase(S)),PChar('FAILED')) <> nil  ) then
+                      begin
+                        TNode.ImageIndex:=3;
+                        TNode.SelectedIndex:=TNode.ImageIndex;
+                        TNodChild.ImageIndex:=3;
+                        TNodChild.SelectedIndex:=TNodChild.ImageIndex;
+                      end else begin
+                        if TNode.ImageIndex<>3 then
+                        TNode.ImageIndex:=2;
+                        TNode.SelectedIndex:=TNode.ImageIndex;
+                      end;
+                 end; {if flag}
+              end;
+      end;{while}
+
+   CloseFile(F);
+ end;{if not log...}
+
+if TreeView1.Items.Count>1 then //была репликаци€ на заданную дату
+begin
+ {LastRepl дата посл. репликации}
+ Year:=Copy(TNode.Text,1,4);
+ Month:=Copy(TNode.Text,6,2);
+ Day:=Copy(TNode.Text,9,2);
+ rTime:=Copy(TNode.Text,12,8);
+
+ LastRepl:=StrToDateTime(Day+'.'+Month+'.'+Year+' '+rTime);
+ NotRepl:= Now-LastRepl;
+ DecodeTime(NotRepl, Hour, Min, Sec, MSec);
+
+ LNotRepl.Caption :=  IntToStr(Hour)+' час. '+IntToStr(Min) +' мин. '+IntToStr(Sec) +' сек.' ;
+ LLastRepl.Caption := FormatDateTime('dd.mm.yyyy  hh:mm:ss' ,LastRepl);
+
+      if  StrToInt(ERepl.Text) < Min then
+       begin
+         ReplMess:= 'Ќет репликации '+LNotRepl.Caption;
+         Result:=True;
+       end else
+       begin
+         ReplMess:='Ok';
+         Result:=False;
+       end;
+
+
+
+StatusBar1.Panels[0].Text:='ѕроверка репликации - '+ReplMess;
+if CheckProt.Checked then Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' (сверка репликации) - '+ReplMess);
+if (CheckMes.Checked) AND (ReplMess<>'Ok')
+  And (Flag=True) AND NOT FlagNoSend then Form1.Send(StrToOEM(ReplMess));
+
+end else begin
+  if CheckProt.Checked then Memo2.Lines.Add(FormatDatetime('dd/mm/yy  hh:nn:ss',Now)+' (сверка репликации) - Ќе было репликации на заданную дату');
+end;{if}
+
+screen.Cursor:=crDefault;
+end;{function}
+
+procedure TForm1.ToolButton3Click(Sender: TObject);
+begin
+if PanelRight.Visible then begin
+    PanelRight.Visible:=False;
+    ToolButton3.ImageIndex:=6;
+    ToolButton3.Hint:='—вернуть';
+      end
+      else begin
+    PanelRight.Visible:=True;
+    ToolButton3.ImageIndex:=4;
+    ToolButton3.Hint:='–азвернуть';
+    end;
+
+    Form1.Resize;
+end;
+
+procedure TForm1.FormResize(Sender: TObject);
+begin
+ ToolBar2.Left:= TreeView1.Width-ToolBar2.Width-25;
+ ToolBar2.Top := TreeView1.Height-ToolBar2.Height-25;
+
+ ToolBar3.Left:= DBGrid1.Width-ToolBar3.Width-25;
+ ToolBar3.Top := DBGrid1.Height-ToolBar3.Height-25;
+
+end;
+
+procedure TForm1.CheckProtONClick(Sender: TObject);
+begin
+if CheckProtON.Checked then
+   begin
+    EPodtv.Enabled:=True;
+    CheckProt.Enabled:=True;
+    LProt.Enabled:=True;
+   end else begin
+    EPodtv.Enabled:=False;
+    CheckProt.Enabled:=False;
+    LProt.Enabled:=False;
+   end;
+end;
+
+procedure TForm1.TabSheet5Show(Sender: TObject);
+begin
+CheckRepl.OnClick(Sender);
+CheckProtON.OnClick(Sender);
+CheckProt.OnClick(Sender);
+end;
+
+procedure TForm1.CheckProtClick(Sender: TObject);
+begin
+if CheckProt.Checked then
+   Memo2.Enabled:=True else    Memo2.Enabled:=False;
+
+end;
+
+procedure TForm1.ToolButton4Click(Sender: TObject);
+begin
+if PanelRight0.Visible then begin
+    PanelRight0.Visible:=False;
+    PanelTop.Visible:=False;
+    ToolButton4.ImageIndex:=6;
+    ToolButton4.Hint:='—вернуть';
+      end
+      else begin
+    PanelRight0.Visible:=True;
+    PanelTop.Visible:=True;
+    ToolButton4.ImageIndex:=4;
+    ToolButton4.Hint:='–азвернуть';
+    end;
+Form1.Resize;
+end;
+
+
+procedure TForm1.ToolButReplClick(Sender: TObject);
+begin
+ TabSheet1.PageControl.ActivePage:=TabSheet1.PageControl.Pages[1] ;
+ if CheckRepl.Checked then //проверка репликации
+  begin
+   Form1.SverkaLoga(Trim(FilenameLog.Text),DateTimePicker1.DateTime,ToolButRepl);
+  end;
+end;
+
+procedure TForm1.ComboBox1Change(Sender: TObject);
+begin
+case ComboBox1.ItemIndex of
+ 0 :  BPL_PR_SYS.Text:='s';
+ 1 :  BPL_PR_SYS.Text:='c';
+end;{Case}
+
+
+end;
+
+procedure TForm1.DBGrid1TitleClick(Column: TColumn);
+var
+sBpl_Ref: String;
+begin
+
+if not tsQuery1.IsEmpty then
+begin
+tsQuery1.DisableControls;
+sBpl_Ref:= tsQuery1['BPL_REF']; //запоминаю текущую позицию
+SortSQL := ' ORDER BY  '+TRIM(Column.Field.FieldName) ; {определ€ю активную колонку}
+
+Form1.ToolButProv.OnClick(DBGrid1) ;
+
+tsQuery1.Locate('BPL_REF',sBpl_Ref,[loCaseInsensitive]);//возврат на позицию
+tsQuery1.EnableControls;
+
+end;
+
+end;
+
+procedure TForm1.ToolButton1Click(Sender: TObject);
+begin
+if form1.ActiveControl is TDBGrid then
+Form1.DBGrid1.OnTitleClick( DBGrid1.Columns.Items[DBGrid1.SelectedIndex]);
+
+end;
+
+procedure TForm1.ToolButton5Click(Sender: TObject);
+begin
+Application.Minimize;
+end;
+
+procedure TForm1.N3Click(Sender: TObject);
+begin
+close;
+end;
+
+procedure TForm1.BitBtn3Click(Sender: TObject);
+begin
+ Report.Preview;
+end;
+
+end.
