@@ -1,0 +1,13 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes]
+"00000409"="ru"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Nls\CodePage]
+"1250"="c_1251.nls"
+"1251"="c_1251.nls"
+"1252"="c_1251.nls"
+
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fontmapper]
+"DEFAULT"=dword:000000cc
+
