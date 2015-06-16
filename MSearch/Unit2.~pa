@@ -1,0 +1,173 @@
+unit Unit2;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  ComCtrls, ExtCtrls, StdCtrls,DB, Mask,Buttons, ToolWin, DBClient,STRUtils ;
+
+
+type
+  TForm2 = class(TForm)
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    Label1: TLabel;
+    Panel1: TPanel;
+    AN: TCheckBox;
+    EGF_CUN: TCheckBox;
+    BBG_CUF: TCheckBox;
+    ADRES: TCheckBox;
+    EGF_CRF: TCheckBox;
+    BBG_NDIR: TCheckBox;
+    BBG_NGLB: TCheckBox;
+    BBG_PHONE: TCheckBox;
+    ECA_BRNM: TCheckBox;
+    ComboBox: TComboBox;
+    BitBtn3: TBitBtn;
+    BSC_SC: TCheckBox;
+    procedure BitBtn2Click(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure ComboBoxDblClick(Sender: TObject);
+    procedure BitBtn3Click(Sender: TObject);
+    procedure FormPaint(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+
+implementation
+
+uses Unit1, Unit3;
+
+{$R *.DFM}
+
+procedure TForm2.BitBtn2Click(Sender: TObject);
+begin
+Close;
+end;
+
+procedure TForm2.BitBtn1Click(Sender: TObject);
+var
+sSQL4,stroka:String;
+begin
+{--------------Пополнение комбокса--------------------------------}
+   if Not IsEmptyStr(Combobox.Text, [#0,' ']) then
+     if Combobox.Text<>Combobox.Items[0]  then
+        Combobox.Items.Add(Combobox.Text);
+    while Combobox.Items.Count>30 do  Combobox.Items.Delete(0);
+{--------------------------------------------------------------}
+ with Form1 do begin
+
+   if BSC_SC.Checked then //поиск только по старому л/с
+    begin
+     DM.QTMP.Active:=False;
+     DM.QTMP.SQL.Clear;
+     DM.QTMP.SQL.ADD('select esc_an from scpf where bsc_sc = '+ Trim(Form2.Combobox.Text) );
+     DM.QTMP.Active:=True;
+
+     if DM.QTMP.IsEmpty then begin
+       ShowMessage('Не нашел старый л/с '+ ReplaceStr(stroka,'%',''));
+       Combobox.SetFocus;
+      end else begin
+       Form2.Combobox.Text:= DM.QTMP.FieldByName('ESC_AN').ASString;
+       AN.Checked:=True;
+      end;
+
+   end; {if}
+
+  sSQL4:='';
+  stroka:=chr(39)+'%'+Trim(Form2.Combobox.Text)+'%'+chr(39);
+  if AN.Checked then  sSQL4:=' OR EGF_CPNC LIKE '+stroka;
+  if EGF_CUN.Checked then  sSQL4:=sSQL4+' OR UPPER(G.EGF_CUN) LIKE '+ stroka;
+  if BBG_CUF.Checked then  sSQL4:=sSQL4+' OR BBG_CUF LIKE '+ stroka;
+  if ADRES.Checked then  sSQL4:=sSQL4+' OR ADRES LIKE '+ stroka;
+  if EGF_CRF.Checked then  sSQL4:=sSQL4+' OR EGF_CRF LIKE '+ stroka;
+  if BBG_NDIR.Checked then  sSQL4:=sSQL4+' OR BBG_NDIR LIKE '+ stroka;
+  if BBG_NGLB.Checked then  sSQL4:=sSQL4+' OR BBG_NGLB LIKE '+ stroka;
+  if BBG_PHONE.Checked then sSQL4:=sSQL4+' OR BBG_PHONE1 LIKE '+ stroka+
+    ' OR BBG_PHONE2 LIKE '+ stroka+' OR BBG_TELEX LIKE '+ stroka+' OR BBG_FAX LIKE '+ stroka;
+  if ECA_BRNM.Checked then  sSQL4:=sSQL4+' OR ECA_BRNM LIKE '+ stroka;
+
+
+if Trim(Form2.Combobox.Text)='' then ShowMessage('Надо ввести строку для поиска')
+else
+  if sSQL4='' then ShowMessage('Я не понял, а по чем искать будем ? ')
+   else
+  begin
+   screen.Cursor:=crSearch;
+   sSQL4:=' AND ( '+COPY(sSQL4,4,Length(sSQL4)-3)+' ) ';
+   QNANC.Active:=False;
+   QNANC.SQL.Clear;
+   QNANC.SQL.Add(sSQL1+sSQL2+sSQL3+sSQL4);
+ //  memo1.Lines.add(sSQL1+sSQL2+sSQL3+sSQL4);
+   QNANC.Active:=True;
+   StatusBar1.Panels[1].Text:= 'Результат поиска строки: '+ ReplaceStr(stroka,'%','');
+   ToolButton1.Enabled:=True;
+   PopupMenu1.Items[2].Enabled:=True;
+   PopupMenu1.Items.ImageIndex:=0;
+   screen.Cursor:=crS_Green;
+  end {if};
+ end;{if}
+
+ if Form1.QNANC.IsEmpty then begin
+    ShowMessage('Не нашел строку '+ ReplaceStr(stroka,'%',''));
+    Combobox.SetFocus;
+   end else Close ;
+
+end;
+
+procedure TForm2.FormActivate(Sender: TObject);
+begin
+  with Form1 do
+  begin
+   PageControl1.ActivePage:=PageControl1.Pages[0] ;
+  end; {with}
+  ComboBox.SetFocus;
+end;
+
+procedure TForm2.FormDeactivate(Sender: TObject);
+begin
+   Form1.GridNANC.SetFocus;
+end;
+
+procedure TForm2.FormDestroy(Sender: TObject);
+begin
+ Combobox.Items.SaveToFile(Form1.Utils1.PathWinDir+'\mscombo.txt');
+end;
+
+procedure TForm2.FormCreate(Sender: TObject);
+var
+sFile : String;
+begin
+ BitBtn1.Cursor:=crDetectF;
+ sFile:=Form1.Utils1.PathWinDir+'\mscombo.txt';
+  if FileExists(sFile) then
+     Combobox.Items.LoadFromFile(sFile);
+
+end;
+
+procedure TForm2.ComboBoxDblClick(Sender: TObject);
+begin
+  Combobox.DroppedDown:=True;
+end;
+
+procedure TForm2.BitBtn3Click(Sender: TObject);
+begin
+  Application.HelpCommand(HELP_CONTENTS,30);
+end;
+
+procedure TForm2.FormPaint(Sender: TObject);
+begin
+// GradientFillRect(Canvas, ClientRect,clBlack, clBlue, fdTopToBottom, 255);
+
+end;
+
+end.

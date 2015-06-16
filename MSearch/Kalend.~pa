@@ -1,0 +1,67 @@
+unit Kalend;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Grids, Calendar, StdCtrls, Buttons, ExtCtrls, Spin,StrUtils ;
+
+type
+  TKalendar = class(TForm)
+    Panel1: TPanel;
+    Panel2: TPanel;
+    BitBtn1: TBitBtn;
+    Calendar1: TCalendar;
+    ComboBox1: TComboBox;
+    SpinEdit1: TSpinEdit;
+    BitBtn2: TBitBtn;
+    procedure BitBtn1Click(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure SpinEdit1Change(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Kalendar: TKalendar;
+
+implementation
+
+{$R *.DFM}
+
+procedure TKalendar.BitBtn1Click(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TKalendar.ComboBox1Change(Sender: TObject);
+begin
+ Calendar1.Day:=1;
+ Calendar1.Month:=ComboBox1.ItemIndex+1;
+end;
+
+procedure TKalendar.FormCreate(Sender: TObject);
+var
+Month: word;
+begin
+ ComboBox1.ItemIndex:= StrToInt(formatDateTime('m',Date))-1;
+end;
+
+procedure TKalendar.SpinEdit1Change(Sender: TObject);
+begin
+ if  Trim(SpinEdit1.Text)<>'' then Calendar1.Year:=SpinEdit1.Value
+   else SpinEdit1.Value:=StrtoInt(FormatDateTime('yyyy',Date));
+end;
+
+procedure TKalendar.BitBtn2Click(Sender: TObject);
+begin
+ Calendar1.CalendarDate:=Date ;
+ SpinEdit1.Value:=StrtoInt(FormatDateTime('yyyy',Date));
+ ComboBox1.ItemIndex := Calendar1.Month-1;
+end;
+
+end.

@@ -1,0 +1,765 @@
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Db, BseMain, SqaMain, Grids, DBGrids, ComCtrls, ExtCtrls, StdCtrls,
+  DBCtrls, Mask, DBTables, Buttons, ToolWin, DBClient, Menus,STRUtils,
+  RXShell, RxGrdCpt, Placemnt, MSybr, ImgList, MUtils, Registry,  IniFiles,
+  VCLUtils, Cast ;
+
+const
+crS_GREEN = 1;
+crSearch  = 2;
+crDetectF = 3;
+crLogotip = 4;
+
+type
+  TForm1 = class(TForm)
+    QNANC: TtsQuery;
+    DSNANC: TDataSource;
+    DSSCPF: TDataSource;
+    QSCPF: TtsQuery;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    PageControl1: TPageControl;
+    TabSheet1: TTabSheet;
+    TabSheet2: TTabSheet;
+    StatusBar1: TStatusBar;
+    MaskEdit1: TMaskEdit;
+    tsDatabase1: TtsDatabase;
+    PopupMenu1: TPopupMenu;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
+    PanelRight: TPanel;
+    Label1: TLabel;
+    Label4: TLabel;
+    Label6: TLabel;
+    Label5: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
+    Label10: TLabel;
+    Label7: TLabel;
+    Label11: TLabel;
+    MainMenu1: TMainMenu;
+    Search: TMenuItem;
+    N7: TMenuItem;
+    N9: TMenuItem;
+    N10: TMenuItem;
+    N6: TMenuItem;
+    N8: TMenuItem;
+    N11: TMenuItem;
+    TabSheet3: TTabSheet;
+    Label12: TLabel;
+    DBText12: TDBText;
+    Label13: TLabel;
+    Utils1: TUtils;
+    NHelp: TMenuItem;
+    NAboutform: TMenuItem;
+    N12: TMenuItem;
+    Label2: TLabel;
+    Panel3: TPanel;
+    DBText1: TDBText;
+    Panel6: TPanel;
+    DBText4: TDBText;
+    Panel8: TPanel;
+    DBText6: TDBText;
+    Panel9: TPanel;
+    Panel10: TPanel;
+    DBText7: TDBText;
+    Panel7: TPanel;
+    DBText8: TDBText;
+    Panel11: TPanel;
+    DBText10: TDBText;
+    Panel12: TPanel;
+    DBText5: TDBText;
+    Panel13: TPanel;
+    DBText13: TDBText;
+    Panel14: TPanel;
+    DBText2: TDBText;
+    Panel15: TPanel;
+    DBText11: TDBText;
+    Panel16: TPanel;
+    DBText9: TDBText;
+    DBText3: TDBText;
+    ImageList1: TImageList;
+    N13: TMenuItem;
+    N14: TMenuItem;
+    Panel4: TPanel;
+    GridNANC: TDBGrid;
+    ToolBar1: TToolBar;
+    ToolButton3: TToolButton;
+    ToolButton1: TToolButton;
+    ToolButton2: TToolButton;
+    Image1: TImage;
+    Panel5: TPanel;
+    MemoBazNomer: TMemo;
+    ToolBar2: TToolBar;
+    ToolButton4: TToolButton;
+    ToolButton8: TToolButton;
+    ToolButton6: TToolButton;
+    Label3: TLabel;
+    Label14: TLabel;
+    MaskEdit2: TMaskEdit;
+    MaskEdit3: TMaskEdit;
+    Panel17: TPanel;
+    Panel18: TPanel;
+    EKluch1: TMaskEdit;
+    EKluch2: TMaskEdit;
+    BKluch: TButton;
+    Label15: TLabel;
+    EMFO: TMaskEdit;
+    Label16: TLabel;
+    Label17: TLabel;
+    LKluch: TLabel;
+    EKluch3: TMaskEdit;
+    Panel19: TPanel;
+    Label18: TLabel;
+    DBText14: TDBText;
+    Panel20: TPanel;
+    DBGrid4: TDBGrid;
+    Panel21: TPanel;
+    Label23: TLabel;
+    Label24: TLabel;
+    Label25: TLabel;
+    Label26: TLabel;
+    Label27: TLabel;
+    Label28: TLabel;
+    Label29: TLabel;
+    Label30: TLabel;
+    Label31: TLabel;
+    Label32: TLabel;
+    Label33: TLabel;
+    Label34: TLabel;
+    Label35: TLabel;
+    SB_SC: TSpeedButton;
+    DBText15: TDBText;
+    DBText16: TDBText;
+    DBText17: TDBText;
+    DBText18: TDBText;
+    DBText19: TDBText;
+    DBText20: TDBText;
+    DBText21: TDBText;
+    DBText22: TDBText;
+    DBText23: TDBText;
+    DBText24: TDBText;
+    DBText25: TDBText;
+    DBText26: TDBText;
+    DBText27: TDBText;
+    Sybr1: TSybr;
+    Label19: TLabel;
+    DBText28: TDBText;
+    Label20: TLabel;
+    DBOstatok: TDBText;
+    Cast1: TCast;
+    TabSheet4: TTabSheet;
+    Panel22: TPanel;
+    Panel23: TPanel;
+    Panel24: TPanel;
+    BMF_MFO: TEdit;
+    BMF_NBAN: TEdit;
+    BMF_ARRP: TEdit;
+    DBGrid1: TDBGrid;
+    BMF_PRDL: TEdit;
+    Label21: TLabel;
+    Label22: TLabel;
+    Label36: TLabel;
+    Label37: TLabel;
+    BitBtn1: TBitBtn;
+    procedure TabSheet2Enter(Sender: TObject);
+    procedure TabSheet2Exit(Sender: TObject);
+    procedure GridNANCTitleClick(Column: TColumn);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure MaskEdit1Exit(Sender: TObject);
+    procedure MaskEdit1KeyPress(Sender: TObject; var Key: Char);
+    procedure MaskEdit1Change(Sender: TObject);
+    procedure ALL_SC;
+    procedure FormCreate(Sender: TObject);
+    procedure N10Click(Sender: TObject);
+    procedure SearchClick(Sender: TObject);
+    procedure GridNANCDblClick(Sender: TObject);
+    procedure N1Click(Sender: TObject);
+    procedure SleepTimer(Sender: TObject);
+    procedure N9Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure N11Click(Sender: TObject);
+    procedure NHelpClick(Sender: TObject);
+    procedure N12Click(Sender: TObject);
+    procedure ToolButton2Click(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure ToolButton1Click(Sender: TObject);
+    procedure NAboutformClick(Sender: TObject);
+    procedure ToolButton3Click(Sender: TObject);
+    procedure GridNANCDrawColumnCell(Sender: TObject; const Rect: TRect;
+      DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure Button2Click(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure ToolButton4Click(Sender: TObject);
+    procedure ToolButton8Click(Sender: TObject);
+    procedure ToolButton6Click(Sender: TObject);
+    procedure PageControl1Change(Sender: TObject);
+    procedure BKluchClick(Sender: TObject);
+    procedure SB_SCClick(Sender: TObject);
+    procedure TabSheet2Show(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+  private
+    { Private declarations }
+    procedure PicSort;//прорисовка стрелки в гриде
+  public
+    { Public declarations }
+     sSQL1,sSQL2,sSQL3,sSQLS: String;
+     FlagSort: Bool; //пор€док сортировки колонки в гриде
+     TMPPath: String; //путь к временному каталогу
+     function IsUser :Bool;
+  end;
+
+var
+  Form1: TForm1;
+  IniFile: TIniFile;
+  FlagDostup: Bool;
+
+implementation
+
+uses Unit2, Unit3, Kalend, About, Splash  ;
+
+{$R *.DFM}
+
+procedure TForm1.ALL_SC ; //показать все счета
+begin
+sSQL1:='select B.EGF_CUS as  CUS ,B.EGF_CLC as CLC,BBG_CUF,BBG_NDIR,BBG_NGLB, BBG_ADR1+BBG_ADR2+BBG_ADR3+BBG_ADR4 as ADRES,';
+sSQL2:=' BBG_PHONE1,BBG_PHONE2,BBG_TELEX,BBG_FAX,BBG_DGNI,BBG_DISP,UPPER(G.EGF_CUN),G.EGF_CPNC,G.ECA_BRNM,G.EGF_CRF';
+sSQL3:=' from dba.BGPB as B,dba.GFPF as G where G.EGF_CUS=B.EGF_CUS and G.EGF_CLC=B.EGF_CLC';
+
+ QNANC.SQL.Clear;
+ QNANC.SQL.Add(sSQL1+sSQL2+sSQL3);
+// memo1.Lines.add(sSQL1+sSQL2+sSQL3);
+ QNANC.Active:=True;
+ ToolButton1.Enabled:=False;  //блокировка кнопки
+ PopupMenu1.Items[2].Enabled:=False;//блокировка меню
+ PopupMenu1.Items.ImageIndex:=1;
+ StatusBar1.Panels[1].Text:='¬ыбраны все счета';
+end;
+procedure TForm1.TabSheet2Enter(Sender: TObject);
+const
+k=chr(39);
+begin
+   screen.Cursor:=crSearch;
+   QSCPF.Active:=False;
+    if Form1.SB_SC.Tag=0 then //только откр. счета
+    begin
+     QSCPF.ParamByName('pr_s').AsString:='a';
+    end else begin
+//     QSCPF.ParamByName('pr_s').AsString:=k+'c'+k+',' +k+'b'+k+',' +k+'t'+k+',' +k+'f'+k;
+      QSCPF.ParamByName('pr_s').AsString:='c';
+    end;
+
+//  Memo1.Lines.Clear;
+//  Memo1.Lines.Add(QSCPF.ParamByName('pr_s').AsString);
+
+
+   QSCPF.Active:=True;
+   screen.Cursor:=crS_Green;
+
+//   Form1.TabSheet2.Hint := TRIM(QNANC['UPPER(G.EGF_CUN)']) ;
+end;
+
+procedure TForm1.TabSheet2Exit(Sender: TObject);
+begin
+   QSCPF.Active:=False;
+end;
+
+procedure TForm1.GridNANCTitleClick(Column: TColumn);
+var
+ sNANC,PSQL,PSQL2: String;
+// sCaption:String;
+// i: Integer;
+
+begin
+ Screen.Cursor := crSearch ; //курсор в часики
+
+ PicSort;//прорисовка стрелки сортировки
+
+ PSQL := TRIM(Column.Field.FieldName) ; {определ€ю активную колонку}
+
+ if sSQLS = PSQL {колонка не изменилась} then
+ begin
+  FlagSort:= Utils1.IIF(FlagSort,False,True) ; //флаг сортировки
+  PSQL2 := Utils1.IIF(FlagSort,' ASC ',' DESC '); //смена направл. сортировки
+  sSQLs := PSQL
+ end else begin
+  FlagSort:= True;   //флаг сортировки
+  PSQL2 := ' ASC '; //смена направл. сортировки
+  sSQLs := PSQL ;
+ end;
+
+
+// for i:=0 to GridNanc.Columns.Count-1 do
+//   begin //очищаю Caption's
+//     sCaption:=GridNanc.Columns.Items[i].Title.Caption; //запиминаю Caption
+//     GridNanc.Columns.Items[i].Title.Caption:=ReplaceStr(sCaption,' v','');
+     //COPY(sCaption,1,Length(sCaption)-1)+' ';
+//   end;
+// Column.Title.Caption:=Column.Title.Caption+' v';
+
+ sNANC:= QNANC['EGF_CPNC']; //запоминаю текущую позицию
+
+{обновление грида }
+QNANC.DisableControls;
+QNANC.Close;
+QNANC.SQL.Clear;
+QNANC.SQL.Add(sSQL1+sSQL2+sSQL3+' ORDER BY '+sSQLS);
+//memo1.Lines.Clear;
+//memo1.Lines.Add(sSQL1+sSQL2+sSQL3+' ORDER BY '+sSQLS);
+QNANC.Active:= True ;
+QNANC.Locate('EGF_CPNC',sNANC,[loCaseInsensitive]);//возврат на позицию
+QNANC.EnableControls;
+
+
+
+ {курсор на место}
+screen.Cursor := crS_Green ;
+// StatusBar1.Panels[1].Text:='';
+
+end;
+
+procedure TForm1.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+
+
+ {только алфавитные и цифровые}
+ if (PageControl1.ActivePage.PageIndex=0) AND (Key in ['A'..'€','0'..'9'])  then
+
+ begin
+    KeyPreview := False ;
+
+    with MaskEdit1 do
+     begin
+         Text     := Key ;{нажатую клавишу в MaskEdit}
+         Visible  := True ;
+         SetFocus;
+         SelStart := 2   ;{курсор на 2 позицию}
+     end;
+ StatusBar1.Panels[1].Text:='ѕоиск по "'+
+   GridNANC.Columns[GridNANC.SelectedIndex].Title.Caption+'"' ;
+
+
+ end;
+
+end;
+
+procedure TForm1.MaskEdit1Exit(Sender: TObject);
+{ѕри выходе пр€чу и перехват  клавиш отдаю форме}
+begin
+ MaskEdit1.Visible := False ;
+ Form1.KeyPreview := True ;
+ GridNANC.SetFocus ;
+ StatusBar1.Panels[1].Text:='';
+ end;
+
+
+procedure TForm1.MaskEdit1KeyPress(Sender: TObject; var Key: Char);
+begin
+ {ѕерехват Enter дл€ возврата в грид}
+ if Key in [#13,#27] then
+  MaskEdit1.OnExit(Sender) ;
+end;
+
+procedure TForm1.MaskEdit1Change(Sender: TObject);
+var
+  I, Code: Integer;
+begin
+ {провер€ю тип пол€ по которому надо искать}
+ if GridNanc.SelectedField.DataType in
+     [ftInteger,ftSmallint,ftWord,ftFloat,ftCurrency] then
+   begin
+    Val(MaskEdit1.Text, I, Code);
+    if ( Length(MaskEdit1.Text)<>0)
+    and not (QNanc.Locate(GridNanc.SelectedField.FieldName,I,[loCaseInsensitive,loPartialKey]))
+       then //MessageBeep(0);
+   end  {if}
+  else
+     if (GridNanc.SelectedField.DataType = ftString)
+       and (Length(MaskEdit1.Text)<=Length(GridNanc.SelectedField.Text)) then
+
+    if not QNanc.Locate(GridNanc.SelectedField.FieldName,MaskEdit1.Text,[loCaseInsensitive,loPartialKey])
+       then //MessageBeep(0);
+
+ GridNanc.Refresh ;
+
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+var
+ IniF :TIniFile;
+begin
+ Utils1.GetOut;
+
+ TMPPath:=GetEnvVar('TMP'); //путь к временному каталогу
+ if Trim(TMPPath)='' then  TMPPath:=GetEnvVar('TEMP');
+ if Trim(TMPPath)='' then  TMPPath:=ExtractFilePath(ParamStr(0));
+
+ FlagDostup:= IsUser; //права доступа
+
+
+   {проверка возможности работы с Sybridge}
+  if Sybr1.IsBlockSybridge(True) then
+   if UpperCase(Sybr1.PhaseODB(tsDataBase1,'kmh0'))<>'WRK' then;
+         Close;
+
+ {-----------курсоры-------------------------}
+  screen.Cursor:=crS_Green;
+  Utils1.LoadANICursor('vojagf.ani',crSearch);
+  Utils1.LoadANICursor('detectf.ani',crDetectF);
+//  Utils1.LoadANICursor('60n.ani',crLogotip);
+//  Logotip.Cursor:=crLogotip;
+ {-------------------------------------------}
+ FlagSort:=True; //пор€док сортировки в гриде (True по убыванию)
+ tsDatabase1.Connected:=False;
+ IniF := TInifile.Create(ExtractFilePath(ParamStr(0))+'\msearch.ini');
+ tsDatabase1.AliasName:=IniF.ReadString('Boot','AliasName','Oleg');
+ IniF.Free;
+ Utils1.IsTitan(tsDatabase1.AliasName,True); //есть ли “итан в реестре
+
+ Form1.ALL_SC; //показать все счета
+
+ Utils1.FormSizeLoad(Form1);{загрузить положение формы}
+ Utils1.FontLoad(Sender); {загрузить шрифты}
+ StatusBar1.Panels[2].Text:='Server: '+tsDatabase1.AliasName ;
+ StatusBar1.Panels[3].Text:=' User: '+UpperCase(Utils1.MSUser); {-----им€ юзера-----}
+
+
+end;
+
+procedure TForm1.N10Click(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TForm1.SearchClick(Sender: TObject);
+begin
+ Form2.Show;
+end;
+
+procedure TForm1.GridNANCDblClick(Sender: TObject);
+begin
+ Form1.SearchClick(Sender);
+end;
+
+procedure TForm1.N1Click(Sender: TObject);
+begin
+   Form1.SearchClick(Sender);
+end;
+
+procedure TForm1.SleepTimer(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TForm1.N9Click(Sender: TObject);
+begin
+ Kalendar.Show;
+end;
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+Utils1.FormSizeSave(Sender);{сохран€ю положение окна}
+Utils1.FontSave(Sender); {сохран€ю фонт}
+end;
+
+procedure TForm1.N11Click(Sender: TObject);
+begin
+  Application.HelpCommand(HELP_CONTENTS,0)
+end;
+
+procedure TForm1.NHelpClick(Sender: TObject);
+begin
+  Application.HelpCommand(HELP_CONTENTS,0);
+end;
+
+procedure TForm1.N12Click(Sender: TObject);
+begin
+	DM.FontDialog.Font.Assign(Font);
+	if DM.FontDialog.Execute then begin
+	     Form1.Font := DM.FontDialog.Font;
+             Form2.Font := DM.FontDialog.Font;
+        end {if}
+{
+		 	Reg.RootKey := HKEY_CURRENT_USER;
+			Reg.OpenKey(BASEKEY,True);									// create \Sofware\NPS\NpsEditor
+			Reg.WriteString('FontName',Font.Name);			// current font
+			Reg.WriteInteger('FontCharset',Font.CharSet);
+                        Reg.WriteInteger('FontPitch',Integer(Font.Pitch));
+			Reg.WriteInteger('FontSize',Font.Size);
+			Reg.WriteString('FontBold',IIF(fsBold in Font.Style,'Yes','No'));
+			Reg.WriteString('FontItalic',IIF(fsItalic in Font.Style,'Yes','No'));
+			Reg.WriteString('FontUnderline',IIF(fsUnderline in Font.Style,'Yes','No'));
+			Reg.WriteString('FontStrikeOut',IIF(fsStrikeOut in Font.Style,'Yes','No'));
+ }
+end;
+
+procedure TForm1.ToolButton2Click(Sender: TObject);
+begin
+if PanelRight.Visible then begin
+    PanelRight.Visible:=False;
+    ToolButton2.ImageIndex:=4;
+    ToolButton2.Hint:='—вернуть';
+      end
+      else begin
+    PanelRight.Visible:=True;
+    ToolButton2.ImageIndex:=2;
+    ToolButton2.Hint:='–азвернуть';
+   end;
+
+PopupMenu1.Items [4].Caption:=ToolButton2.Hint;
+PopupMenu1.Items[4].ImageIndex:=ToolButton2.ImageIndex;
+
+Form1.Resize;
+end;
+
+procedure TForm1.FormResize(Sender: TObject);
+begin
+ ToolBar1.Left:= GridNanc.Width-ToolBar1.Width-25;
+ ToolBar1.Top := GridNanc.Height-ToolBar1.Height-25;
+end;
+
+procedure TForm1.ToolButton1Click(Sender: TObject);
+begin
+ Form1.ALL_SC; //показать все счета
+end;
+
+procedure TForm1.NAboutformClick(Sender: TObject);
+begin
+  Aboutform.Show;
+end;
+
+procedure TForm1.ToolButton3Click(Sender: TObject);
+begin
+ Form2.Show;
+end;
+
+procedure TForm1.PicSort;//прорисовка стрелки в гриде
+begin
+ //пор€док сортировки в гриде (True по убыванию)
+
+//if FlagSort then ImageList1.GetBitmap(13,Image1.Picture.Bitmap)
+//else  ImageList1.GetBitmap(14,Image1.Picture.Bitmap);
+
+if FlagSort=True then ImageList1.Draw(GridNANC.Canvas,0,0,13 )
+ else ImageList1.Draw(GridNANC.Canvas,0,0,14 );
+
+//Image1.Repaint;
+
+end;
+
+procedure TForm1.GridNANCDrawColumnCell(Sender: TObject; const Rect: TRect;
+  DataCol: Integer; Column: TColumn; State: TGridDrawState);
+begin
+ PicSort;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+PicSort;
+end;
+
+procedure TForm1.FormActivate(Sender: TObject);
+begin
+  SplashForm.Close;
+  Form1.Resize;
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+ Utils1.FormSizeSave(Form1);
+end;
+
+
+procedure TForm1.ToolButton4Click(Sender: TObject);
+var
+N,K,I: Integer;
+begin
+   Screen.Cursor := crSearch ; //курсор в часики
+   MemoBaznomer.Lines.Clear;
+   MemoBaznomer.Lines.Add('Free numbers');
+   MemoBaznomer.Lines.Add('From '+MaskEdit2.Text+' to '+MaskEdit3.Text);
+   MemoBaznomer.Lines.Add('=================');
+   N:=StrToInt(MaskEdit2.Text);//начало
+   K:=StrToInt(MaskEdit3.Text);//конец
+  With DM do begin
+   QBazNomer.Active:=False;
+   QBazNomer.ParamByName('NN').AsInteger := N;
+   QBazNomer.ParamByName('KK').AsInteger := K;
+   QBazNomer.Active:=True;
+
+    With QBazNomer do begin
+     First;
+      if QBazNomer['EGF_CPNC']>N then begin  //пропущено в начале
+         for I:=N to QBazNomer['EGF_CPNC'] do begin
+          MemoBaznomer.Lines.Add(IntToStr(I));
+         end;
+      end;
+     I:=QBazNomer['EGF_CPNC'];
+     While not eof do begin
+       if QBazNomer['EGF_CPNC']>I then begin
+        while QBazNomer['EGF_CPNC']>I do  begin
+         MemoBaznomer.Lines.Add(IntToStr(I));
+         I:=I+1;
+        end;
+       end;{if}
+
+      next;
+      I:=I+1;
+     end;{while}
+
+      if QBazNomer['EGF_CPNC']<K then begin  //пропущено в конце
+         for I:=QBazNomer['EGF_CPNC']+1 to K do begin
+          MemoBaznomer.Lines.Add(IntToStr(I));
+         end;
+      end;
+
+
+
+    end;{With QBazNomer do begin}
+  QBazNomer.Active:=False;
+  end; {With DM do begin}
+ MemoBaznomer.Lines.Add('=================');
+ Screen.Cursor := crDefault ;
+end;
+
+
+procedure TForm1.ToolButton8Click(Sender: TObject);
+begin
+  if DM.SaveDialog1.Execute then
+  begin
+    if FileExists(DM.SaveDialog1.FileName) then
+      if MessageDlg(Format('‘айл уже существует. ѕерезаписать? %s', [DM.SaveDialog1.FileName]),
+         mtConfirmation,[mbYes, mbNo], 0) <> mrYes then Exit;
+       MemoBazNomer.Lines.SaveToFile(DM.SaveDialog1.FileName)  ;
+  end;
+end;
+
+procedure TForm1.ToolButton6Click(Sender: TObject);
+VAR F: TextFile;
+I: Integer;
+begin
+ if MessageDlg('Ѕудем печатать ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+ begin
+  AssignFile(F, 'PRN');
+  Rewrite(F);
+  for I := 0 to MemoBazNomer.Lines.Count-1 do
+  begin
+  WriteLN( F, MemoBazNomer.Lines[I] );
+  end;
+  CloseFile(F);
+ end; {if}
+
+end;
+
+procedure TForm1.PageControl1Change(Sender: TObject);
+begin
+  Form1.Resize;
+end;
+
+procedure TForm1.BKluchClick(Sender: TObject);
+begin
+Screen.Cursor := crSearch ; //курсор в часики
+// LKluch.Caption:=Utils1.Kluch(EMFO.Text, EKluch1.Text+'0'+EKluch2.Text);
+{использую хранимую процедуру на Sybase}
+with DM.QTMP do
+begin
+ Active:=False;
+ SQL.Clear;
+ SQL.Add('select ovt_get_control_key(:MFO,:SC) kluch from sys.dummy ');
+ ParamByName('MFO').AsString:=EMFO.Text;
+ ParamByName('SC').AsString:=EKluch1.Text+'0'+EKluch2.Text+EKluch3.Text;
+ Active:=True;
+
+ LKluch.Caption:=FieldbyName('kluch').AsString;
+ Active:=False;
+end; {with}
+ Screen.Cursor := crDefault ;
+end;
+
+procedure TForm1.SB_SCClick(Sender: TObject);
+begin
+ if SB_SC.Tag = 0 then
+   begin
+    Form1.SB_SC.Caption:='«акрытые счета';
+    SB_SC.Tag:=1;
+   end else
+   begin
+    Form1.SB_SC.Caption:='ќткрытые счета';
+    SB_SC.Tag:=0;
+   end;
+   Form1.TabSheet2.OnEnter(Sender) ;
+end;
+
+function TForm1.IsUser : Bool;
+VAR F : TextFile;
+s:string;
+
+begin
+Cast1.InputFile := ExtractFilePath(ParamStr(0))+'usera.txt';
+Cast1.OutputFile := TMPPath+'\tmp00_00.tm$';
+Cast1.DecipherFile;
+
+
+if FileExists(Cast1.OutputFile) then
+ begin
+  AssignFile(F, Cast1.OutputFile);
+  Reset(F);
+  while not eof(F) do
+  begin
+   ReadLn(F,S);
+   if UpperCase(Trim(S))= UpperCase(Trim(Utils1.MSUser)) then
+    begin
+     Result:=True;
+     break;
+    end else Result:=False;
+  end; {while}
+
+CloseFile(F);
+Deletefile(Cast1.OutputFile);
+
+end else Result := False ;
+
+
+
+
+end;
+
+procedure TForm1.TabSheet2Show(Sender: TObject);
+begin
+
+if FlagDostup then DBOstatok.Visible:=True
+else DBOstatok.Visible:=False;
+
+end;
+
+procedure TForm1.BitBtn1Click(Sender: TObject);
+begin
+screen.Cursor := crSearch;
+DM.QMFPB.Active:=False;
+Sybr1.sWhere:=''; //формирую строку дл€ запроса
+Sybr1.SQLWhere([BMF_MFO,BMF_NBAN,BMF_ARRP,BMF_PRDL]);
+
+DM.QMFPB.SQL.Clear;
+DM.QMFPB.SQL.Add('select * from dba.mfpb '+Sybr1.sWhere);
+DM.QMFPB.Active:=True;
+
+
+screen.Cursor := crDefault;
+
+end;
+
+initialization
+
+  Screen.Cursors[crS_Green] := LoadCursor(hInstance, 'S_Green');
+  // Screen.Cursors[crSearch] := LoadCursor(hInstance, 'Wait');
+
+end.

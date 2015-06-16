@@ -1,0 +1,214 @@
+[MainWindow]
+Create=1
+Visible=1
+State=0
+Left=7
+Top=1
+Width=1024
+Height=106
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1016
+ClientHeight=60
+
+[ProjectManager]
+LargeButtons=1
+Column0Width=75
+Column1Width=125
+Column2Width=125
+
+[PropertyInspector]
+Create=1
+Visible=1
+State=0
+Left=12
+Top=123
+Width=232
+Height=594
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=224
+ClientHeight=570
+SplitPos=133
+
+[HistoryLists\hiWatchExpression]
+Count=3
+H0=fparams[i]
+H1=bound
+H2=name
+
+[HistoryLists\hiOpenFile]
+Count=2
+H0=c:\program files\titan\ivory32\sqlany\standard\bsetitan.dpk
+H1=c:\program files\titan\ivory32\sqlany\standard\sqainfop.dpk
+
+[HistoryLists\hiUnitAlias]
+Count=1
+H0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+
+[HistoryLists\hiLibUnitAliases]
+Count=1
+H0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+
+[Closed Files]
+File_0=PackageEditModule,'C:\Program Files\Titan\Ivory32\SQLANY\Standard\Sqainfop.dpk',0,312,152,697,449,1
+File_1=SourceModule,'C:\Program Files\Titan\Ivory32\SQLANY\Standard\sqainfou.pas',0,1,1,3,15,0,0
+File_2=PackageEditModule,'C:\Program Files\Titan\Ivory32\SQLANY\Standard\BSETITAN.dpk',0,333,153,751,618,1
+File_3=SourceModule,'E:\#DEPO\APP\Renta\QRBalans.pas',0,1,42,1,42,1,1
+File_4=SourceModule,'E:\#DEPO\APP\Renta\Unit1.pas',0,1,527,31,533,1,0
+File_5=SourceModule,'E:\#DEPO\APP\Renta\Splash.pas',0,1,28,5,28,1,1
+File_6=SourceModule,'E:\#DEPO\APP\Renta\Unit2.pas',0,1,33,1,33,0,0
+File_7=SourceModule,'E:\#DEPO\APP\Renta\QRCharts.pas',0,1,32,1,32,0,0
+File_8=SourceModule,'E:\#DEPO\APP\Renta\QRBalans.dfm',0,1,1,1,1,0,0
+File_9=SourceModule,'E:\#DEPO\APP\Renta\Report.pas',0,1,1,1,1,1,0
+
+[Modules]
+Module0=E:\#BANK\APP\MSearch\Unit1.pas
+Module1=c:\program files\titan\ivory32\sqlany\standard\BseUtils.pas
+Module2=E:\#BANK\APP\MSearch\msearch.dpr
+Module3=c:\program files\titan\ivory32\sqlany\standard\BseMain.pas
+Module4=c:\program files\titan\ivory32\sqlany\standard\BseConst.pas
+Module5=c:\program files\titan\ivory32\sqlany\standard\BseColl.pas
+Module6=c:\program files\titan\ivory32\sqlany\standard\BseTypes.pas
+Count=7
+EditWindowCount=1
+
+[E:\#BANK\APP\MSearch\Unit1.pas]
+ModuleType=SourceModule
+FormState=1
+FormOnTop=0
+
+[c:\program files\titan\ivory32\sqlany\standard\BseUtils.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[E:\#BANK\APP\MSearch\msearch.dpr]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\program files\titan\ivory32\sqlany\standard\BseMain.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\program files\titan\ivory32\sqlany\standard\BseConst.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\program files\titan\ivory32\sqlany\standard\BseColl.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\program files\titan\ivory32\sqlany\standard\BseTypes.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[EditWindow0]
+Create=1
+Visible=1
+State=0
+Left=268
+Top=254
+Width=696
+Height=486
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=688
+ClientHeight=459
+SplitPos=-1
+MessagePane=0
+ViewCount=7
+CurrentView=0
+View0=0
+View1=1
+View2=2
+View3=3
+View4=4
+View5=5
+View6=6
+
+[View0]
+Module=E:\#BANK\APP\MSearch\Unit1.pas
+CursorX=1
+CursorY=11
+TopLine=6
+LeftCol=1
+
+[View1]
+Module=c:\program files\titan\ivory32\sqlany\standard\BseMain.pas
+CursorX=47
+CursorY=8216
+TopLine=8204
+LeftCol=1
+
+[View2]
+Module=E:\#BANK\APP\MSearch\msearch.dpr
+CursorX=1
+CursorY=1
+TopLine=1
+LeftCol=1
+
+[View3]
+Module=c:\program files\titan\ivory32\sqlany\standard\BseTypes.pas
+CursorX=1
+CursorY=63
+TopLine=52
+LeftCol=1
+
+[View4]
+Module=c:\program files\titan\ivory32\sqlany\standard\BseColl.pas
+CursorX=1
+CursorY=281
+TopLine=270
+LeftCol=1
+
+[View5]
+Module=c:\program files\titan\ivory32\sqlany\standard\BseConst.pas
+CursorX=1
+CursorY=182
+TopLine=171
+LeftCol=1
+
+[View6]
+Module=c:\program files\titan\ivory32\sqlany\standard\BseUtils.pas
+CursorX=1
+CursorY=459
+TopLine=446
+LeftCol=1
+
+[Watches]
+Count=3
+Watch0='name',256,0,18,1
+Watch1='bound',256,0,18,1
+Watch2='fparams[i]',256,0,18,1
+
+[Breakpoints]
+Count=0
+
+[PVCS Browser]
+Left=236
+Top=105
+Width=625
+Height=393
+State=0
+Visible=0
+[PVCS VDiff]
+Left=257
+Top=160
+Width=591
+Height=608
+Layout=1
+Orientation=1
+State=0
+Visible=0
+File1Color=16711680
+File2Color=255
+SpaceColor=16776960
+TextColor=0
+[Project Resource Expert]
+Visible=0

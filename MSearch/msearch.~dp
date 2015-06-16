@@ -1,0 +1,31 @@
+program msearch;
+
+uses
+  Forms,CoolHint,
+  Unit1 in 'Unit1.pas' {Form1},
+  Unit2 in 'Unit2.pas' {Form2},
+  Unit3 in 'Unit3.pas' {DM: TDataModule},
+  Splash in 'Splash.pas' {SplashForm},
+  Kalend in 'Kalend.pas' {Kalendar},
+  About in 'About.pas' {AboutForm}; {SplashForm}
+
+
+{$R *.RES}
+{$R CURSORS.RES}
+
+
+begin
+
+  SplashForm := TSplashForm.Create(Application);
+  SplashForm.Show;
+
+  Application.Initialize;
+  Application.Title := 'Поиск клиента';
+  Application.HelpFile := 'Msearch.hlp';
+  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TForm2, Form2);
+  Application.CreateForm(TDM, DM);
+  Application.CreateForm(TKalendar, Kalendar);
+ Application.CreateForm(TAboutForm, AboutForm);
+  Application.Run;
+end.

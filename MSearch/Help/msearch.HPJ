@@ -1,0 +1,15 @@
+[OPTIONS]
+COMPRESS=8 Zeck
+ERRORLOG=E:\#BANK\APP\MSearch\Help\msearch.LOG
+HLP=E:\#BANK\APP\MSearch\Help\msearch.HLP
+
+[FILES]
+E:\#BANK\APP\MSearch\Help\msearch.RTF
+
+[MAP]
+TITLE=10
+ABOUT=20
+WPOISK=30
+
+[WINDOWS]
+main="Поиск клиента банка",,60932,(r14483455),(r12632256)

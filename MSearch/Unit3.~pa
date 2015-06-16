@@ -1,0 +1,40 @@
+unit Unit3;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  RxGrdCpt, Placemnt, RxCalc, MUtils, Db, BseMain, SqaMain;
+
+
+type
+  TDM = class(TDataModule)
+    FontDialog: TFontDialog;
+    QBazNomer: TtsQuery;
+    DSBazNomer: TDataSource;
+    SaveDialog1: TSaveDialog;
+    QTMP: TtsQuery;
+    QMFPB: TtsQuery;
+    DSMFPB: TDataSource;
+    procedure DMCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  DM: TDM;
+
+implementation
+
+uses Unit1;
+
+{$R *.DFM}
+
+procedure TDM.DMCreate(Sender: TObject);
+begin
+SaveDialog1.InitialDir := Form1.TMPPath;
+end;
+
+end.

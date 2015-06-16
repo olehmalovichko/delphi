@@ -1,0 +1,40 @@
+unit Kalend;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Grids, Calendar, StdCtrls, Buttons, ExtCtrls, Spin,StrUtils, ComCtrls,
+  yupack ;
+
+type
+  TKalendar11 = class(TForm)
+    procedure BitBtn1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Kalendar11: TKalendar11;
+
+implementation
+
+{$R *.DFM}
+
+procedure TKalendar11.BitBtn1Click(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TKalendar11.FormCreate(Sender: TObject);
+var
+Month: word;
+begin
+MonthCalendar1.Date:=Now;
+
+end;
+
+end.

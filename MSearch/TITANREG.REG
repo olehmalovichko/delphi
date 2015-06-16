@@ -1,0 +1,13 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Titan\SqlAnywhere\Aliases\KMH0]
+@=""
+"AutoCommit"="Yes"
+"DatabaseFile"=""
+"DatabaseName"=""
+"Dynamic"="Yes"
+"EngineName"="kmh0"
+"User"=""
+"Password"=""
+"StartCommand"="C:\\SQLANY50\\WIN32\\dbclient.exe -xtcpip{host=10.3.2.10}  -ga"
+
